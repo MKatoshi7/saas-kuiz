@@ -152,13 +152,7 @@ export default async function LeadsPage({ params }: { params: Promise<{ funnelId
                                                     <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Etapa {index + 1}</span>
                                                     <span className="text-slate-900 font-bold text-xs truncate max-w-[140px]" title={step.title}>{step.title}</span>
                                                 </div>
-                                                {/* Barra de Progresso Horizontal */}
-                                                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                    <div
-                                                        className="h-full bg-green-500 rounded-full transition-all duration-500"
-                                                        style={{ width: `${stats.percentage}%` }}
-                                                    />
-                                                </div>
+                                                {/* Removido a barra horizontal */}
                                                 <span className="text-[9px] text-slate-400 font-medium">{stats.percentage}% respondido</span>
                                             </div>
                                         </TableHead>
@@ -204,31 +198,30 @@ export default async function LeadsPage({ params }: { params: Promise<{ funnelId
                                                 const answer = answers[step.id];
                                                 return (
                                                     <TableCell key={step.id} className="relative">
-                                                        <div className="flex flex-col gap-1.5">
-                                                            {answer ? (
-                                                                <>
-                                                                    <div className="flex items-center gap-1.5">
-                                                                        <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                                                                        <span className="font-semibold text-[11px] text-slate-800 truncate max-w-[140px]" title={String(answer)}>
-                                                                            {String(answer)}
-                                                                        </span>
-                                                                    </div>
-                                                                    {/* A barrinha de progresso na coluna */}
-                                                                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                                                        <div className="h-full bg-green-500 rounded-full w-full animate-in fade-in slide-in-from-left-1 duration-500" />
-                                                                    </div>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <div className="flex items-center gap-1.5 opacity-30">
-                                                                        <div className="w-2 h-2 rounded-full bg-slate-300" />
-                                                                        <span className="text-[11px] text-slate-400">-</span>
-                                                                    </div>
-                                                                    <div className="w-full h-1.5 bg-slate-50 rounded-full overflow-hidden">
-                                                                        <div className="h-full bg-slate-200 rounded-full w-0" />
-                                                                    </div>
-                                                                </>
-                                                            )}
+                                                        <div className="flex gap-1.5">
+                                                            {/* Barra Vertical */}
+                                                            <div className="w-1 h-full bg-slate-100 rounded-full overflow-hidden">
+                                                                <div className={`w-full rounded-full transition-all duration-500 ${answer ? 'h-full bg-green-500' : 'h-0'}`} />
+                                                            </div>
+                                                            <div className="flex flex-col gap-1.5 flex-1">
+                                                                {answer ? (
+                                                                    <>
+                                                                        <div className="flex items-center gap-1.5">
+                                                                            <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                                                                            <span className="font-semibold text-[11px] text-slate-800 truncate max-w-[140px]" title={String(answer)}>
+                                                                                {String(answer)}
+                                                                            </span>
+                                                                        </div>
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <div className="flex items-center gap-1.5 opacity-30">
+                                                                            <div className="w-2 h-2 rounded-full bg-slate-300" />
+                                                                            <span className="text-[11px] text-slate-400">-</span>
+                                                                        </div>
+                                                                    </>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </TableCell>
                                                 );

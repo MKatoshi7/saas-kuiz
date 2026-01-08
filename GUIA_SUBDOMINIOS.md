@@ -18,13 +18,40 @@ O middleware já está configurado para suportar subdomínios no formato:
 6. Clique em **Add**
 
 #### 2. Configurar DNS
-O Vercel irá fornecer as instruções, mas basicamente você precisará:
 
-1. Ir no seu provedor de DNS (Cloudflare, GoDaddy, etc.)
-2. Adicionar um registro **CNAME**:
+A Vercel oferece **duas opções** para configurar o wildcard domain:
+
+##### **Opção A: Nameservers da Vercel** (Mais Simples - Recomendado se você NÃO usa o domínio para email)
+
+Se você pode apontar todo o domínio `kuiz.digital` para a Vercel:
+
+1. Vá no seu provedor de DNS (Cloudflare, GoDaddy, Registro.br, etc.)
+2. Encontre a seção de **Nameservers**
+3. Substitua os atuais por:
+   ```
+   ns1.vercel-dns.com
+   ns2.vercel-dns.com
+   ```
+4. Aguarde propagação (5-30 minutos)
+
+**Vantagens:**
+- ✅ Configuração automática
+- ✅ SSL automático para todos os subdomínios
+- ✅ Mais simples
+
+**Desvantagens:**
+- ❌ Move TODO o DNS para Vercel (emails podem parar de funcionar se não reconfigurar)
+- ❌ Você precisa recriar TODOS os registros DNS na Vercel
+
+##### **Opção B: Apenas CNAME** (Se você usa o domínio para outras coisas)
+
+Se você precisa manter outros serviços (email, etc.) no domínio:
+
+1. **NÃO mude os nameservers**
+2. No seu provedor de DNS, adicione um registro **CNAME**:
    - **Nome**: `*` (asterisco para todos os subdomínios)
    - **Tipo**: CNAME
-   - **Valor**: `cname.vercel-dns.com` (ou o valor que o Vercel fornecer)
+   - **Valor**: `cname.vercel-dns.com`
    - **TTL**: Auto ou 300 segundos
 
 Exemplo no Cloudflare:
@@ -32,9 +59,17 @@ Exemplo no Cloudflare:
 Type: CNAME
 Name: *
 Content: cname.vercel-dns.com
-Proxy: DNS only (desligado)
+Proxy: DNS only (desligado - ícone cinza ☁️)
 TTL: Auto
 ```
+
+**Vantagens:**
+- ✅ Mantém seus emails funcionando
+- ✅ Mantém outros registros DNS intactos
+
+**Desvantagens:**
+- ⚠️ Alguns provedores de DNS não permitem CNAME wildcard (`*`)
+- ⚠️ Se não funcionar, use a Opção A
 
 #### 3. Aguardar Propagação
 - A propagação do DNS pode levar de 5 minutos a 48 horas
@@ -131,12 +166,50 @@ O código está **100% correto** para 2026. A configuração atual já inclui:
 
 ### Como obter o Access Token:
 
-1. Acesse: https://developers.facebook.com/tools/accesstoken
-2. Copie o **Token de Acesso da Página**
-3. Para token permanente:
-   - Acesse: https://developers.facebook.com/tools/debug/accesstoken
-   - Clique em "Extend Access Token"
-   - Use esse token no sistema
+#### **Passo 1: Acessar o Gerenciador de Eventos do Facebook**
+
+1. Acesse: https://business.facebook.com/events_manager2
+2. Selecione sua fonte de dados (Pixel)
+3. Vá em **Configurações** (ícone de engrenagem)
+
+#### **Passo 2: Gerar Token via API de Conversões**
+
+1. Na aba **Configurações**, role até **API de Conversões**
+2. Clique em **Gerar token de acesso**
+3. OU acesse diretamente: https://business.facebook.com/events_manager2/list/pixel/YOUR_PIXEL_ID/settings
+
+#### **Passo 3: Token Permanente (Recomendado)**
+
+**IMPORTANTE**: O token padrão expira. Para obter um token de **longa duração** (não expira):
+
+1. Vá para: https://developers.facebook.com/tools/accesstoken/
+2. Copie o **User Access Token** da sua conta Business
+3. Acesse: https://developers.facebook.com/tools/debug/accesstoken/
+4. Cole o token e clique em **Debug**
+5. Clique em **Extend Access Token** (parte inferior)
+6. Copie o **novo token** gerado (este não expira)
+7. **Guarde este token em local seguro!**
+
+#### **Passo 4: Verificar Permissões**
+
+Certifique-se de que o token tem as permissões:
+- ✅ `ads_management`
+- ✅ `business_management`
+
+#### **Alternativa: Token de Sistema (Mais Seguro)**
+
+Para produção, é recomendado usar um **System User Token**:
+
+1. Acesse: https://business.facebook.com/settings/system-users
+2. Crie um System User
+3. Atribua acesso ao Pixel
+4. Gere o token com permissões de `ads_management`
+5. Este token **nunca expira** e é mais seguro
+
+**Exemplo de Token:**
+```
+EAAB... (string longa de ~200+ caracteres)
+```
 
 ### Eventos Rastreados:
 

@@ -17,6 +17,7 @@ export function SettingsForm({ funnel }: SettingsFormProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
         title: funnel.title || '',
+        slug: funnel.slug || '',
         themeConfig: funnel.themeConfig || {},
         marketingConfig: funnel.marketingConfig || {},
         theme: funnel.theme || { bgColor: '#ffffff', primaryColor: '#2563EB' }
@@ -72,6 +73,42 @@ export function SettingsForm({ funnel }: SettingsFormProps) {
                 <CardFooter className="border-t bg-slate-50/50 px-6 py-4">
                     <Button onClick={handleSave} disabled={isLoading}>
                         {isLoading ? 'Salvando...' : 'Salvar Alterações'}
+                    </Button>
+                </CardFooter>
+            </Card>
+
+            {/* Subdomínio */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Subdomínio Personalizado</CardTitle>
+                    <CardDescription>Configure o endereço único do seu quiz.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="slug">Subdomínio</Label>
+                        <div className="flex items-center gap-2">
+                            <Input
+                                id="slug"
+                                value={formData.slug || ''}
+                                onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))}
+                                placeholder="meu-quiz"
+                                className="flex-1 font-mono"
+                            />
+                            <span className="text-sm text-gray-500 whitespace-nowrap">.kuiz.digital</span>
+                        </div>
+                        <p className="text-xs text-gray-500">
+                            Apenas letras minúsculas, números e hífens. Seu quiz ficará disponível em:
+                        </p>
+                        <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                            <span className="text-xs font-mono text-blue-700">
+                                https://{formData.slug || 'seu-quiz'}.kuiz.digital
+                            </span>
+                        </div>
+                    </div>
+                </CardContent>
+                <CardFooter className="border-t bg-slate-50/50 px-6 py-4">
+                    <Button onClick={handleSave} disabled={isLoading}>
+                        {isLoading ? 'Salvando...' : 'Salvar Subdomínio'}
                     </Button>
                 </CardFooter>
             </Card>
