@@ -115,6 +115,7 @@ export interface ButtonComponent extends BaseComponent {
     action: ActionType;
     targetStepId?: string; // For jump_to_step action
     targetUrl?: string; // For open_url action
+    delay?: number; // Delay in seconds before button appears
     styles?: {
       backgroundColor?: string;
       textColor?: string;

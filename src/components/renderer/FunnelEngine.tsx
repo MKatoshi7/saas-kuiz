@@ -11,6 +11,7 @@ import { useLoadingTimer } from '@/hooks/useLoadingTimer';
 import { UnifiedTextRenderer } from '@/components/renderer/UnifiedTextRenderer';
 import { LoadingComponentRenderer } from '@/components/renderer/LoadingComponentRenderer';
 import { PricingComponent } from '@/types/funnel';
+import { DelayedButton } from './DelayedButton';
 
 // Lazy load heavy components
 const QuizOptionsRenderer = lazy(() => import('./QuizOptionsRenderer').then(m => ({ default: m.QuizOptionsRenderer })));
@@ -248,7 +249,7 @@ function PublicComponentRenderer({
 
                 // Convert back to hex
                 const toHex = (val: number) => val.toString(16).padStart(2, '0');
-                return `#${toHex(darken(r))}${toHex(darken(g))}${toHex(darken(b))} `;
+                return `#${toHex(darken(r))}${toHex(darken(g))}${toHex(darken(b))}`;
             };
 
             const buttonBgColor = data.styles?.backgroundColor || themePrimaryColor;
@@ -311,47 +312,44 @@ function PublicComponentRenderer({
             const transformStyle = is3D ? 'translateY(-2px)' : undefined;
 
             return (
-                <>
-                    {/* Inject animation keyframes */}
+                <DelayedButton
+                    delay={data.delay || 0}
+                    onClick={() => {
+                        // Track the click
+                        onAnswer(data.text || 'Clicked');
 
-
-                    <button
-                        onClick={() => {
-                            // Track the click
-                            onAnswer(data.text || 'Clicked');
-
-                            // Handle button actions (open url, etc)
-                            if (data.action === 'open_url' && data.targetUrl) {
-                                window.open(data.targetUrl, '_blank');
-                                if (onComplete) onComplete();
-                            } else if (data.action === 'submit_funnel') {
-                                if (onComplete) onComplete();
-                            } else if (data.action === 'jump_to_step' && data.targetStepId) {
-                                onJump(data.targetStepId);
-                            } else {
-                                onNext();
-                            }
-                        }}
-                        className={`
-                            w-full font-semibold transition-all
-                            ${sizeStyles[size]}
-                            ${borderRadiusStyles[borderRadius]}
-                            ${!is3D && shadow !== 'glow' ? shadowStyles[shadow] : ''}
-                            ${animationStyles[animation]}
-                            hover:opacity-90
-                        `}
-                        style={{
-                            ...gradientBg,
-                            color: buttonTextColor,
-                            boxShadow: shadowStyle,
-                            transform: transformStyle,
-                            marginBottom: is3D ? '4px' : '0',
-                        }}
-                    >
-                        {data.text || 'Continuar'}
-                    </button>
-                </>
+                        // Handle button actions (open url, etc)
+                        if (data.action === 'open_url' && data.targetUrl) {
+                            window.open(data.targetUrl, '_blank');
+                            if (onComplete) onComplete();
+                        } else if (data.action === 'submit_funnel') {
+                            if (onComplete) onComplete();
+                        } else if (data.action === 'jump_to_step' && data.targetStepId) {
+                            onJump(data.targetStepId);
+                        } else {
+                            onNext();
+                        }
+                    }}
+                    className={`
+                        w-full font-semibold transition-all
+                        ${sizeStyles[size]}
+                        ${borderRadiusStyles[borderRadius]}
+                        ${!is3D && shadow !== 'glow' ? shadowStyles[shadow] : ''}
+                        ${animationStyles[animation]}
+                        hover:opacity-90
+                    `}
+                    style={{
+                        ...gradientBg,
+                        color: buttonTextColor,
+                        boxShadow: shadowStyle,
+                        transform: transformStyle,
+                        marginBottom: is3D ? '4px' : '0',
+                    }}
+                >
+                    {data.text || 'Continuar'}
+                </DelayedButton>
             );
+
 
         case 'quiz-option':
             return (

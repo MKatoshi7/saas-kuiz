@@ -359,6 +359,23 @@ export function PropertiesPanel() {
                                         />
                                     </div>
                                 )}
+
+                                <div>
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">
+                                        ⏱️ Delay para Aparecer (segundos)
+                                    </label>
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        step="0.5"
+                                        value={selectedComponent.data.delay || 0}
+                                        onChange={(e) => handleUpdate('delay', Number(e.target.value))}
+                                        placeholder="0"
+                                    />
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        Tempo em segundos antes do botão aparecer (0 = aparece imediatamente)
+                                    </p>
+                                </div>
                                 <div className="pt-4 border-t border-gray-200 mt-4">
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Nome da Variável (Analytics)</label>
                                     <Input
