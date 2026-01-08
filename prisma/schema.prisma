@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  role      String   @default("user") // user, admin
+  
+  // Subscription fields
+  subscriptionStatus String?   @default("free") // free, active, canceled, expired
+  subscriptionPlan   String?   // starter, pro, enterprise
+  subscriptionEndsAt DateTime?
+  
+  funnels   Funnel[]
+  transactions SubscriptionTransaction[]
+
+  @@map("users")
+}
+
+model Funnel {
+  id              String           @id @default(cuid())
+  title           String
+  slug            String           @unique
+  customDomain    String?          @unique
+  description     String?
+  theme           Json?            @default("{\"bgColor\": \"#ffffff\", \"primaryColor\": \"#2563EB\"}")
+  themeConfig     Json?
+  marketingConfig Json?
+  status          String           @default("draft")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  publishedAt     DateTime?
+  userId          String
+  steps           FunnelStep[]
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  integrations    Integration[]
+  sessions        VisitorSession[]
+
+  @@index([userId, status, createdAt])
+  @@map("funnels")
+}
+
+model FunnelStep {
+  id         String            @id @default(cuid())
+  funnelId   String
+  title      String
+  slug       String
+  stepType   String            @default("question")
+  order      Int
+  settings   Json?             @default("{}")
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  events     Event[]
+  components FunnelComponent[]
+  funnel     Funnel            @relation(fields: [funnelId], references: [id], onDelete: Cascade)
+
+  @@unique([funnelId, slug])
+  @@unique([funnelId, order])
+  @@map("funnel_steps")
+}
+
+model FunnelComponent {
+  id        String     @id @default(cuid())
+  stepId    String
+  type      String
+  order     Int
+  data      Json
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  step      FunnelStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+
+  @@map("funnel_components")
+}
+
+model VisitorSession {
+  id              String    @id @default(cuid())
+  funnelId        String
+  sessionId       String    @unique
+  utmSource       String?
+  utmMedium       String?
+  utmCampaign     String?
+  utmTerm         String?
+  utmContent      String?
+  referrer        String?
+  userAgent       String?
+  ipAddress       String?
+  country         String?
+  deviceType      String?
+  browser         String?
+  visitorData     Json?     @default("{}")
+  answersSnapshot Json?
+  isLead          Boolean   @default(false)
+  isConverted     Boolean   @default(false)
+  startedAt       DateTime  @default(now())
+  lastSeenAt      DateTime  @updatedAt
+  completedAt     DateTime?
+  email           String?
+  name            String?
+  phone           String?
+  events          Event[]
+  funnel          Funnel    @relation(fields: [funnelId], references: [id], onDelete: Cascade)
+
+  @@index([funnelId, isLead])
+  @@index([email])
+  @@index([funnelId, startedAt(sort: Desc)])
+  @@map("visitor_sessions")
+}
+
+model Event {
+  id        String         @id @default(cuid())
+  sessionId String
+  stepId    String?
+  eventType String
+  eventName String?
+  data      Json?
+  createdAt DateTime       @default(now())
+  session   VisitorSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  step      FunnelStep?    @relation(fields: [stepId], references: [id])
+
+  @@index([sessionId])
+  @@index([stepId])
+  @@index([eventType])
+  @@index([sessionId, eventType, createdAt])
+  @@map("events")
+}
+
+model Integration {
+  id        String   @id @default(cuid())
+  funnelId  String
+  type      String
+  url       String?
+  config    Json?
+  trigger   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  funnel    Funnel   @relation(fields: [funnelId], references: [id], onDelete: Cascade)
+
+  @@map("integrations")
+}
+
+model SubscriptionTransaction {
+  id            String   @id @default(cuid())
+  userId        String
+  amount        Float
+  status        String   // paid, pending, failed
+  provider      String   // cakto, stripe, etc
+  transactionId String?  // ID na plataforma de pagamento
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([transactionId])
+  @@map("subscription_transactions")
+}
+
+model WebhookLog {
+  id        String   @id @default(cuid())
+  provider  String
+  eventType String?
+  payload   Json
+  status    String   // success, error
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@index([provider, eventType])
+  @@map("webhook_logs")
+}
+
+model SystemLog {
+  id        String   @id @default(cuid())
+  level     String   // info, warn, error
+  message   String
+  context   Json?
+  stack     String?
+  createdAt DateTime @default(now())
+
+  @@index([level])
+  @@index([createdAt])
+  @@map("system_logs")
+}
