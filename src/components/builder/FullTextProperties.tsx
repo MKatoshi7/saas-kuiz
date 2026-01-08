@@ -33,12 +33,14 @@ export function FullTextProperties({ data, onUpdate }: FullTextPropertiesProps) 
                     onChange={(e) => onUpdate('fontSize', e.target.value)}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                    <option value="small">Pequeno (14px)</option>
-                    <option value="normal">Normal (16px)</option>
+                    <option value="micro">Micro (8px)</option>
+                    <option value="minusculo">Minúsculo (12px)</option>
+                    <option value="small">Pequeno (16px)</option>
+                    <option value="normal">Normal (18px)</option>
                     <option value="medium">Médio (20px)</option>
                     <option value="big">Grande (24px)</option>
-                    <option value="bigger">Muito Grande (32px)</option>
-                    <option value="huge">Gigante (48px)</option>
+                    <option value="bigger">Muito Grande (30px)</option>
+                    <option value="huge">Gigante (36px)</option>
                 </select>
             </div>
 
