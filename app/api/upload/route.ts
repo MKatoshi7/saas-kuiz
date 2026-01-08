@@ -2,13 +2,26 @@ import { v2 as cloudinary } from 'cloudinary';
 import { NextRequest, NextResponse } from 'next/server';
 
 // Configure Cloudinary
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+const isCloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET;
+
+if (isCloudinaryConfigured) {
+    cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+}
 
 export async function POST(request: NextRequest) {
+    if (!isCloudinaryConfigured) {
+        return NextResponse.json({
+            error: 'Cloudinary not configured',
+            details: 'Missing environment variables on server.'
+        }, { status: 500 });
+    }
+
     try {
         const formData = await request.formData();
         const file = formData.get('file') as File;
@@ -61,6 +74,13 @@ export async function POST(request: NextRequest) {
 
 // Also support URL-based upload (paste image URL)
 export async function PUT(request: NextRequest) {
+    if (!isCloudinaryConfigured) {
+        return NextResponse.json({
+            error: 'Cloudinary not configured',
+            details: 'Missing environment variables on server.'
+        }, { status: 500 });
+    }
+
     try {
         const { url, funnelId } = await request.json();
 

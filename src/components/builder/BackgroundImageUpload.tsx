@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud, Loader2, Image as ImageIcon, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface BackgroundImageUploadProps {
     currentUrl?: string;
@@ -17,7 +18,7 @@ export function BackgroundImageUpload({ currentUrl, onUpload, funnelId }: Backgr
         if (!file) return;
 
         if (!funnelId) {
-            alert('Erro: ID do funil não encontrado.');
+            toast.error('ID do funil não encontrado');
             return;
         }
 
@@ -35,13 +36,19 @@ export function BackgroundImageUpload({ currentUrl, onUpload, funnelId }: Backgr
             if (response.ok) {
                 const { url } = await response.json();
                 onUpload(url);
+                toast.success('Imagem de fundo atualizada!');
             } else {
-                console.error('Upload failed');
-                alert('Falha ao fazer upload da imagem. Tente novamente.');
+                const error = await response.json();
+                console.error('Upload failed:', error);
+                toast.error('Erro ao fazer upload', {
+                    description: error.details || 'Verifique as configurações do Cloudinary.'
+                });
             }
         } catch (error) {
             console.error('Upload error:', error);
-            alert('Erro ao fazer upload. Verifique sua conexão.');
+            toast.error('Erro de conexão', {
+                description: 'Não foi possível enviar a imagem.'
+            });
         } finally {
             setIsUploading(false);
         }
