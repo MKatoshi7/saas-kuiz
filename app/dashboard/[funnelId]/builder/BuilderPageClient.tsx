@@ -272,6 +272,26 @@ export default function BuilderPageClient({ funnelId }: { funnelId: string }) {
 
                     <Button
                         size="sm"
+                        variant="outline"
+                        className="gap-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-black rounded-xl"
+                        onClick={handleSave}
+                        disabled={autoSave.isSaving || isLoading}
+                    >
+                        {autoSave.isSaving ? (
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500"></div>
+                                <span className="font-medium">Salvando...</span>
+                            </>
+                        ) : (
+                            <>
+                                <Save className="w-4 h-4" />
+                                <span className="font-medium">Salvar</span>
+                            </>
+                        )}
+                    </Button>
+
+                    <Button
+                        size="sm"
                         className="gap-2 bg-black text-white hover:bg-gray-800 shadow-lg shadow-black/20 hover:shadow-black/30 transition-all rounded-xl"
                         onClick={async () => {
                             try {
@@ -296,26 +316,6 @@ export default function BuilderPageClient({ funnelId }: { funnelId: string }) {
                     >
                         <Rocket className="w-4 h-4" />
                         Publicar
-                    </Button>
-
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-2 border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-black rounded-xl"
-                        onClick={handleSave}
-                        disabled={autoSave.isSaving || isLoading}
-                    >
-                        {autoSave.isSaving ? (
-                            <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500"></div>
-                                <span className="font-medium">Salvando...</span>
-                            </>
-                        ) : (
-                            <>
-                                <Save className="w-4 h-4" />
-                                <span className="font-medium">Salvar</span>
-                            </>
-                        )}
                     </Button>
                 </ToolbarSection>
             </Toolbar>
