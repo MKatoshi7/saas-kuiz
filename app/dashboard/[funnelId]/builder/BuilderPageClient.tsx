@@ -69,6 +69,7 @@ export default function BuilderPageClient({ funnelId }: { funnelId: string }) {
         loadFunnel(funnelId);
     }, [funnelId, setCurrentFunnel, loadFunnel]);
 
+    const currentFunnel = useBuilderStore((state) => state.currentFunnel);
     const [isAutoSaveEnabled, setIsAutoSaveEnabled] = useState(false);
 
     // Auto-save setup
@@ -265,7 +266,13 @@ export default function BuilderPageClient({ funnelId }: { funnelId: string }) {
 
                     <ToolbarDivider />
 
-                    <Button variant="ghost" size="sm" className="gap-2 text-gray-600 hover:text-black hover:bg-black/5" onClick={() => window.open(`/f/${funnelId}`, '_blank')}>
+                    <Button variant="ghost" size="sm" className="gap-2 text-gray-600 hover:text-black hover:bg-black/5" onClick={() => {
+                        if (currentFunnel?.customDomain) {
+                            window.open(`https://${currentFunnel.customDomain}`, '_blank');
+                        } else {
+                            window.open(`/f/${funnelId}`, '_blank');
+                        }
+                    }}>
                         <Eye className="w-4 h-4" />
                         Preview
                     </Button>

@@ -39,6 +39,10 @@ export function UnifiedTextRenderer({
     const getFontSizeClass = () => {
         switch (fontSize) {
             // New size system (from TextToolbar)
+            case 'micro':
+                return 'text-[8px]';  // 8px
+            case 'minusculo':
+                return 'text-xs';     // 12px
             case 'small':
                 return 'text-base';  // 16px (era 14px)
             case 'normal':
@@ -134,13 +138,13 @@ export function UnifiedTextRenderer({
             styles.fontWeight = fontWeight;
         }
 
-        // Drop shadow
+        // Drop shadow (hard 3D style)
         if (dropShadow && dropShadow !== 'none') {
             const shadows = {
-                sm: '0 1px 2px rgba(0, 0, 0, 0.1)',
-                md: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                lg: '0 4px 6px rgba(0, 0, 0, 0.15)',
-                xl: '0 8px 12px rgba(0, 0, 0, 0.2)'
+                sm: '1px 1px 0px rgba(0, 0, 0, 0.5)',
+                md: '2px 2px 0px rgba(0, 0, 0, 0.5)',
+                lg: '3px 3px 0px rgba(0, 0, 0, 0.5)',
+                xl: '5px 5px 0px rgba(0, 0, 0, 0.5)'
             };
             styles.textShadow = shadows[dropShadow];
         }

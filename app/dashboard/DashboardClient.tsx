@@ -9,9 +9,10 @@ import { EmptyState } from '@/components/ui/EmptyState';
 
 interface DashboardClientProps {
     projects: any[];
+    isSubscriptionExpired?: boolean;
 }
 
-export function DashboardClient({ projects }: DashboardClientProps) {
+export function DashboardClient({ projects, isSubscriptionExpired }: DashboardClientProps) {
     const [dialogOpen, setDialogOpen] = useState(false);
 
     return (
@@ -26,10 +27,17 @@ export function DashboardClient({ projects }: DashboardClientProps) {
                     <div>
                         <h1 className="text-4xl font-bold tracking-tight text-[#1D1D1F] mb-2">Meus Projetos</h1>
                         <p className="text-gray-500 text-lg">Gerencie seus funis e quizzes ativos.</p>
+                        {isSubscriptionExpired && (
+                            <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-100 text-red-700 text-sm font-medium">
+                                <span className="w-2 h-2 rounded-full bg-red-500" />
+                                Assinatura Expirada - Funcionalidades limitadas
+                            </div>
+                        )}
                     </div>
                     <Button
                         onClick={() => setDialogOpen(true)}
-                        className="h-12 px-6 rounded-xl bg-black hover:bg-gray-800 text-white shadow-lg shadow-black/20 hover:shadow-black/30 hover:-translate-y-0.5 transition-all gap-2"
+                        disabled={isSubscriptionExpired}
+                        className="h-12 px-6 rounded-xl bg-black hover:bg-gray-800 text-white shadow-lg shadow-black/20 hover:shadow-black/30 hover:-translate-y-0.5 transition-all gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Plus className="w-5 h-5" />
                         <span className="font-medium">Novo Projeto</span>

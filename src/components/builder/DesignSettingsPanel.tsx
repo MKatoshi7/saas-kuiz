@@ -5,11 +5,12 @@ import { useBuilderStore } from '@/store/builderStore';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Palette, Type, Layout, Image as ImageIcon, Box, BarChart2, ImageIcon as LogoIcon, UploadCloud, X, Loader2 } from 'lucide-react';
+import { Palette, Type, Layout, Image as ImageIcon, Box, BarChart2, ImageIcon as LogoIcon, UploadCloud, X, Loader2, Sparkles } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useDropzone } from 'react-dropzone';
 import { BackgroundImageUpload } from './BackgroundImageUpload';
 import { ColorPickerWithPalette } from './ColorPickerWithPalette';
+import { SimpleColorPicker } from './SimpleColorPicker';
 
 export function DesignSettingsPanel() {
     const { theme, updateTheme, currentFunnelId } = useBuilderStore();
@@ -86,7 +87,7 @@ export function DesignSettingsPanel() {
             </div>
 
             <div className="flex-1 p-4 space-y-6">
-                {/* 1. Global Styles */}
+
                 <details className="group" open>
                     <summary className="flex items-center justify-between cursor-pointer list-none font-medium text-sm text-gray-900 pb-2 border-b border-gray-100">
                         <span className="flex items-center gap-2"><Type className="w-4 h-4 text-gray-500" /> Estilos Globais</span>
@@ -146,26 +147,18 @@ export function DesignSettingsPanel() {
                     </summary>
                     <div className="pt-4 space-y-4">
                         <Tabs defaultValue={theme.page.type} onValueChange={(val) => handleThemeUpdate('page', 'type', val)}>
-                            <TabsList className="w-full grid grid-cols-2">
-                                <TabsTrigger value="color">Cor Sólida</TabsTrigger>
+                            <TabsList className="w-full grid grid-cols-3">
+                                <TabsTrigger value="color">Cor</TabsTrigger>
                                 <TabsTrigger value="image">Imagem</TabsTrigger>
+                                <TabsTrigger value="pattern">Padrão</TabsTrigger>
                             </TabsList>
 
                             <TabsContent value="color" className="pt-2">
                                 <Label className="text-xs mb-1.5 block">Cor de Fundo</Label>
-                                <div className="flex items-center gap-2">
-                                    <input
-                                        type="color"
-                                        value={theme.page.type === 'color' ? theme.page.value : '#ffffff'}
-                                        onChange={(e) => handleThemeUpdate('page', 'value', e.target.value)}
-                                        className="h-9 w-9 p-1 rounded border border-gray-300 cursor-pointer"
-                                    />
-                                    <Input
-                                        value={theme.page.type === 'color' ? theme.page.value : '#ffffff'}
-                                        onChange={(e) => handleThemeUpdate('page', 'value', e.target.value)}
-                                        className="flex-1 font-mono text-xs"
-                                    />
-                                </div>
+                                <SimpleColorPicker
+                                    value={theme.page.type === 'color' ? theme.page.value : '#ffffff'}
+                                    onChange={(color) => handleThemeUpdate('page', 'value', color)}
+                                />
                             </TabsContent>
 
                             <TabsContent value="image" className="pt-2 space-y-3">
@@ -201,6 +194,41 @@ export function DesignSettingsPanel() {
                                         value={theme.page.overlayOpacity || 0}
                                         onChange={(e) => handleThemeUpdate('page', 'overlayOpacity', parseFloat(e.target.value))}
                                         className="w-full"
+                                    />
+                                </div>
+                            </TabsContent>
+
+                            <TabsContent value="pattern" className="pt-2 space-y-3">
+                                <div>
+                                    <Label className="text-xs mb-1.5 block">Tipo de Padrão</Label>
+                                    <select
+                                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                        value={theme.page.patternName || 'grid'}
+                                        onChange={(e) => handleThemeUpdate('page', 'patternName', e.target.value)}
+                                    >
+                                        <option value="grid">Grade (Grid)</option>
+                                        <option value="dots">Pontos (Dots)</option>
+                                        <option value="diagonal">Linhas Diagonais</option>
+                                        <option value="squares">Quadrados</option>
+                                        <option value="cross">Cruzes</option>
+                                        <option value="waves">Ondas</option>
+                                        <option value="noise">Ruído (Noise)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <Label className="text-xs mb-1.5 block">Cor do Padrão</Label>
+                                    <SimpleColorPicker
+                                        value={theme.page.patternColor || '#000000'}
+                                        onChange={(color) => handleThemeUpdate('page', 'patternColor', color)}
+                                    />
+                                </div>
+
+                                <div>
+                                    <Label className="text-xs mb-1.5 block">Cor de Fundo (Base)</Label>
+                                    <SimpleColorPicker
+                                        value={theme.page.backgroundColor || '#ffffff'}
+                                        onChange={(color) => handleThemeUpdate('page', 'backgroundColor', color)}
                                     />
                                 </div>
                             </TabsContent>
@@ -258,31 +286,16 @@ export function DesignSettingsPanel() {
                             <div className="space-y-4">
                                 <div>
                                     <Label className="text-xs mb-1.5 block">Cor da Barra</Label>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="color"
-                                            value={theme.progressBar?.color || theme.primaryColor}
-                                            onChange={(e) => updateTheme({
-                                                progressBar: {
-                                                    ...theme.progressBar,
-                                                    show: theme.progressBar?.show ?? true,
-                                                    color: e.target.value
-                                                }
-                                            })}
-                                            className="h-9 w-9 p-1 rounded border border-gray-300 cursor-pointer"
-                                        />
-                                        <Input
-                                            value={theme.progressBar?.color || theme.primaryColor}
-                                            onChange={(e) => updateTheme({
-                                                progressBar: {
-                                                    ...theme.progressBar,
-                                                    show: theme.progressBar?.show ?? true,
-                                                    color: e.target.value
-                                                }
-                                            })}
-                                            className="flex-1 font-mono text-xs"
-                                        />
-                                    </div>
+                                    <SimpleColorPicker
+                                        value={theme.progressBar?.color || theme.primaryColor}
+                                        onChange={(color) => updateTheme({
+                                            progressBar: {
+                                                ...theme.progressBar,
+                                                show: theme.progressBar?.show ?? true,
+                                                color: color
+                                            }
+                                        })}
+                                    />
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <Label className="text-xs">Fixar no Topo</Label>
@@ -457,19 +470,10 @@ export function DesignSettingsPanel() {
 
                         <div>
                             <Label className="text-xs mb-1.5 block">Cor de Fundo</Label>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="color"
-                                    value={theme.container.backgroundColor}
-                                    onChange={(e) => handleThemeUpdate('container', 'backgroundColor', e.target.value)}
-                                    className="h-9 w-9 p-1 rounded border border-gray-300 cursor-pointer"
-                                />
-                                <Input
-                                    value={theme.container.backgroundColor}
-                                    onChange={(e) => handleThemeUpdate('container', 'backgroundColor', e.target.value)}
-                                    className="flex-1 font-mono text-xs"
-                                />
-                            </div>
+                            <SimpleColorPicker
+                                value={theme.container.backgroundColor}
+                                onChange={(color) => handleThemeUpdate('container', 'backgroundColor', color)}
+                            />
                         </div>
 
                         <div>
@@ -531,7 +535,67 @@ export function DesignSettingsPanel() {
                                 <option value="md">Média</option>
                                 <option value="lg">Forte</option>
                                 <option value="xl">Muito Forte</option>
+                                <option value="neon-green">Neon Verde</option>
+                                <option value="neon-blue">Neon Azul</option>
+                                <option value="neon-purple">Neon Roxo</option>
                             </select>
+                        </div>
+
+                        <div className="pt-4 border-t border-gray-100 space-y-4">
+                            <Label className="text-xs font-bold text-gray-900 uppercase tracking-wider">Bordas e Efeitos</Label>
+
+                            <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                    <Label className="text-xs mb-1.5 block">Espessura da Borda</Label>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            max="10"
+                                            value={theme.container.borderWidth || 0}
+                                            onChange={(e) => handleThemeUpdate('container', 'borderWidth', parseInt(e.target.value))}
+                                            className="h-9"
+                                        />
+                                        <span className="text-xs text-gray-500">px</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <Label className="text-xs mb-1.5 block">Estilo da Borda</Label>
+                                    <select
+                                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm h-9"
+                                        value={theme.container.borderStyle || 'solid'}
+                                        onChange={(e) => handleThemeUpdate('container', 'borderStyle', e.target.value)}
+                                    >
+                                        <option value="solid">Sólida</option>
+                                        <option value="dashed">Tracejada</option>
+                                        <option value="dotted">Pontilhada</option>
+                                        <option value="double">Dupla</option>
+                                        <option value="glow">Brilhante</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <Label className="text-xs mb-1.5 block">Cor da Borda</Label>
+                                <SimpleColorPicker
+                                    value={theme.container.borderColor || '#e5e7eb'}
+                                    onChange={(color) => handleThemeUpdate('container', 'borderColor', color)}
+                                />
+                            </div>
+
+                            <div>
+                                <Label className="text-xs mb-1.5 block">Efeito Vidro (Backdrop Blur)</Label>
+                                <select
+                                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                    value={theme.container.backdropFilter || 'none'}
+                                    onChange={(e) => handleThemeUpdate('container', 'backdropFilter', e.target.value)}
+                                >
+                                    <option value="none">Nenhum</option>
+                                    <option value="blur-sm">Leve (Sm)</option>
+                                    <option value="blur-md">Médio (Md)</option>
+                                    <option value="blur-lg">Forte (Lg)</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </details>

@@ -80,14 +80,6 @@ export function FullTextProperties({ data, onUpdate }: FullTextPropertiesProps) 
                 </div>
             </div>
 
-            {/* Cor do Texto */}
-            <div className="space-y-2">
-                <Label className="text-xs font-medium text-gray-700">Cor do Texto</Label>
-                <ColorPickerWithPalette
-                    value={data.color || '#000000'}
-                    onChange={(color) => onUpdate('color', color)}
-                />
-            </div>
 
             {/* Espaçamento entre Letras */}
             <div className="space-y-2">

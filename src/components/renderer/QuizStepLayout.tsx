@@ -26,13 +26,17 @@ export function QuizStepLayout({ children, progress = 0, onBack, showBack = true
             {/* Progress Bar at the very top (Fixed) if stacked */}
             {headerLayout === 'stacked' && showProgressBar && (
                 <>
-                    <div className="fixed top-0 left-0 right-0 z-[60] w-full px-6 py-2 bg-white/95 backdrop-blur-sm border-b border-gray-100/50">
-                        <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                        className="fixed top-0 left-0 right-0 z-[60] w-full px-6 py-2 backdrop-blur-md transition-colors duration-300"
+                        style={{ backgroundColor: 'rgba(var(--box-bg-rgb), 0.95)' }}
+                    >
+                        <div className="w-full h-1.5 bg-gray-200/20 rounded-full overflow-hidden">
                             <div
-                                className="h-full rounded-full transition-all duration-500 ease-out"
+                                className="h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(0,0,0,0.2)]"
                                 style={{
                                     width: `${progress}%`,
-                                    backgroundColor: progressBarColor
+                                    backgroundColor: progressBarColor,
+                                    boxShadow: `0 0 8px ${progressBarColor}`
                                 }}
                             />
                         </div>
@@ -44,7 +48,13 @@ export function QuizStepLayout({ children, progress = 0, onBack, showBack = true
 
             {/* Logo Section */}
             {logoUrl && (
-                <div className={`w-full flex justify-center py-4 px-6 bg-transparent ${isLogoSticky || headerLayout === 'stacked' ? 'sticky z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100/50' : ''}`} style={{ top: headerLayout === 'stacked' && showProgressBar ? '32px' : '0' }}>
+                <div
+                    className={`w-full flex justify-center py-4 px-6 transition-colors duration-300 ${isLogoSticky || headerLayout === 'stacked' ? 'sticky z-50 backdrop-blur-md' : ''}`}
+                    style={{
+                        top: headerLayout === 'stacked' && showProgressBar ? '32px' : '0',
+                        backgroundColor: isLogoSticky || headerLayout === 'stacked' ? 'rgba(var(--box-bg-rgb), 0.95)' : 'transparent'
+                    }}
+                >
                     <img
                         src={logoUrl}
                         alt="Logo"
@@ -56,8 +66,14 @@ export function QuizStepLayout({ children, progress = 0, onBack, showBack = true
 
             {/* Progress Bar Section (Default Layout) */}
             {headerLayout === 'default' && showProgressBar && (
-                <div className={`w-full px-6 pb-2 pt-2 ${isProgressBarSticky ? 'sticky z-40 bg-white/95 backdrop-blur-sm' : ''}`} style={{ top: isLogoSticky && logoUrl ? `${(logoHeight || 40) + 32}px` : '0' }}>
-                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                    className={`w-full px-6 pb-2 pt-2 transition-colors duration-300 ${isProgressBarSticky ? 'sticky z-40 backdrop-blur-md' : ''}`}
+                    style={{
+                        top: isLogoSticky && logoUrl ? `${(logoHeight || 40) + 32}px` : '0',
+                        backgroundColor: isProgressBarSticky ? 'rgba(var(--box-bg-rgb), 0.95)' : 'transparent'
+                    }}
+                >
+                    <div className="w-full h-1.5 bg-gray-200/20 rounded-full overflow-hidden">
                         <div
                             className="h-full rounded-full transition-all duration-500 ease-out"
                             style={{

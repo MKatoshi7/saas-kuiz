@@ -58,8 +58,8 @@ export default async function LeadsPage({ params }: { params: Promise<{ funnelId
         completedAt: session.completedAt,
         userAgent: session.userAgent,
         ip: session.ipAddress,
-        city: null, // Not available in current schema
-        region: null, // Not available in current schema
+        city: (session.visitorData as any)?.city || null,
+        region: (session.visitorData as any)?.region || null,
         country: session.country,
         answersSnapshot: session.answersSnapshot as Record<string, any> || {},
         utmSource: session.utmSource,
@@ -147,13 +147,19 @@ export default async function LeadsPage({ params }: { params: Promise<{ funnelId
                                     const stats = stepStats[index];
                                     return (
                                         <TableHead key={step.id} className="min-w-[160px] py-4">
-                                            <div className="flex flex-col gap-2">
+                                            <div className="flex items-center gap-3 h-full">
+                                                {/* Vertical Progress Bar */}
+                                                <div className="relative w-1.5 h-8 bg-slate-100 rounded-full overflow-hidden flex-shrink-0">
+                                                    <div
+                                                        className="absolute bottom-0 w-full bg-blue-500 transition-all duration-500"
+                                                        style={{ height: `${stats.percentage}%` }}
+                                                    />
+                                                </div>
                                                 <div className="flex flex-col gap-0.5">
                                                     <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Etapa {index + 1}</span>
                                                     <span className="text-slate-900 font-bold text-xs truncate max-w-[140px]" title={step.title}>{step.title}</span>
+                                                    <span className="text-[9px] text-slate-400 font-medium">{stats.percentage}% respondido</span>
                                                 </div>
-                                                {/* Removido a barra horizontal */}
-                                                <span className="text-[9px] text-slate-400 font-medium">{stats.percentage}% respondido</span>
                                             </div>
                                         </TableHead>
                                     );

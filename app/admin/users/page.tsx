@@ -62,6 +62,7 @@ export default function UsersPage() {
         const formData = new FormData(form);
         const password = formData.get('password') as string;
         const subscriptionStatus = formData.get('subscriptionStatus') as string;
+        const subscriptionPlan = formData.get('subscriptionPlan') as string;
         const subscriptionEndsAt = formData.get('subscriptionEndsAt') as string;
         const role = formData.get('role') as string;
 
@@ -73,6 +74,7 @@ export default function UsersPage() {
                     id: editingUser.id,
                     password: password || undefined,
                     subscriptionStatus,
+                    subscriptionPlan,
                     subscriptionEndsAt: subscriptionEndsAt || null,
                     role
                 })
@@ -164,12 +166,12 @@ export default function UsersPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${user.subscriptionStatus === 'active' ? 'bg-green-50 text-green-700 border-green-100' :
-                                                    user.subscriptionStatus === 'expired' ? 'bg-red-50 text-red-700 border-red-100' :
-                                                        'bg-gray-50 text-gray-700 border-gray-100'
+                                                user.subscriptionStatus === 'expired' ? 'bg-red-50 text-red-700 border-red-100' :
+                                                    'bg-gray-50 text-gray-700 border-gray-100'
                                                 }`}>
                                                 <span className={`w-1.5 h-1.5 rounded-full ${user.subscriptionStatus === 'active' ? 'bg-green-500' :
-                                                        user.subscriptionStatus === 'expired' ? 'bg-red-500' :
-                                                            'bg-gray-400'
+                                                    user.subscriptionStatus === 'expired' ? 'bg-red-500' :
+                                                        'bg-gray-400'
                                                     }`} />
                                                 {user.subscriptionStatus || 'free'}
                                             </span>
@@ -247,6 +249,14 @@ export default function UsersPage() {
                                 <Input value={editingUser.email} disabled className="bg-gray-50" />
                             </div>
                             <div className="space-y-2">
+                                <Label>Dia que assinou</Label>
+                                <Input
+                                    value={new Date(editingUser.createdAt).toLocaleDateString()}
+                                    disabled
+                                    className="bg-gray-50"
+                                />
+                            </div>
+                            <div className="space-y-2">
                                 <Label>Nova Senha</Label>
                                 <Input name="password" type="password" placeholder="Deixe em branco para manter" />
                             </div>
@@ -261,20 +271,30 @@ export default function UsersPage() {
                                     </select>
                                 </div>
                                 <div className="space-y-2">
+                                    <Label>Plano</Label>
+                                    <select name="subscriptionPlan" defaultValue={editingUser.subscriptionPlan || 'starter'} className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                                        <option value="starter">Starter</option>
+                                        <option value="pro">Pro</option>
+                                        <option value="enterprise">Enterprise</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
                                     <Label>Função</Label>
                                     <select name="role" defaultValue={editingUser.role || 'user'} className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                                         <option value="user">User</option>
                                         <option value="admin">Admin</option>
                                     </select>
                                 </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Vencimento</Label>
-                                <Input
-                                    name="subscriptionEndsAt"
-                                    type="date"
-                                    defaultValue={editingUser.subscriptionEndsAt ? new Date(editingUser.subscriptionEndsAt).toISOString().split('T')[0] : ''}
-                                />
+                                <div className="space-y-2">
+                                    <Label>Vencimento</Label>
+                                    <Input
+                                        name="subscriptionEndsAt"
+                                        type="date"
+                                        defaultValue={editingUser.subscriptionEndsAt ? new Date(editingUser.subscriptionEndsAt).toISOString().split('T')[0] : ''}
+                                    />
+                                </div>
                             </div>
                             <DialogFooter className="pt-4">
                                 <Button type="button" variant="outline" onClick={() => setEditingUser(null)}>Cancelar</Button>

@@ -13,6 +13,9 @@ import { LoadingComponentRenderer } from '@/components/renderer/LoadingComponent
 import { PricingComponent } from '@/types/funnel';
 import { DelayedButton } from './DelayedButton';
 import { VSLVideo } from './VSLVideo';
+import Image from 'next/image';
+import DOMPurify from 'isomorphic-dompurify';
+import { TimerRenderer } from './TimerRenderer';
 
 // Lazy load heavy components
 const QuizOptionsRenderer = lazy(() => import('./QuizOptionsRenderer').then(m => ({ default: m.QuizOptionsRenderer })));
@@ -230,8 +233,9 @@ function PublicComponentRenderer({
             );
 
         case 'code':
+            const sanitizedCode = DOMPurify.sanitize(data.code || '', { ADD_TAGS: ['iframe', 'script'], ADD_ATTR: ['src', 'frameborder', 'allow', 'allowfullscreen'] });
             return (
-                <div dangerouslySetInnerHTML={{ __html: data.code || '' }} />
+                <div dangerouslySetInnerHTML={{ __html: sanitizedCode }} />
             );
 
         case 'button':
@@ -370,11 +374,19 @@ function PublicComponentRenderer({
             return (
                 <div className="w-full flex justify-center">
                     <div
-                        className="rounded-lg overflow-hidden bg-gray-100"
+                        className="rounded-lg overflow-hidden bg-gray-100 relative"
                         style={{ width: data.width || '100%' }}
                     >
                         {data.src ? (
-                            <img src={data.src} alt={data.alt || ''} className="w-full h-auto" />
+                            <Image
+                                src={data.src}
+                                alt={data.alt || 'Imagem do quiz'}
+                                width={0}
+                                height={0}
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                style={{ width: '100%', height: 'auto' }}
+                                className="w-full h-auto"
+                            />
                         ) : (
                             <div className="aspect-video flex items-center justify-center text-gray-400 bg-gray-50">
                                 <ImageIcon className="w-12 h-12 opacity-50" />
@@ -386,20 +398,26 @@ function PublicComponentRenderer({
 
         case 'vsl-video':
             return (
-                <VSLVideo
-                    url={data.url}
-                    thumbnailUrl={data.thumbnailUrl}
-                    autoPlay={data.autoPlay}
-                    loop={data.loop}
-                    showProgressBar={data.showProgressBar}
-                    progressBarColor={data.progressBarColor}
-                    playButtonText={data.playButtonText}
-                    playButtonColor={data.playButtonColor}
-                    restartOnClick={data.restartOnClick}
-                    unmuteOnClick={data.unmuteOnClick}
-                    fakeProgress={data.fakeProgress}
-                    fakeProgressDuration={data.fakeProgressDuration}
-                />
+                <div className="relative">
+                    {/* Under Construction Badge */}
+                    <div className="absolute top-2 right-2 bg-yellow-400 text-black text-[10px] font-bold px-2 py-1 rounded shadow-sm z-50 pointer-events-none">
+                        EM CONSTRUÇÃO
+                    </div>
+                    <VSLVideo
+                        url={data.url}
+                        thumbnailUrl={data.thumbnailUrl}
+                        autoPlay={data.autoPlay}
+                        loop={data.loop}
+                        showProgressBar={data.showProgressBar}
+                        progressBarColor={data.progressBarColor}
+                        playButtonText={data.playButtonText}
+                        playButtonColor={data.playButtonColor}
+                        restartOnClick={data.restartOnClick}
+                        unmuteOnClick={data.unmuteOnClick}
+                        fakeProgress={data.fakeProgress}
+                        fakeProgressDuration={data.fakeProgressDuration}
+                    />
+                </div>
             );
 
         case 'video':
@@ -411,17 +429,38 @@ function PublicComponentRenderer({
                 '1:1': 'aspect-square',
             }[aspectRatio] || 'aspect-video';
 
+            const getVideoEmbedUrl = (url: string) => {
+                if (!url) return '';
+                // YouTube
+                const ytMatch = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+                if (ytMatch && ytMatch[1]) {
+                    // controls=0 hides player controls
+                    // rel=0 hides related videos
+                    // modestbranding=1 reduces branding
+                    return `https://www.youtube.com/embed/${ytMatch[1]}?controls=0&rel=0&modestbranding=1&showinfo=0`;
+                }
+                // Vimeo
+                const vimeoMatch = url.match(/(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?)/);
+                if (vimeoMatch && vimeoMatch[1]) {
+                    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+                }
+                return url;
+            };
+
             return (
-                <div className={`w-full rounded-lg overflow-hidden bg-black shadow-lg ${aspectRatioClass} relative`}>
+                <div className={`w-full rounded-lg overflow-hidden bg-black shadow-lg ${aspectRatioClass} relative group`}>
                     {data.url ? (
-                        <iframe
-                            className="absolute inset-0 w-full h-full"
-                            src={data.url.replace('watch?v=', 'embed/')}
-                            title="YouTube video player"
-                            frameBorder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                        ></iframe>
+                        <>
+                            <iframe
+                                className="absolute inset-0 w-full h-full"
+                                src={getVideoEmbedUrl(data.url)}
+                                title="Video player"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            />
+                            {/* Note: With controls=0, clicking the video toggles play/pause natively for YouTube */}
+                        </>
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-white/50">
                             <Video className="w-16 h-16" />
@@ -432,14 +471,18 @@ function PublicComponentRenderer({
 
         case 'timer':
             return (
-                <div className="flex justify-center gap-3 text-center py-4">
-                    {['05', '00'].map((val, i) => (
-                        <div key={i} className="bg-red-50 text-red-600 p-3 rounded-lg border border-red-100 min-w-[70px]">
-                            <div className="text-2xl font-bold">{val}</div>
-                            <div className="text-[10px] uppercase font-medium">{i === 0 ? 'Min' : 'Seg'}</div>
-                        </div>
-                    ))}
-                </div>
+                <TimerRenderer
+                    minutes={data.minutes !== undefined ? data.minutes : 5}
+                    seconds={data.seconds || 0}
+                    style={data.style || 'boxes'}
+                    autoStart={data.autoStart !== false}
+                    onComplete={() => {
+                        if (data.onComplete === 'goto_step' && data.targetStepId) {
+                            onJump(data.targetStepId);
+                        }
+                    }}
+                    theme={theme}
+                />
             );
 
         case 'progressbar':
@@ -505,13 +548,19 @@ function PublicComponentRenderer({
 
         case 'audio':
             return (
-                <AudioPlayer
-                    audioSrc={(data as any).url || ''}
-                    playerStyle={(data as any).playerStyle || 'modern'}
-                    avatarSrc={(data as any).avatarUrl}
-                    senderName={(data as any).senderName}
-                    autoplay={(data as any).autoplay}
-                />
+                <div className="relative">
+                    {/* Under Construction Badge */}
+                    <div className="absolute top-2 right-2 bg-yellow-400 text-black text-[10px] font-bold px-2 py-1 rounded shadow-sm z-50 pointer-events-none">
+                        EM CONSTRUÇÃO
+                    </div>
+                    <AudioPlayer
+                        audioSrc={(data as any).url || ''}
+                        playerStyle={(data as any).playerStyle || 'modern'}
+                        avatarSrc={(data as any).avatarUrl}
+                        senderName={(data as any).senderName}
+                        autoplay={(data as any).autoplay}
+                    />
+                </div>
             );
 
         case 'alert':
@@ -573,6 +622,7 @@ function PublicComponentRenderer({
 
             const iconPosition = data.iconPosition || 'left';
             const isIconTop = iconPosition === 'top';
+            const sanitizedAlertText = DOMPurify.sanitize(data.text || 'Texto de destaque...', { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'br', 'span'], ALLOWED_ATTR: ['href', 'target', 'style', 'class'] });
 
             return (
                 <div
@@ -592,7 +642,7 @@ function PublicComponentRenderer({
                             <div
                                 className={`font-medium text-sm md:text-base ${alertStyle === 'solid' ? 'text-white' : colors.text}`}
                                 style={{ color: alertStyle === 'solid' ? '#ffffff' : data.textColor }}
-                                dangerouslySetInnerHTML={{ __html: data.text || 'Texto de destaque...' }}
+                                dangerouslySetInnerHTML={{ __html: sanitizedAlertText }}
                             />
                         </div>
                     </div>

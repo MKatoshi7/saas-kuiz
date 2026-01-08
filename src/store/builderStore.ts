@@ -10,6 +10,7 @@ interface Step {
 interface BuilderStore {
     // Current state
     currentFunnelId: string | null;
+    currentFunnel: any | null;
     currentStepId: string | null;
     selectedComponentId: string | null;
 
@@ -70,6 +71,7 @@ interface BuilderStore {
 export const useBuilderStore = create<BuilderStore>((set, get) => ({
     // Initial state
     currentFunnelId: null,
+    currentFunnel: null,
     currentStepId: 'step_1',
     selectedComponentId: null,
     theme: {
@@ -427,6 +429,7 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
             }
 
             const funnel = await response.json();
+            set({ currentFunnel: funnel });
 
             // ... (rest of the logic)
 
@@ -561,11 +564,13 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
             // CRITICAL: Reload from API to sync IDs and ensure persistence
             // Pass stepIdMap to preserve current step selection even if ID changed
             // Use silent: true to prevent UI flash
+            /* 
             await get().loadFunnel(currentFunnelId, {
                 preserveState: true,
                 stepIdMap: responseData.stepIdMap,
                 silent: true
             });
+            */
 
             return true;
         } catch (error) {

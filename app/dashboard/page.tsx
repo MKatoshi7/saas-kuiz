@@ -1,3 +1,4 @@
+// Force rebuild
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -23,10 +24,17 @@ export default async function DashboardPage() {
         orderBy: { updatedAt: 'desc' }
     });
 
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { subscriptionEndsAt: true, subscriptionStatus: true }
+    });
+
+    const isSubscriptionExpired = user?.subscriptionEndsAt && new Date(user.subscriptionEndsAt) < new Date();
+
     return (
         <>
             <DashboardHeader />
-            <DashboardClient projects={projects} />
+            <DashboardClient projects={projects} isSubscriptionExpired={!!isSubscriptionExpired} />
         </>
     );
 }

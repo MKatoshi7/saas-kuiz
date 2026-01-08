@@ -63,6 +63,7 @@ export function LeadsActions({ funnelId, leads }: LeadsActionsProps) {
         try {
             // Create CSV content
             const headers = [
+                'Lead #',
                 'ID Sessão',
                 'Data/Hora Início',
                 'Data/Hora Fim',
@@ -77,10 +78,12 @@ export function LeadsActions({ funnelId, leads }: LeadsActionsProps) {
                 'UTM Campaign',
                 'UTM Content',
                 'UTM Term',
-                'Respostas'
+                'Respostas',
+                'System ID'
             ];
 
-            const rows = leads.map(lead => [
+            const rows = leads.map((lead, index) => [
+                `LEAD-${String(index + 1).padStart(4, '0')}`,
                 lead.sessionId,
                 new Date(lead.startedAt).toLocaleString('pt-BR'),
                 lead.completedAt ? new Date(lead.completedAt).toLocaleString('pt-BR') : 'Não completou',
@@ -95,7 +98,8 @@ export function LeadsActions({ funnelId, leads }: LeadsActionsProps) {
                 lead.utmCampaign || '-',
                 lead.utmContent || '-',
                 lead.utmTerm || '-',
-                JSON.stringify(lead.answersSnapshot)
+                JSON.stringify(lead.answersSnapshot),
+                lead.id
             ]);
 
             const csvContent = [
@@ -132,7 +136,7 @@ export function LeadsActions({ funnelId, leads }: LeadsActionsProps) {
                 className="gap-2"
             >
                 <Download size={16} />
-                {isExporting ? 'Exportando...' : 'Exportar Leads'}
+                {isExporting ? 'Exportando...' : 'Exportar Leads (CSV)'}
             </Button>
             <Button
                 variant="destructive"

@@ -22,6 +22,7 @@ import { PricingRenderer } from '@/components/renderer/PricingRenderer';
 import { PricingComponent } from '@/types/funnel';
 import { QuizOptionsRenderer } from '@/components/renderer/QuizOptionsRenderer';
 import { CarouselRenderer } from '@/components/renderer/CarouselRenderer';
+import { TimerRenderer } from '@/components/renderer/TimerRenderer';
 
 export function Canvas({ previewDevice }: { previewDevice: 'mobile' | 'desktop' }) {
     // Granular selectors to prevent unnecessary re-renders
@@ -81,7 +82,7 @@ export function Canvas({ previewDevice }: { previewDevice: 'mobile' | 'desktop' 
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="space-y-6 min-h-[500px] pb-20">
+                                    <div className="space-y-2 min-h-[500px] pb-20">
                                         {components.map((component) => (
                                             <SortableComponent
                                                 key={component.id}
@@ -175,29 +176,68 @@ const ComponentRenderer = React.memo(function ComponentRenderer({
 });
 
 function renderContent(component: FunnelComponentData, onUpdate: (id: string, data: Partial<FunnelComponentData>) => void, isSelected: boolean, anchorRef?: React.RefObject<HTMLElement>) {
+    // Helper function to get font size class
+    const getFontSizeClass = (fontSize: any, isHeadline: boolean = false): string => {
+        const size = String(fontSize || '');
+        if (isHeadline) {
+            switch (size) {
+                case 'huge': return 'text-4xl';
+                case 'bigger': return 'text-3xl';
+                case 'big': return 'text-2xl';
+                case 'medium': return 'text-xl';
+                case 'normal': return 'text-lg';
+                case 'small': return 'text-base';
+                case 'minusculo': return 'text-xs';
+                case 'micro': return 'text-[8px]';
+                default: return 'text-base';
+            }
+        } else {
+            switch (size) {
+                case 'huge': return 'text-3xl';
+                case 'bigger': return 'text-2xl';
+                case 'big': return 'text-xl';
+                case 'medium': return 'text-lg';
+                case 'normal': return 'text-base';
+                case 'small': return 'text-sm';
+                case 'minusculo': return 'text-xs';
+                case 'micro': return 'text-[8px]';
+                default: return 'text-base';
+            }
+        }
+    };
+
     switch (component.type) {
         // ... (other cases remain the same until button)
         case 'headline':
             return (
-                <div className="p-2 relative">
+                <div className="p-1 relative">
                     {isSelected ? (
                         (() => {
                             const editorStyle = {
                                 textAlign: (component.data as any).align as any,
                                 color: (component.data as any).color,
-                                fontWeight: (component.data as any).fontWeight || 700
+                                fontWeight: (component.data as any).fontWeight || 700,
+                                letterSpacing: (component.data as any).letterSpacing === 'tighter' ? '-0.05em' :
+                                    (component.data as any).letterSpacing === 'tight' ? '-0.025em' :
+                                        (component.data as any).letterSpacing === 'wide' ? '0.025em' :
+                                            (component.data as any).letterSpacing === 'wider' ? '0.05em' :
+                                                (component.data as any).letterSpacing === 'widest' ? '0.1em' : 'normal',
+                                lineHeight: (component.data as any).lineHeight === 'tight' ? '1.0' :
+                                    (component.data as any).lineHeight === 'snug' ? '1.2' :
+                                        (component.data as any).lineHeight === 'relaxed' ? '1.625' :
+                                            (component.data as any).lineHeight === 'loose' ? '2' : '1.5',
+                                textTransform: (component.data as any).textTransform || 'none',
+                                textShadow: (component.data as any).dropShadow === 'sm' ? '1px 1px 0px rgba(0, 0, 0, 0.5)' :
+                                    (component.data as any).dropShadow === 'md' ? '2px 2px 0px rgba(0, 0, 0, 0.5)' :
+                                        (component.data as any).dropShadow === 'lg' ? '3px 3px 0px rgba(0, 0, 0, 0.5)' :
+                                            (component.data as any).dropShadow === 'xl' ? '5px 5px 0px rgba(0, 0, 0, 0.5)' : 'none',
+                                WebkitTextStroke: (component.data as any).textStroke?.width ? `${(component.data as any).textStroke.width}px ${(component.data as any).textStroke.color}` : 'none',
                             } as React.CSSProperties;
                             return (
                                 <InlineTextEditor
                                     value={component.data.text || ''}
                                     onChange={(html) => onUpdate(component.id, { data: { ...component.data, text: html } } as any)}
-                                    className={`font-bold text-gray-900 ${component.data.fontSize === 'huge' ? 'text-4xl' :
-                                        component.data.fontSize === 'bigger' ? 'text-3xl' :
-                                            component.data.fontSize === 'big' ? 'text-2xl' :
-                                                component.data.fontSize === 'medium' ? 'text-xl' :
-                                                    component.data.fontSize === 'normal' ? 'text-lg' :
-                                                        component.data.fontSize === 'small' ? 'text-base' : 'text-base'
-                                        }`}
+                                    className={`font-bold text-gray-900 ${getFontSizeClass(component.data.fontSize, true)}`}
                                     style={editorStyle}
                                     placeholder="Digite seu título..."
                                 />
@@ -223,25 +263,34 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
 
         case 'paragraph':
             return (
-                <div className="p-2 relative">
+                <div className="p-1 relative">
                     {isSelected ? (
                         (() => {
                             const editorStyle = {
                                 textAlign: (component.data as any).align as any,
                                 color: (component.data as any).color,
-                                fontWeight: (component.data as any).fontWeight || 400
+                                fontWeight: (component.data as any).fontWeight || 400,
+                                letterSpacing: (component.data as any).letterSpacing === 'tighter' ? '-0.05em' :
+                                    (component.data as any).letterSpacing === 'tight' ? '-0.025em' :
+                                        (component.data as any).letterSpacing === 'wide' ? '0.025em' :
+                                            (component.data as any).letterSpacing === 'wider' ? '0.05em' :
+                                                (component.data as any).letterSpacing === 'widest' ? '0.1em' : 'normal',
+                                lineHeight: (component.data as any).lineHeight === 'tight' ? '1.0' :
+                                    (component.data as any).lineHeight === 'snug' ? '1.2' :
+                                        (component.data as any).lineHeight === 'relaxed' ? '1.625' :
+                                            (component.data as any).lineHeight === 'loose' ? '2' : '1.5',
+                                textTransform: (component.data as any).textTransform || 'none',
+                                textShadow: (component.data as any).dropShadow === 'sm' ? '1px 1px 0px rgba(0, 0, 0, 0.5)' :
+                                    (component.data as any).dropShadow === 'md' ? '2px 2px 0px rgba(0, 0, 0, 0.5)' :
+                                        (component.data as any).dropShadow === 'lg' ? '3px 3px 0px rgba(0, 0, 0, 0.5)' :
+                                            (component.data as any).dropShadow === 'xl' ? '5px 5px 0px rgba(0, 0, 0, 0.5)' : 'none',
+                                WebkitTextStroke: (component.data as any).textStroke?.width ? `${(component.data as any).textStroke.width}px ${(component.data as any).textStroke.color}` : 'none',
                             } as React.CSSProperties;
                             return (
                                 <InlineTextEditor
                                     value={component.data.text || ''}
                                     onChange={(html) => onUpdate(component.id, { data: { ...component.data, text: html } } as any)}
-                                    className={`text-gray-600 ${component.data.fontSize === 'huge' ? 'text-3xl' :
-                                        component.data.fontSize === 'bigger' ? 'text-2xl' :
-                                            component.data.fontSize === 'big' ? 'text-xl' :
-                                                component.data.fontSize === 'medium' ? 'text-lg' :
-                                                    component.data.fontSize === 'normal' ? 'text-base' :
-                                                        component.data.fontSize === 'small' ? 'text-sm' : 'text-base'
-                                        }`}
+                                    className={`text-gray-600 ${getFontSizeClass(component.data.fontSize, false)}`}
                                     style={editorStyle}
                                     placeholder="Digite seu parágrafo..."
                                 />
@@ -436,14 +485,16 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
                         });
 
                         if (!response.ok) {
-                            throw new Error('Upload failed');
+                            const errorText = await response.text();
+                            console.error('Upload failed:', response.status, errorText);
+                            throw new Error(`Upload failed: ${response.status} - ${errorText}`);
                         }
 
                         const data = await response.json();
                         onUpdate(component.id, { data: { ...component.data, src: data.url } } as any);
                     } catch (error) {
                         console.error('Error uploading image:', error);
-                        alert('Erro ao fazer upload da imagem. Tente novamente.');
+                        alert(`Erro ao fazer upload da imagem: ${error instanceof Error ? error.message : 'Tente novamente.'}`);
                     }
                 } else if (event?.dataTransfer) {
                     // Handle URL drop
@@ -513,18 +564,39 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
                 '1:1': 'aspect-square',
             }[aspectRatio] || 'aspect-video';
 
+            const getVideoEmbedUrl = (url: string) => {
+                if (!url) return '';
+                // YouTube
+                const ytMatch = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+                if (ytMatch && ytMatch[1]) {
+                    return `https://www.youtube.com/embed/${ytMatch[1]}?controls=0&rel=0&modestbranding=1&showinfo=0`;
+                }
+                // Vimeo
+                const vimeoMatch = url.match(/(?:https?:\/\/)?(?:www\.)?vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|video\/|)(\d+)(?:$|\/|\?)/);
+                if (vimeoMatch && vimeoMatch[1]) {
+                    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+                }
+                return url;
+            };
+
             return (
                 <div className="p-2">
                     {component.data.url ? (
-                        <div className={`${aspectRatioClass} w-full bg-black rounded-lg overflow-hidden relative`}>
+                        <div className={`${aspectRatioClass} w-full bg-black rounded-lg overflow-hidden relative group`}>
                             <iframe
-                                className="absolute inset-0 w-full h-full"
-                                src={component.data.url.replace('watch?v=', 'embed/')}
+                                className="absolute inset-0 w-full h-full pointer-events-none"
+                                src={getVideoEmbedUrl(component.data.url)}
                                 title="Video player"
                                 frameBorder="0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
                             />
+                            {/* Simple Play/Stop Overlay - Visual Only for Builder */}
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="bg-white/90 rounded-full p-3 shadow-lg">
+                                    <Video className="w-6 h-6 text-black" />
+                                </div>
+                            </div>
                         </div>
                     ) : (
                         <div className={`w-full ${aspectRatioClass} bg-gray-900 rounded-lg flex items-center justify-center`}>
@@ -541,6 +613,11 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
             return (
                 <div className="p-2">
                     <div className="aspect-video w-full bg-black rounded-lg overflow-hidden relative flex flex-col items-center justify-center border-2 border-dashed border-gray-700">
+                        {/* Under Construction Badge */}
+                        <div className="absolute top-2 right-2 bg-yellow-400 text-black text-[10px] font-bold px-2 py-1 rounded shadow-sm z-10">
+                            EM CONSTRUÇÃO
+                        </div>
+
                         {component.data.url ? (
                             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
                                 <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center mb-2">
@@ -567,16 +644,13 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
         case 'timer':
             return (
                 <div className="p-2">
-                    <div className="flex justify-center gap-4 text-center">
-                        {['00', '15', '00'].map((val, i) => (
-                            <div key={i} className="bg-gray-800 text-white p-2 rounded w-16">
-                                <div className="text-xl font-bold">{val}</div>
-                                <div className="text-[10px] uppercase text-gray-400">
-                                    {['Min', 'Seg', 'Ms'][i]}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    <TimerRenderer
+                        minutes={component.data.minutes || 15}
+                        seconds={component.data.seconds || 0}
+                        style={component.data.style || 'box'}
+                        theme={useBuilderStore.getState().theme}
+                        isPreview={true}
+                    />
                 </div>
             );
 

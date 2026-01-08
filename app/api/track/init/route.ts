@@ -21,6 +21,21 @@ export async function POST(req: NextRequest) {
         // Generate a unique session ID  
         const sessionId = `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
+        // Extract Geo/IP data from headers (Vercel/Next.js specific)
+        const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.headers.get('x-real-ip') || 'Unknown';
+        const city = req.headers.get('x-vercel-ip-city') || null;
+        const region = req.headers.get('x-vercel-ip-country-region') || null;
+        const country = req.headers.get('x-vercel-ip-country') || null;
+
+        // Merge with client-provided visitorData if any
+        const finalVisitorData = {
+            ...(visitorData || {}),
+            city: city || visitorData?.city,
+            region: region || visitorData?.region,
+            country: country || visitorData?.country,
+            ip: ip || visitorData?.ip,
+        };
+
         // Create new visitor session with all tracking data
         const session = await prisma.visitorSession.create({
             data: {
@@ -33,7 +48,9 @@ export async function POST(req: NextRequest) {
                 utmContent: utm_content || null,
                 referrer: referrer || null,
                 userAgent: userAgent || null,
-                visitorData: visitorData || null, // Stores fbc, fbp, city, region, country, ip
+                ipAddress: ip !== 'Unknown' ? ip : null,
+                country: country || visitorData?.country || null,
+                visitorData: finalVisitorData, // Stores fbc, fbp, city, region, country, ip
             }
         });
 

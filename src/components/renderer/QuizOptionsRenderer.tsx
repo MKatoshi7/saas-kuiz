@@ -28,21 +28,37 @@ export function QuizOptionsRenderer({ component, onNext, onAnswer, funnelId, ste
         borderRadius = 'xl'
     } = component.data;
     const [selectedValues, setSelectedValues] = useState<string[]>([]);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]); // Track by unique ID
 
     const primaryColor = theme?.primaryColor || '#2563EB';
 
     const handleSelect = (option: QuizOptionItem) => {
         const value = option.value || option.label;
+        const optionId = option.id;
+
+        console.log('🔵 CLICKED:', {
+            id: optionId,
+            label: option.label,
+            value: option.value,
+            computedValue: value
+        });
 
         if (allowMultiple) {
-            const newSelected = selectedValues.includes(value)
-                ? selectedValues.filter(v => v !== value)
-                : [...selectedValues, value];
+            const newSelectedIds = selectedIds.includes(optionId)
+                ? selectedIds.filter(id => id !== optionId)
+                : [...selectedIds, optionId];
 
-            setSelectedValues(newSelected);
+            setSelectedIds(newSelectedIds);
+
+            const newSelectedValues = options
+                .filter(opt => newSelectedIds.includes(opt.id))
+                .map(opt => opt.value || opt.label);
+            setSelectedValues(newSelectedValues);
         } else {
-            // Single select
-            // Ensure we clear any previous selection first to avoid visual glitches
+            // Single select - use ID for precise tracking
+            console.log('🟢 Setting selection ID to:', optionId);
+
+            setSelectedIds([optionId]);
             setSelectedValues([value]);
 
             // Call onAnswer to trigger tracking in parent
@@ -79,8 +95,19 @@ export function QuizOptionsRenderer({ component, onNext, onAnswer, funnelId, ste
                 )}
                 style={{ gap: `${spacing}px` }}
             >
-                {options.map((option) => {
-                    const isSelected = selectedValues.includes(option.value || option.label);
+                {options.map((option, index) => {
+                    // CRITICAL: Use ID for selection comparison
+                    const isSelected = selectedIds.includes(option.id);
+
+                    // Debug logging
+                    console.log(`Option ${index + 1}:`, {
+                        id: option.id,
+                        label: option.label,
+                        value: option.value,
+                        selectedIds,
+                        isSelected
+                    });
+
                     const checkPosition = component.data.checkPosition || 'right';
                     const emojiPosition = component.data.emojiPosition || 'left';
                     const showCheck = component.data.showCheck !== false;

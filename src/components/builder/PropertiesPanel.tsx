@@ -415,8 +415,12 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                         value={selectedComponent.data.src || ''}
                                         onChange={(url) => handleUpdate('src', url)}
                                         onUploadComplete={(data) => {
-                                            handleUpdate('src', data.url);
-                                            handleUpdate('publicId', data.publicId);
+                                            if (data && data.url) {
+                                                handleUpdate('src', data.url);
+                                                if (data.publicId) {
+                                                    handleUpdate('publicId', data.publicId);
+                                                }
+                                            }
                                         }}
                                         placeholder="https://exemplo.com/imagem.jpg"
                                         helpText="Arraste ou cole a URL da imagem"
@@ -1380,7 +1384,67 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                             </>
                         )}
 
-                        {!['headline', 'paragraph', 'button', 'quiz-option', 'video', 'vsl-video', 'image', 'input', 'slider', 'audio', 'alert', 'testimonial', 'pricing', 'spacer', 'code', 'loading', 'argument'].includes(selectedComponent.type) && (
+                        {selectedComponent.type === 'timer' && (
+                            <>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label className="text-xs font-medium text-gray-700 mb-2 block">Minutos</label>
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            max="59"
+                                            value={selectedComponent.data.minutes !== undefined ? selectedComponent.data.minutes : 5}
+                                            onChange={(e) => handleUpdate('minutes', Number(e.target.value))}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-medium text-gray-700 mb-2 block">Segundos</label>
+                                        <Input
+                                            type="number"
+                                            min="0"
+                                            max="59"
+                                            value={selectedComponent.data.seconds || 0}
+                                            onChange={(e) => handleUpdate('seconds', Number(e.target.value))}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Estilo</label>
+                                    <select
+                                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        value={selectedComponent.data.style || 'boxes'}
+                                        onChange={(e) => handleUpdate('style', e.target.value)}
+                                    >
+                                        <option value="boxes">Caixas (Padrão)</option>
+                                        <option value="minimal">Minimalista</option>
+                                        <option value="circle">Circular</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex items-center gap-2 mt-2">
+                                    <input
+                                        type="checkbox"
+                                        id="autoStart"
+                                        checked={selectedComponent.data.autoStart !== false}
+                                        onChange={(e) => handleUpdate('autoStart', e.target.checked)}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <label htmlFor="autoStart" className="text-xs font-medium text-gray-700">Iniciar Automaticamente</label>
+                                </div>
+
+                                <div className="pt-4 border-t border-gray-200 mt-4">
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Nome da Variável (Analytics)</label>
+                                    <Input
+                                        value={selectedComponent.data.variableName || ''}
+                                        onChange={(e) => handleUpdate('variableName', e.target.value)}
+                                        placeholder="ex: timer_oferta"
+                                    />
+                                </div>
+                            </>
+                        )}
+
+                        {!['headline', 'paragraph', 'button', 'quiz-option', 'video', 'vsl-video', 'image', 'input', 'slider', 'audio', 'alert', 'testimonial', 'pricing', 'spacer', 'code', 'loading', 'argument', 'timer'].includes(selectedComponent.type) && (
                             <p className="text-xs text-gray-500">
                                 Edição avançada para {selectedComponent.type} em breve...
                             </p>

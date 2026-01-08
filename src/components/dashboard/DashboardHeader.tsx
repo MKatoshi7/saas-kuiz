@@ -1,3 +1,4 @@
+// Force rebuild
 import React from 'react';
 import Link from 'next/link';
 import { UserMenu } from '@/components/dashboard/UserMenu';
@@ -9,7 +10,7 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({ children }: DashboardHeaderProps) {
     return (
-        <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl border-b border-black/5">
+        <header className="w-full sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-black/5">
             <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
                 <div className="flex items-center gap-8">
                     {/* Logo */}

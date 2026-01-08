@@ -248,12 +248,13 @@ export function QuizOptionProperties({ component }: { component: QuizOptionCompo
                         size="sm"
                         className="h-6 text-xs text-blue-600 hover:text-blue-700"
                         onClick={() => {
+                            const nextValue = String.fromCharCode(65 + options.length);
                             handleUpdate('options', [
                                 ...options,
                                 {
                                     id: crypto.randomUUID(),
-                                    label: 'Nova Opção',
-                                    value: 'A',
+                                    label: `Opção ${options.length + 1}`,
+                                    value: nextValue,
                                     emoji: '📝',
                                     points: 0,
                                     targetStepId: 'next_step'

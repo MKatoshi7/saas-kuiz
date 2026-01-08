@@ -51,7 +51,7 @@ export async function PUT(req: Request) {
     try {
         await requireAdmin();
         const body = await req.json();
-        const { id, password, subscriptionStatus, subscriptionEndsAt, role } = body;
+        const { id, password, subscriptionStatus, subscriptionEndsAt, role, subscriptionPlan } = body;
 
         if (!id) return NextResponse.json({ error: 'User ID required' }, { status: 400 });
 
@@ -60,6 +60,7 @@ export async function PUT(req: Request) {
             data.password = await bcrypt.hash(password, 10);
         }
         if (subscriptionStatus) data.subscriptionStatus = subscriptionStatus;
+        if (subscriptionPlan) data.subscriptionPlan = subscriptionPlan;
         if (subscriptionEndsAt) data.subscriptionEndsAt = new Date(subscriptionEndsAt);
         if (role) data.role = role;
 

@@ -22,9 +22,10 @@ interface FunnelCardProps {
             sessions: number;
         };
     };
+    isSubscriptionExpired?: boolean;
 }
 
-export function FunnelCard({ project }: FunnelCardProps) {
+export function FunnelCard({ project, isSubscriptionExpired }: FunnelCardProps) {
     const router = useRouter();
     const [isDeleting, setIsDeleting] = useState(false);
     const [isDuplicating, setIsDuplicating] = useState(false);
@@ -34,10 +35,12 @@ export function FunnelCard({ project }: FunnelCardProps) {
     const handleDeleteClick = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        if (isSubscriptionExpired) return;
         setShowDeleteDialog(true);
     };
 
     const handleDelete = async () => {
+        if (isSubscriptionExpired) return;
         setIsDeleting(true);
 
         try {
@@ -61,6 +64,7 @@ export function FunnelCard({ project }: FunnelCardProps) {
     const handleDuplicate = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        if (isSubscriptionExpired) return;
 
         setIsDuplicating(true);
 
@@ -84,6 +88,10 @@ export function FunnelCard({ project }: FunnelCardProps) {
 
     const handleOpenEditor = (e: React.MouseEvent) => {
         e.preventDefault();
+        if (isSubscriptionExpired) {
+            toast.error('Sua assinatura expirou. Renove para editar.');
+            return;
+        }
         router.push(`/dashboard/${project.id}/builder`);
     };
 
@@ -107,7 +115,9 @@ export function FunnelCard({ project }: FunnelCardProps) {
                         </div>
                         <button
                             onClick={handleDeleteClick}
-                            className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50"
+                            disabled={isSubscriptionExpired}
+                            className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 disabled:opacity-30 disabled:hover:text-gray-400 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                            title={isSubscriptionExpired ? "Assinatura expirada" : "Deletar"}
                         >
                             <Trash2 className="w-4 h-4" />
                         </button>
@@ -151,7 +161,9 @@ export function FunnelCard({ project }: FunnelCardProps) {
                     <div className="grid grid-cols-2 gap-2">
                         <Button
                             onClick={handleOpenEditor}
-                            className="bg-black hover:bg-gray-800 text-white shadow-md shadow-black/10 h-9 rounded-xl text-xs font-medium"
+                            disabled={isSubscriptionExpired}
+                            className="bg-black hover:bg-gray-800 text-white shadow-md shadow-black/10 h-9 rounded-xl text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={isSubscriptionExpired ? "Assinatura expirada" : "Editar"}
                         >
                             <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
                             Editor
@@ -169,8 +181,9 @@ export function FunnelCard({ project }: FunnelCardProps) {
                         onClick={handleDuplicate}
                         variant="ghost"
                         size="sm"
-                        className="w-full text-gray-500 hover:text-gray-900 hover:bg-gray-100 h-8 rounded-lg text-xs"
-                        disabled={isDuplicating}
+                        className="w-full text-gray-500 hover:text-gray-900 hover:bg-gray-100 h-8 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isDuplicating || isSubscriptionExpired}
+                        title={isSubscriptionExpired ? "Assinatura expirada" : "Duplicar"}
                     >
                         <Copy className="w-3 h-3 mr-1.5" />
                         {isDuplicating ? 'Duplicando...' : 'Duplicar Projeto'}

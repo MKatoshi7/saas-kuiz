@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { isRateLimited } from '@/lib/rateLimit';
 
 export function middleware(request: NextRequest) {
+    // Rate Limiting
+    if (isRateLimited(request)) {
+        return new NextResponse('Too Many Requests', { status: 429 });
+    }
+
     const hostname = request.headers.get('host') || '';
     const url = request.nextUrl;
     const path = url.pathname;

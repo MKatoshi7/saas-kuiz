@@ -184,10 +184,15 @@ export interface TimerComponent extends BaseComponent {
   type: 'timer';
   data: {
     duration: number; // in seconds
+    minutes?: number;
+    seconds?: number;
+    style?: 'boxes' | 'minimal' | 'circle';
+    autoStart?: boolean;
     format?: 'MM:SS' | 'HH:MM:SS';
     onComplete?: 'goto_step' | 'hide';
     targetStepId?: string;
     label?: string;
+    variableName?: string;
   };
 }
 
@@ -572,20 +577,27 @@ export interface FunnelTheme {
   textColor?: string;
   fontFamily: string;
   page: {
-    type: 'color' | 'gradient' | 'image';
+    type: 'color' | 'gradient' | 'image' | 'pattern';
     value: string;
     secondaryColor?: string;
     overlayOpacity?: number;
     publicId?: string; // Cloudinary public ID
     customCss?: string;
+    patternName?: 'grid' | 'dots' | 'diagonal' | 'noise' | 'squares' | 'cross' | 'waves';
+    patternColor?: string;
+    backgroundColor?: string;
   };
   container: {
     show?: boolean;
     backgroundColor: string;
     borderRadius: string;
-    shadow: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+    shadow: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'neon-green' | 'neon-blue' | 'neon-purple';
     opacity: number;
     blur: number;
+    borderWidth?: number;
+    borderColor?: string;
+    borderStyle?: 'solid' | 'dashed' | 'dotted' | 'double' | 'glow';
+    backdropFilter?: 'none' | 'blur-sm' | 'blur-md' | 'blur-lg';
   };
   logo?: {
     url: string;
