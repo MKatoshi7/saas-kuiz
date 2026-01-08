@@ -600,6 +600,7 @@ export interface FunnelTheme {
     color?: string;
     isSticky?: boolean;
   };
+  headerLayout?: 'default' | 'stacked'; // default: logo then bar, stacked: bar top fixed then logo
 }
 
 

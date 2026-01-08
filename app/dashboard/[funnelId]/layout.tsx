@@ -40,28 +40,27 @@ export default function ProjectLayout({
                         <h1 className="font-bold text-sm text-slate-900">Quiz Editor</h1>
                     </div>
 
-                    <nav className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border border-slate-200">
-                        {tabs.map((tab) => {
-                            const isActive = pathname?.includes(tab.href);
-                            return (
-                                <Link key={tab.href} href={tab.href}>
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className={`text-xs font-semibold transition-all duration-200 rounded-md relative overflow-hidden ${isActive
-                                            ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25'
-                                            : 'text-slate-600 hover:text-slate-900 hover:bg-white'
-                                            }`}
-                                    >
-                                        {isActive && (
-                                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-400 opacity-0 group-hover:opacity-20 transition-opacity"></div>
-                                        )}
-                                        {tab.name}
-                                    </Button>
-                                </Link>
-                            );
-                        })}
-                    </nav>
+                    <div className="flex-1 flex justify-center">
+                        <nav className="flex items-center gap-1 bg-slate-100/50 p-1 rounded-xl border border-slate-200/60 backdrop-blur-sm">
+                            {tabs.map((tab) => {
+                                const isActive = pathname?.includes(tab.href);
+                                return (
+                                    <Link key={tab.href} href={tab.href}>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className={`text-xs font-bold px-5 py-1.5 transition-all duration-300 rounded-lg relative ${isActive
+                                                ? 'bg-white text-slate-900 shadow-sm border border-slate-200/50'
+                                                : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
+                                                }`}
+                                        >
+                                            {tab.name}
+                                        </Button>
+                                    </Link>
+                                );
+                            })}
+                        </nav>
+                    </div>
                 </div>
             </DashboardHeader>
 

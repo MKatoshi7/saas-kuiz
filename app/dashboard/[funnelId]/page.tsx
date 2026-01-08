@@ -242,40 +242,29 @@ export default async function DashboardPage({ params }: { params: Promise<{ funn
                                             Origem
                                         </div>
                                     </th>
-                                    {/* Dynamic Step Headers com Progress Bar Vertical */}
-                                    {steps.map((step: any) => {
+                                    {/* Dynamic Step Headers com Barra de Progresso Embaixo */}
+                                    {steps.map((step: any, index: number) => {
                                         const stats = stepStatsMap[step.id];
                                         return (
                                             <th key={step.id} className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-200 min-w-[180px] relative group">
-                                                <div className="flex items-start gap-3">
-                                                    {/* Barra de Progresso Vertical Colorida */}
-                                                    <div className="relative group/bar">
-                                                        <div className="h-12 w-3 bg-gray-200 rounded-full relative overflow-hidden flex-shrink-0 shadow-inner">
-                                                            <div
-                                                                className={`absolute bottom-0 left-0 w-full rounded-full transition-all duration-700 ease-out ${stats.colorClass}`}
-                                                                style={{ height: `${stats.percentage}%` }}
-                                                            />
-                                                        </div>
-                                                        {/* Tooltip ao passar o mouse */}
-                                                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 opacity-0 group-hover/bar:opacity-100 transition-opacity duration-200 pointer-events-none z-20">
-                                                            <div className="bg-gray-900 text-white text-xs font-medium px-3 py-2 rounded-lg shadow-lg whitespace-nowrap">
-                                                                <div className="text-center">
-                                                                    <div className="font-bold text-sm">{stats.percentage}%</div>
-                                                                    <div className="text-gray-300 text-[10px] mt-0.5">{stats.count} visitantes</div>
-                                                                </div>
-                                                                <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1">
-                                                                    <div className="border-4 border-transparent border-t-gray-900"></div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="text-[9px] uppercase tracking-wider text-gray-400 font-bold">Etapa {index + 1}</span>
+                                                        <span className="font-bold text-gray-900 truncate text-xs" title={step.title}>{step.title}</span>
                                                     </div>
 
-                                                    <div className="flex flex-col min-w-0">
-                                                        <span className="font-semibold text-gray-700 truncate">{step.title}</span>
-                                                        <span className="text-[10px] text-gray-400 font-normal mt-1 flex items-center gap-1">
-                                                            <span className={`inline-block w-2 h-2 rounded-full ${stats.colorClass.replace('bg-', 'bg-')}`}></span>
-                                                            {stats.count} visitantes
-                                                        </span>
+                                                    {/* Barra de Progresso Horizontal */}
+                                                    <div className="relative group/bar w-full">
+                                                        <div className="h-1.5 w-full bg-gray-100 rounded-full relative overflow-hidden shadow-inner">
+                                                            <div
+                                                                className={`absolute top-0 left-0 h-full rounded-full transition-all duration-700 ease-out ${stats.colorClass}`}
+                                                                style={{ width: `${stats.percentage}%` }}
+                                                            />
+                                                        </div>
+                                                        <div className="mt-1 flex items-center justify-between">
+                                                            <span className="text-[9px] text-gray-400 font-medium">{stats.count} visitantes</span>
+                                                            <span className="text-[9px] font-bold text-gray-500">{stats.percentage}%</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </th>

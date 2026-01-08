@@ -196,7 +196,7 @@ export function TextStyleToolbar({
                         </button>
 
                         {showColorPicker && (
-                            <div className="absolute top-full right-0 mt-2 p-3 bg-white rounded-lg shadow-xl border border-gray-200 w-48 z-50 origin-top-right">
+                            <div className="absolute top-full right-0 mt-2 p-3 bg-white rounded-lg shadow-xl border border-gray-200 w-48 z-[100] origin-top-right">
                                 <div className="mb-2">
                                     <div className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-1">Recentes</div>
                                     <div className="flex flex-wrap gap-1">
@@ -264,7 +264,7 @@ export function TextStyleToolbar({
                         </button>
 
                         {showBgColorPicker && (
-                            <div className="absolute top-full right-0 mt-2 p-3 bg-white rounded-lg shadow-xl border border-gray-200 w-48 z-50 origin-top-right">
+                            <div className="absolute top-full right-0 mt-2 p-3 bg-white rounded-lg shadow-xl border border-gray-200 w-48 z-[100] origin-top-right">
                                 <div className="mb-2">
                                     <div className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-1">Recentes</div>
                                     <div className="flex flex-wrap gap-1">

@@ -239,6 +239,21 @@ export function DesignSettingsPanel() {
                             />
                         </div>
 
+                        <div>
+                            <Label className="text-xs mb-1.5 block">Layout do Cabeçalho</Label>
+                            <select
+                                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                value={theme.headerLayout || 'default'}
+                                onChange={(e) => updateTheme({ headerLayout: e.target.value as any })}
+                            >
+                                <option value="default">Padrão (Logo acima da Barra)</option>
+                                <option value="stacked">Barra no Topo (Fixo) + Logo abaixo</option>
+                            </select>
+                            <p className="text-[10px] text-gray-400 mt-1">
+                                No modo "Barra no Topo", a barra fica colada no topo da tela e o logo aparece logo abaixo.
+                            </p>
+                        </div>
+
                         {(theme.progressBar?.show ?? true) && (
                             <div className="space-y-4">
                                 <div>

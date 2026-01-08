@@ -20,16 +20,37 @@ const STORAGE_KEY = 'quizk_recent_colors';
 
 export function ColorPickerWithPalette({ value, onChange, label }: ColorPickerWithPaletteProps) {
     const [localValue, setLocalValue] = useState(value);
+    const [recentColors, setRecentColors] = useState<string[]>([]);
 
     useEffect(() => {
         setLocalValue(value);
     }, [value]);
+
+    useEffect(() => {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                setRecentColors(JSON.parse(saved));
+            } catch (e) {
+                console.error("Failed to parse recent colors", e);
+            }
+        }
+    }, []);
 
     const handleHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newValue = e.target.value;
         setLocalValue(newValue);
         if (/^#[0-9A-F]{6}$/i.test(newValue)) {
             onChange(newValue);
+        }
+    };
+
+    const handleColorChange = (color: string) => {
+        onChange(color);
+        if (!recentColors.includes(color)) {
+            const newColors = [color, ...recentColors].slice(0, 8);
+            setRecentColors(newColors);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(newColors));
         }
     };
 
@@ -48,7 +69,7 @@ export function ColorPickerWithPalette({ value, onChange, label }: ColorPickerWi
                     <input
                         type="color"
                         value={value}
-                        onChange={(e) => onChange(e.target.value)}
+                        onChange={(e) => handleColorChange(e.target.value)}
                         className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                     />
                 </div>
@@ -61,20 +82,42 @@ export function ColorPickerWithPalette({ value, onChange, label }: ColorPickerWi
                 />
             </div>
 
-            <div className="space-y-1.5">
-                <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Cores Sugeridas</span>
-                <div className="grid grid-cols-8 gap-1.5">
-                    {PRESET_COLORS.map((color) => (
-                        <button
-                            key={color}
-                            type="button"
-                            onClick={() => onChange(color)}
-                            className={`w-6 h-6 rounded-md border hover:scale-110 transition-transform ${value === color ? 'border-blue-500 ring-2 ring-blue-200 z-10' : 'border-gray-200'
-                                }`}
-                            style={{ backgroundColor: color }}
-                            title={color}
-                        />
-                    ))}
+            <div className="space-y-3">
+                {/* Recent Colors */}
+                {recentColors.length > 0 && (
+                    <div className="space-y-1.5">
+                        <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Cores Recentes</span>
+                        <div className="flex flex-wrap gap-1.5">
+                            {recentColors.map((color, i) => (
+                                <button
+                                    key={`recent-${i}`}
+                                    type="button"
+                                    onClick={() => onChange(color)}
+                                    className={`w-7 h-7 rounded-md border hover:scale-110 transition-transform flex items-center justify-center ${value === color ? 'border-blue-500 ring-2 ring-blue-200 z-10' : 'border-gray-200'
+                                        }`}
+                                    style={{ backgroundColor: color }}
+                                    title={color}
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                <div className="space-y-1.5">
+                    <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Cores Sugeridas</span>
+                    <div className="grid grid-cols-8 gap-1.5">
+                        {PRESET_COLORS.map((color) => (
+                            <button
+                                key={color}
+                                type="button"
+                                onClick={() => onChange(color)}
+                                className={`w-6 h-6 rounded-md border hover:scale-110 transition-transform ${value === color ? 'border-blue-500 ring-2 ring-blue-200 z-10' : 'border-gray-200'
+                                    }`}
+                                style={{ backgroundColor: color }}
+                                title={color}
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>

@@ -80,7 +80,14 @@ export function TextToolbar({ currentData, onUpdate, isVisible, className }: Too
 
         if (hasSelection) {
             // Apply color to selected text
-            document.execCommand('foreColor', false, color);
+            // Ensure we are focusing the editor before applying
+            const editor = selection.anchorNode?.parentElement?.closest('[contenteditable="true"]') as HTMLElement;
+            if (editor) {
+                editor.focus();
+                document.execCommand('foreColor', false, color);
+            } else {
+                document.execCommand('foreColor', false, color);
+            }
         } else {
             // No selection, apply to entire component
             onUpdate('color', color);
@@ -97,7 +104,7 @@ export function TextToolbar({ currentData, onUpdate, isVisible, className }: Too
     const currentColor = currentData.color || '#000000';
 
     return (
-        <div className={`absolute z-[60] flex flex-col items-start gap-1 bg-slate-900 text-white p-1.5 rounded-lg shadow-xl animate-in fade-in slide-in-from-left duration-200 border border-slate-700 ${className || '-top-20 left-0'}`}>
+        <div className={`absolute z-[100] flex flex-col items-start gap-1 bg-slate-900 text-white p-1.5 rounded-lg shadow-xl animate-in fade-in slide-in-from-left duration-200 border border-slate-700 pointer-events-auto ${className || '-top-20 left-0'}`}>
 
             <div className="flex items-center gap-2">
                 {/* Tag Selector */}
@@ -167,7 +174,7 @@ export function TextToolbar({ currentData, onUpdate, isVisible, className }: Too
 
                     {/* Enhanced Color Palette Popover */}
                     {showPalette && (
-                        <div className="absolute top-full left-0 mt-2 p-3 bg-slate-800 rounded-lg shadow-xl border border-slate-700 w-56 z-[60]">
+                        <div className="absolute top-full left-0 mt-2 p-3 bg-slate-800 rounded-lg shadow-xl border border-slate-700 w-56 z-[110]">
 
                             {/* Theme Primary Color (Quick Access) */}
                             <div className="mb-3">

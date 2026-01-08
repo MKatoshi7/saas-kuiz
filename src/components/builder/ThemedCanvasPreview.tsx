@@ -81,31 +81,52 @@ export function ThemedCanvasPreview({ children }: ThemedCanvasPreviewProps) {
                     }}
                 >
                     {/* Top Bar (Matches QuizStepLayout) */}
-                    <div className="px-6 pb-2 pt-4">
-                        {/* Logo */}
-                        {logoUrl && (
-                            <div className="flex justify-center mb-4">
-                                <img
-                                    src={logoUrl}
-                                    alt="Logo"
-                                    style={{ height: `${logoHeight}px` }}
-                                    className="max-w-full h-auto object-contain"
-                                />
-                            </div>
+                    <div className="flex flex-col">
+                        {/* Progress Bar at the very top if stacked */}
+                        {theme.headerLayout === 'stacked' && showProgressBar && (
+                            <>
+                                <div className="fixed top-0 left-0 right-0 z-[60] w-full px-6 py-2 bg-white/95 backdrop-blur-sm border-b border-gray-100/50">
+                                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full rounded-full transition-all duration-500 ease-out"
+                                            style={{
+                                                width: '50%',
+                                                backgroundColor: progressBarColor
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                                {/* Spacer */}
+                                <div className="h-[34px] w-full shrink-0" />
+                            </>
                         )}
 
-                        {/* Progress Bar */}
-                        {showProgressBar && (
-                            <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mb-4">
-                                <div
-                                    className="h-full rounded-full transition-all duration-500 ease-out"
-                                    style={{
-                                        width: '50%', // Simulado para preview
-                                        backgroundColor: progressBarColor
-                                    }}
-                                ></div>
-                            </div>
-                        )}
+                        <div className="px-6 pb-2 pt-4">
+                            {/* Logo */}
+                            {logoUrl && (
+                                <div className="flex justify-center mb-4">
+                                    <img
+                                        src={logoUrl}
+                                        alt="Logo"
+                                        style={{ height: `${logoHeight}px` }}
+                                        className="max-w-full h-auto object-contain"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Progress Bar (Default Layout) */}
+                            {theme.headerLayout !== 'stacked' && showProgressBar && (
+                                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mb-4">
+                                    <div
+                                        className="h-full rounded-full transition-all duration-500 ease-out"
+                                        style={{
+                                            width: '50%',
+                                            backgroundColor: progressBarColor
+                                        }}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Content (Matches QuizStepLayout) */}
@@ -115,32 +136,53 @@ export function ThemedCanvasPreview({ children }: ThemedCanvasPreviewProps) {
                 </div>
             ) : (
                 <div className="relative z-10 w-full">
-                    {/* Top Bar (Matches QuizStepLayout structure even without container box) */}
-                    <div className="px-6 pb-2 pt-4">
-                        {/* Logo */}
-                        {logoUrl && (
-                            <div className="flex justify-center mb-4">
-                                <img
-                                    src={logoUrl}
-                                    alt="Logo"
-                                    style={{ height: `${logoHeight}px` }}
-                                    className="max-w-full h-auto object-contain"
-                                />
-                            </div>
+                    {/* Top Bar without container box */}
+                    <div className="flex flex-col">
+                        {/* Progress Bar at the very top if stacked */}
+                        {theme.headerLayout === 'stacked' && showProgressBar && (
+                            <>
+                                <div className="fixed top-0 left-0 right-0 z-[60] w-full px-6 py-2 bg-white/95 backdrop-blur-sm border-b border-gray-100/50">
+                                    <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full rounded-full transition-all duration-500 ease-out"
+                                            style={{
+                                                width: '50%',
+                                                backgroundColor: progressBarColor
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                                {/* Spacer */}
+                                <div className="h-[34px] w-full shrink-0" />
+                            </>
                         )}
 
-                        {/* Progress Bar */}
-                        {showProgressBar && (
-                            <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mb-4">
-                                <div
-                                    className="h-full rounded-full transition-all duration-500 ease-out"
-                                    style={{
-                                        width: '50%', // Simulado para preview
-                                        backgroundColor: progressBarColor
-                                    }}
-                                ></div>
-                            </div>
-                        )}
+                        <div className="px-6 pb-2 pt-4">
+                            {/* Logo */}
+                            {logoUrl && (
+                                <div className="flex justify-center mb-4">
+                                    <img
+                                        src={logoUrl}
+                                        alt="Logo"
+                                        style={{ height: `${logoHeight}px` }}
+                                        className="max-w-full h-auto object-contain"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Progress Bar (Default Layout) */}
+                            {theme.headerLayout !== 'stacked' && showProgressBar && (
+                                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mb-4">
+                                    <div
+                                        className="h-full rounded-full transition-all duration-500 ease-out"
+                                        style={{
+                                            width: '50%',
+                                            backgroundColor: progressBarColor
+                                        }}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Content */}

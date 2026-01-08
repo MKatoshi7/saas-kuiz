@@ -43,14 +43,11 @@ export async function POST(request: NextRequest) {
                 {
                     folder: funnelId ? `kuiz-uploads/${funnelId}` : 'kuiz-uploads',
                     resource_type: 'auto',
+                    // Incoming transformations (resize only, format happens at delivery)
                     transformation: isVideo ? [
-                        { quality: 'auto' },
-                        { fetch_format: 'auto' },
                         { width: 1280, height: 720, crop: 'limit' }, // HD max for speed
                     ] : [
                         { width: 1920, height: 1080, crop: 'limit' }, // Max dimensions for images
-                        { quality: 'auto:good' }, // Auto quality optimization
-                        { fetch_format: 'auto' }, // Auto format (WebP when supported)
                     ],
                 },
                 (error, result) => {
@@ -62,8 +59,19 @@ export async function POST(request: NextRequest) {
             uploadStream.end(buffer);
         });
 
+        // Generate optimized URL with f_auto,q_auto
+        const optimizedUrl = cloudinary.url(result.public_id, {
+            resource_type: result.resource_type,
+            secure: true,
+            transformation: [
+                { width: isVideo ? 1280 : 1920, crop: 'limit' },
+                { quality: 'auto' },
+                { fetch_format: 'auto' }
+            ]
+        });
+
         return NextResponse.json({
-            url: result.secure_url,
+            url: optimizedUrl, // Return the optimized URL
             publicId: result.public_id,
             width: result.width,
             height: result.height,
@@ -99,13 +107,22 @@ export async function PUT(request: NextRequest) {
             folder: funnelId ? `kuiz-uploads/${funnelId}` : 'kuiz-uploads',
             transformation: [
                 { width: 1920, height: 1080, crop: 'limit' },
-                { quality: 'auto:good' },
-                { fetch_format: 'auto' },
             ],
         });
 
+        // Generate optimized URL with f_auto,q_auto
+        const optimizedUrl = cloudinary.url(result.public_id, {
+            resource_type: result.resource_type,
+            secure: true,
+            transformation: [
+                { width: 1920, height: 1080, crop: 'limit' },
+                { quality: 'auto' },
+                { fetch_format: 'auto' }
+            ]
+        });
+
         return NextResponse.json({
-            url: result.secure_url,
+            url: optimizedUrl,
             publicId: result.public_id,
             width: result.width,
             height: result.height,

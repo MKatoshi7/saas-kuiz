@@ -105,9 +105,22 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
     },
 
     updateTheme: (themeUpdate) => {
-        set((state) => ({
-            theme: { ...state.theme, ...themeUpdate }
-        }));
+        set((state) => {
+            const newState = {
+                ...state,
+                theme: { ...state.theme, ...themeUpdate }
+            };
+            // Add to history
+            const history = state.history.slice(0, state.historyIndex + 1);
+            history.push({ steps: state.steps, componentsByStep: state.componentsByStep });
+            if (history.length > 50) history.shift();
+
+            return {
+                ...newState,
+                history,
+                historyIndex: history.length - 1
+            };
+        });
     },
 
     // Step Actions
@@ -116,16 +129,26 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
     },
 
     addStep: () => {
-        const { steps } = get();
+        const { steps, componentsByStep, history, historyIndex } = get();
         const newStep: Step = {
             id: `step_${Date.now()}`,
             title: `Etapa ${steps.length + 1}`,
             order: steps.length
         };
-        set((state) => ({
-            steps: [...state.steps, newStep],
-            componentsByStep: { ...state.componentsByStep, [newStep.id]: [] }
-        }));
+
+        const newSteps = [...steps, newStep];
+        const newComponentsByStep = { ...componentsByStep, [newStep.id]: [] };
+
+        const newHistory = history.slice(0, historyIndex + 1);
+        newHistory.push({ steps, componentsByStep });
+        if (newHistory.length > 50) newHistory.shift();
+
+        set({
+            steps: newSteps,
+            componentsByStep: newComponentsByStep,
+            history: newHistory,
+            historyIndex: newHistory.length - 1
+        });
     },
 
     updateStepTitle: (stepId, title) => {
@@ -135,7 +158,7 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
     },
 
     duplicateStep: (stepId) => {
-        const { steps, componentsByStep } = get();
+        const { steps, componentsByStep, history, historyIndex } = get();
         const stepToDuplicate = steps.find(s => s.id === stepId);
         if (!stepToDuplicate) return;
 
@@ -145,15 +168,26 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
             order: steps.length
         };
 
+        // Deep copy components to ensure no reference sharing
         const duplicatedComponents = (componentsByStep[stepId] || []).map(c => ({
             ...c,
-            id: `${c.type}_${Date.now()}_${Math.random()}`
+            id: `${c.type}_${Date.now()}_${Math.random()}`,
+            data: JSON.parse(JSON.stringify(c.data)) // Deep copy of data
         }));
 
-        set((state) => ({
-            steps: [...state.steps, newStep],
-            componentsByStep: { ...state.componentsByStep, [newStep.id]: duplicatedComponents }
-        }));
+        const newSteps = [...steps, newStep];
+        const newComponentsByStep = { ...componentsByStep, [newStep.id]: duplicatedComponents };
+
+        const newHistory = history.slice(0, historyIndex + 1);
+        newHistory.push({ steps, componentsByStep });
+        if (newHistory.length > 50) newHistory.shift();
+
+        set({
+            steps: newSteps,
+            componentsByStep: newComponentsByStep,
+            history: newHistory,
+            historyIndex: newHistory.length - 1
+        });
     },
 
     deleteStep: (stepId) => {
@@ -181,7 +215,7 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
     },
 
     addComponent: (type, index) => {
-        const { currentStepId, componentsByStep } = get();
+        const { currentStepId, componentsByStep, steps, history, historyIndex } = get();
         if (!currentStepId) return;
 
         const currentComponents = componentsByStep[currentStepId] || [];
@@ -220,31 +254,49 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
             newComponents.push(newComponent);
         }
 
-        set((state) => ({
-            componentsByStep: {
-                ...state.componentsByStep,
-                [currentStepId]: newComponents.map((c, i) => ({ ...c, order: i }))
-            },
-            selectedComponentId: newComponent.id
-        }));
+        const newComponentsByStep = {
+            ...componentsByStep,
+            [currentStepId]: newComponents.map((c, i) => ({ ...c, order: i }))
+        };
+
+        const newHistory = history.slice(0, historyIndex + 1);
+        newHistory.push({ steps, componentsByStep });
+        if (newHistory.length > 50) newHistory.shift();
+
+        set({
+            componentsByStep: newComponentsByStep,
+            selectedComponentId: newComponent.id,
+            history: newHistory,
+            historyIndex: newHistory.length - 1
+        });
     },
 
     updateComponent: (id, updates) => {
-        const { currentStepId, componentsByStep } = get();
+        const { currentStepId, componentsByStep, steps, history, historyIndex } = get();
         if (!currentStepId) return;
 
-        set((state) => ({
-            componentsByStep: {
-                ...state.componentsByStep,
-                [currentStepId]: (state.componentsByStep[currentStepId] || []).map(c =>
-                    c.id === id ? { ...c, ...updates } as FunnelComponentData : c
-                )
-            }
-        }));
+        const newComponentsByStep = {
+            ...componentsByStep,
+            [currentStepId]: (componentsByStep[currentStepId] || []).map(c =>
+                c.id === id ? { ...c, ...updates } as FunnelComponentData : c
+            )
+        };
+
+        // Only add to history if it's not a "frequent" update (like typing)
+        // For now, we add everything, but we could debounce this
+        const newHistory = history.slice(0, historyIndex + 1);
+        newHistory.push({ steps, componentsByStep });
+        if (newHistory.length > 50) newHistory.shift();
+
+        set({
+            componentsByStep: newComponentsByStep,
+            history: newHistory,
+            historyIndex: newHistory.length - 1
+        });
     },
 
     duplicateComponent: (id) => {
-        const { currentStepId, componentsByStep } = get();
+        const { currentStepId, componentsByStep, steps, history, historyIndex } = get();
         if (!currentStepId) return;
 
         const components = componentsByStep[currentStepId] || [];
@@ -261,27 +313,43 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
         const insertIndex = components.findIndex(c => c.id === id) + 1;
         newComponents.splice(insertIndex, 0, newComponent);
 
-        set((state) => ({
-            componentsByStep: {
-                ...state.componentsByStep,
-                [currentStepId]: newComponents.map((c, i) => ({ ...c, order: i }))
-            }
-        }));
+        const newComponentsByStep = {
+            ...componentsByStep,
+            [currentStepId]: newComponents.map((c, i) => ({ ...c, order: i }))
+        };
+
+        const newHistory = history.slice(0, historyIndex + 1);
+        newHistory.push({ steps, componentsByStep });
+        if (newHistory.length > 50) newHistory.shift();
+
+        set({
+            componentsByStep: newComponentsByStep,
+            history: newHistory,
+            historyIndex: newHistory.length - 1
+        });
     },
 
     deleteComponent: (id) => {
-        const { currentStepId, componentsByStep, selectedComponentId } = get();
+        const { currentStepId, componentsByStep, selectedComponentId, steps, history, historyIndex } = get();
         if (!currentStepId) return;
 
-        set((state) => ({
-            componentsByStep: {
-                ...state.componentsByStep,
-                [currentStepId]: (state.componentsByStep[currentStepId] || [])
-                    .filter(c => c.id !== id)
-                    .map((c, i) => ({ ...c, order: i }))
-            },
-            selectedComponentId: selectedComponentId === id ? null : selectedComponentId
-        }));
+        const newComponentsByStep = {
+            ...componentsByStep,
+            [currentStepId]: (componentsByStep[currentStepId] || [])
+                .filter(c => c.id !== id)
+                .map((c, i) => ({ ...c, order: i }))
+        };
+
+        const newHistory = history.slice(0, historyIndex + 1);
+        newHistory.push({ steps, componentsByStep });
+        if (newHistory.length > 50) newHistory.shift();
+
+        set({
+            componentsByStep: newComponentsByStep,
+            selectedComponentId: selectedComponentId === id ? null : selectedComponentId,
+            history: newHistory,
+            historyIndex: newHistory.length - 1
+        });
     },
 
     reorderComponents: (components) => {

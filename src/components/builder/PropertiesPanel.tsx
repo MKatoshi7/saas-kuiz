@@ -16,9 +16,11 @@ import { TextStyleToolbar } from './TextStyleToolbar';
 import { RichTextEditor } from './RichTextEditor';
 import { ColorPickerWithPalette } from './ColorPickerWithPalette';
 import { ImageUploadWithPreview } from './ImageUploadWithPreview';
+import { VideoUploadWithPreview } from './VideoUploadWithPreview';
 import EmojiPicker from 'emoji-picker-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Smile } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
     const { selectedComponentId, deleteComponent, setSelectedComponent } = useBuilderStore();
@@ -1306,14 +1308,17 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
 
                         {selectedComponent.type === 'vsl-video' && (
                             <>
-                                <div>
-                                    <label className="text-xs font-medium text-gray-700 mb-2 block">URL do Vídeo (Direto ou Cloudinary)</label>
-                                    <Input
-                                        value={selectedComponent.data.url || ''}
-                                        onChange={(e) => handleUpdate('url', e.target.value)}
-                                        placeholder="https://..."
-                                    />
-                                </div>
+                                <VideoUploadWithPreview
+                                    label="Vídeo VSL"
+                                    value={selectedComponent.data.url || ''}
+                                    onChange={(url) => handleUpdate('url', url)}
+                                    onUploadComplete={(data) => {
+                                        handleUpdate('url', data.url);
+                                        handleUpdate('publicId', data.publicId);
+                                    }}
+                                    funnelId={funnelId || undefined}
+                                    helpText="Suba um vídeo MP4/MOV ou cole um link direto."
+                                />
 
                                 <ImageUploadWithPreview
                                     label="Thumbnail (Capa)"

@@ -69,6 +69,16 @@ export default async function LeadsPage({ params }: { params: Promise<{ funnelId
         utmTerm: session.utmTerm,
     }));
 
+    // Calculate stats per step for the header bars
+    const stepStats = funnel.steps.map((step: any) => {
+        const count = sessions.filter((s: any) => {
+            const answers = s.answersSnapshot as Record<string, any> || {};
+            return !!answers[step.id];
+        }).length;
+        const percentage = sessions.length > 0 ? Math.round((count / sessions.length) * 100) : 0;
+        return { id: step.id, count, percentage };
+    });
+
     return (
         <div className="p-6 h-full overflow-y-auto">
             <div className="mb-8 flex justify-between items-start">
@@ -132,15 +142,28 @@ export default async function LeadsPage({ params }: { params: Promise<{ funnelId
                                 <TableHead className="w-[180px]">Data/Hora</TableHead>
                                 <TableHead className="w-[120px]">ID do Lead</TableHead>
                                 <TableHead>Origem</TableHead>
-                                {/* Dynamic Step Headers */}
-                                {funnel.steps.map((step: any) => (
-                                    <TableHead key={step.id} className="min-w-[150px] py-4">
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Etapa</span>
-                                            <span className="text-slate-900 font-bold">{step.title}</span>
-                                        </div>
-                                    </TableHead>
-                                ))}
+                                {/* Dynamic Step Headers com Barra de Progresso Embaixo */}
+                                {funnel.steps.map((step: any, index: number) => {
+                                    const stats = stepStats[index];
+                                    return (
+                                        <TableHead key={step.id} className="min-w-[160px] py-4">
+                                            <div className="flex flex-col gap-2">
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Etapa {index + 1}</span>
+                                                    <span className="text-slate-900 font-bold text-xs truncate max-w-[140px]" title={step.title}>{step.title}</span>
+                                                </div>
+                                                {/* Barra de Progresso Horizontal */}
+                                                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-green-500 rounded-full transition-all duration-500"
+                                                        style={{ width: `${stats.percentage}%` }}
+                                                    />
+                                                </div>
+                                                <span className="text-[9px] text-slate-400 font-medium">{stats.percentage}% respondido</span>
+                                            </div>
+                                        </TableHead>
+                                    );
+                                })}
                                 <TableHead>Status</TableHead>
                                 <TableHead>Campanha</TableHead>
                                 <TableHead>Anúncio</TableHead>
