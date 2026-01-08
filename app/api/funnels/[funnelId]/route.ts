@@ -318,6 +318,57 @@ export async function DELETE(
             return NextResponse.json({ error: "Funnel not found or access denied" }, { status: 404 });
         }
 
+        // Delete all images from Cloudinary for this funnel
+        try {
+            const { v2: cloudinary } = await import('cloudinary');
+
+            cloudinary.config({
+                cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+                api_key: process.env.CLOUDINARY_API_KEY,
+                api_secret: process.env.CLOUDINARY_API_SECRET,
+            });
+
+            // Delete all images in the funnel's folder
+            const folderPath = `kuiz-uploads/${funnelId}`;
+
+            try {
+                // List all resources in the folder
+                const resources = await cloudinary.api.resources({
+                    type: 'upload',
+                    prefix: folderPath,
+                    max_results: 500, // Cloudinary limit
+                });
+
+                // Delete each resource
+                if (resources.resources && resources.resources.length > 0) {
+                    const publicIds = resources.resources.map((resource: any) => resource.public_id);
+
+                    // Delete in batches of 100 (Cloudinary limit)
+                    for (let i = 0; i < publicIds.length; i += 100) {
+                        const batch = publicIds.slice(i, i + 100);
+                        await cloudinary.api.delete_resources(batch);
+                    }
+
+                    console.log(`✅ Deleted ${publicIds.length} images from Cloudinary for funnel ${funnelId}`);
+                }
+
+                // Try to delete the folder itself
+                try {
+                    await cloudinary.api.delete_folder(folderPath);
+                    console.log(`✅ Deleted Cloudinary folder: ${folderPath}`);
+                } catch (folderError) {
+                    // Folder might not exist or might not be empty, that's okay
+                    console.log(`ℹ️ Could not delete folder ${folderPath}:`, folderError);
+                }
+            } catch (cloudinaryError) {
+                // Log but don't fail the deletion if Cloudinary fails
+                console.warn('⚠️ Error deleting Cloudinary resources:', cloudinaryError);
+            }
+        } catch (importError) {
+            console.warn('⚠️ Cloudinary not configured or import failed:', importError);
+        }
+
+
         // Delete all related data with cascade
         await prisma.$transaction([
             // Delete events related to this funnel's sessions
