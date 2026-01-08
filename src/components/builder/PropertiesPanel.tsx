@@ -87,16 +87,6 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                         onChange={(html) => handleUpdate('text', html)}
                                         placeholder="Digite seu título aqui..."
                                         className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] bg-white"
-                                        isBold={selectedComponent.data.bold}
-                                        isItalic={selectedComponent.data.italic}
-                                        isUnderline={selectedComponent.data.underline}
-                                        isStrikethrough={selectedComponent.data.strikethrough}
-                                        color={selectedComponent.data.color}
-                                        backgroundColor={selectedComponent.data.backgroundColor}
-                                        onBoldToggle={() => handleUpdate('bold', !selectedComponent.data.bold)}
-                                        onItalicToggle={() => handleUpdate('italic', !selectedComponent.data.italic)}
-                                        onUnderlineToggle={() => handleUpdate('underline', !selectedComponent.data.underline)}
-                                        onStrikethroughToggle={() => handleUpdate('strikethrough', !selectedComponent.data.strikethrough)}
                                     />
                                 </div>
 
@@ -127,16 +117,6 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                         onChange={(html) => handleUpdate('text', html)}
                                         placeholder="Digite seu parágrafo aqui..."
                                         className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[120px] bg-white"
-                                        isBold={selectedComponent.data.bold}
-                                        isItalic={selectedComponent.data.italic}
-                                        isUnderline={selectedComponent.data.underline}
-                                        isStrikethrough={selectedComponent.data.strikethrough}
-                                        color={selectedComponent.data.color}
-                                        backgroundColor={selectedComponent.data.backgroundColor}
-                                        onBoldToggle={() => handleUpdate('bold', !selectedComponent.data.bold)}
-                                        onItalicToggle={() => handleUpdate('italic', !selectedComponent.data.italic)}
-                                        onUnderlineToggle={() => handleUpdate('underline', !selectedComponent.data.underline)}
-                                        onStrikethroughToggle={() => handleUpdate('strikethrough', !selectedComponent.data.strikethrough)}
                                     />
                                 </div>
 
