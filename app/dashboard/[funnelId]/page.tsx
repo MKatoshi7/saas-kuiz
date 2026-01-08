@@ -322,16 +322,35 @@ export default async function DashboardPage({ params }: { params: Promise<{ funn
                                                 </span>
                                             </td>
 
-                                            {/* Dynamic Step Cells com estilo melhorado */}
+                                            {/* Dynamic Step Cells com estilo de barrinha horizontal */}
                                             {steps.map((step: any) => (
                                                 <td key={step.id} className="px-6 py-4 whitespace-nowrap text-sm border-r border-gray-100">
-                                                    {visitor.stepEvents[step.id] ? (
-                                                        <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-green-50 text-green-700 border border-green-200">
-                                                            {visitor.stepEvents[step.id]}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-gray-300 text-lg">—</span>
-                                                    )}
+                                                    <div className="flex flex-col gap-1.5 min-w-[140px]">
+                                                        {visitor.stepEvents[step.id] ? (
+                                                            <>
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                                                                    <span className="font-semibold text-[11px] text-slate-800 truncate max-w-[120px]" title={visitor.stepEvents[step.id]}>
+                                                                        {visitor.stepEvents[step.id]}
+                                                                    </span>
+                                                                </div>
+                                                                {/* A barrinha de progresso horizontal */}
+                                                                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                                    <div className="h-full bg-green-500 rounded-full w-full animate-in fade-in slide-in-from-left-1 duration-500" />
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <div className="flex items-center gap-1.5 opacity-30">
+                                                                    <div className="w-2 h-2 rounded-full bg-slate-300" />
+                                                                    <span className="text-[11px] text-slate-400">-</span>
+                                                                </div>
+                                                                <div className="w-full h-1.5 bg-slate-50 rounded-full overflow-hidden">
+                                                                    <div className="h-full bg-slate-200 rounded-full w-0" />
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </div>
                                                 </td>
                                             ))}
 

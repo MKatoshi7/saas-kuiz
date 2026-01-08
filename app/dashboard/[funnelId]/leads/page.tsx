@@ -134,8 +134,11 @@ export default async function LeadsPage({ params }: { params: Promise<{ funnelId
                                 <TableHead>Origem</TableHead>
                                 {/* Dynamic Step Headers */}
                                 {funnel.steps.map((step: any) => (
-                                    <TableHead key={step.id} className="min-w-[150px]">
-                                        {step.title}
+                                    <TableHead key={step.id} className="min-w-[150px] py-4">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Etapa</span>
+                                            <span className="text-slate-900 font-bold">{step.title}</span>
+                                        </div>
                                     </TableHead>
                                 ))}
                                 <TableHead>Status</TableHead>
@@ -177,14 +180,33 @@ export default async function LeadsPage({ params }: { params: Promise<{ funnelId
                                             {funnel.steps.map((step: any) => {
                                                 const answer = answers[step.id];
                                                 return (
-                                                    <TableCell key={step.id}>
-                                                        {answer ? (
-                                                            <div className="font-medium text-xs text-slate-700 truncate max-w-[150px]" title={String(answer)}>
-                                                                {String(answer)}
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-slate-200 text-xs">·</span>
-                                                        )}
+                                                    <TableCell key={step.id} className="relative">
+                                                        <div className="flex flex-col gap-1.5">
+                                                            {answer ? (
+                                                                <>
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
+                                                                        <span className="font-semibold text-[11px] text-slate-800 truncate max-w-[140px]" title={String(answer)}>
+                                                                            {String(answer)}
+                                                                        </span>
+                                                                    </div>
+                                                                    {/* A barrinha de progresso na coluna */}
+                                                                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                                                        <div className="h-full bg-green-500 rounded-full w-full animate-in fade-in slide-in-from-left-1 duration-500" />
+                                                                    </div>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <div className="flex items-center gap-1.5 opacity-30">
+                                                                        <div className="w-2 h-2 rounded-full bg-slate-300" />
+                                                                        <span className="text-[11px] text-slate-400">-</span>
+                                                                    </div>
+                                                                    <div className="w-full h-1.5 bg-slate-50 rounded-full overflow-hidden">
+                                                                        <div className="h-full bg-slate-200 rounded-full w-0" />
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
                                                     </TableCell>
                                                 );
                                             })}
