@@ -17,7 +17,9 @@ export function middleware(request: NextRequest) {
     // Adjust these based on your actual deployment domains
     const isMainDomain = hostname.includes('localhost') ||
         hostname.includes('quizk.com') ||
-        hostname.endsWith('.vercel.app');
+        hostname.includes('kuiz.digital') ||
+        hostname.endsWith('.vercel.app') ||
+        hostname.endsWith('.netlify.app');
 
     // Check for auth token on dashboard routes
     if (url.pathname.startsWith('/dashboard')) {
