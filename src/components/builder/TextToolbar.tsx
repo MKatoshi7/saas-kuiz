@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
-    Heading1, Heading2, Type, AlignLeft, AlignCenter, AlignRight, Palette, ChevronDown, Check
+    Heading1, Heading2, Type, AlignLeft, AlignCenter, AlignRight, Palette, ChevronDown, Check, Highlighter
 } from "lucide-react";
 import { useBuilderStore } from '@/store/builderStore';
 
@@ -18,6 +18,12 @@ const PRESET_COLORS = [
     '#EF4444', '#F97316', '#F59E0B', '#84CC16',
     '#10B981', '#06B6D4', '#3B82F6', '#6366F1',
     '#8B5CF6', '#D946EF', '#F43F5E', '#881337'
+];
+
+const HIGHLIGHT_COLORS = [
+    '#FEF3C7', '#FED7AA', '#FBCFE8',
+    '#DBEAFE', '#D1FAE5', '#FDE68A',
+    'transparent'
 ];
 
 const STORAGE_KEY = 'quizk_recent_colors';
@@ -131,6 +137,22 @@ export function TextToolbar({ currentData, onUpdate, isVisible, className, ancho
         setShowPalette(false);
     };
 
+    const handleHighlightChange = (color: string) => {
+        const selection = window.getSelection();
+        const hasSelection = selection && selection.rangeCount > 0 && !selection.isCollapsed;
+
+        if (hasSelection) {
+            const editor = selection.anchorNode?.parentElement?.closest('[contenteditable="true"]') as HTMLElement;
+            if (editor) {
+                editor.focus();
+            }
+            document.execCommand('hiliteColor', false, color);
+        } else {
+            document.execCommand('hiliteColor', false, color);
+        }
+        setShowPalette(false);
+    };
+
     const currentColor = currentData.color || '#000000';
 
     const toolbarContent = (
@@ -199,6 +221,7 @@ export function TextToolbar({ currentData, onUpdate, isVisible, className, ancho
                 {/* Color & Palette Trigger */}
                 <div className="relative" ref={paletteRef}>
                     <button
+                        onMouseDown={(e) => e.preventDefault()}
                         onClick={(e) => { e.stopPropagation(); setShowPalette(!showPalette); }}
                         className="flex items-center gap-1 p-1 hover:bg-slate-800 rounded"
                         title="Cor do Texto"
@@ -278,6 +301,30 @@ export function TextToolbar({ currentData, onUpdate, isVisible, className, ancho
                                         >
                                             {currentColor === color && (
                                                 <Check size={10} className={color === '#FFFFFF' || color === '#ffffff' ? 'text-black' : 'text-white'} />
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+
+                            {/* Highlight Colors */}
+                            <div className="mb-3">
+                                <div className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2">
+                                    Realce (Grifar)
+                                </div>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {HIGHLIGHT_COLORS.map((color) => (
+                                        <button
+                                            key={color}
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onClick={(e) => { e.stopPropagation(); handleHighlightChange(color); }}
+                                            className={`w-6 h-6 rounded border-2 hover:scale-110 transition-transform flex items-center justify-center border-white/10`}
+                                            style={{ backgroundColor: color === 'transparent' ? 'transparent' : color }}
+                                            title={color === 'transparent' ? 'Remover Realce' : color}
+                                        >
+                                            {color === 'transparent' && (
+                                                <div className="w-full h-px bg-red-500 rotate-45 transform" />
                                             )}
                                         </button>
                                     ))}
@@ -447,7 +494,7 @@ export function TextToolbar({ currentData, onUpdate, isVisible, className, ancho
                 )}
             </div>
 
-        </div>
+        </div >
     );
 
     if (anchorRef && typeof document !== 'undefined') {

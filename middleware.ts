@@ -45,7 +45,7 @@ export function middleware(request: NextRequest) {
 
     // 3. Clean Links on Main Domain (e.g. kuiz.digital/slug -> /f/slug)
     // Only if it's not a reserved path
-    const reservedPaths = ['/login', '/register', '/dashboard', '/f', '/api'];
+    const reservedPaths = ['/login', '/register', '/dashboard', '/f', '/api', '/admin'];
     const isReserved = reservedPaths.some(p => path.startsWith(p));
 
     if (isMainDomain && !isReserved && path !== '/') {

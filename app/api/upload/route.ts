@@ -14,6 +14,14 @@ if (isCloudinaryConfigured) {
     });
 }
 
+export const config = {
+    api: {
+        bodyParser: {
+            sizeLimit: '500mb',
+        },
+    },
+};
+
 export async function POST(request: NextRequest) {
     if (!isCloudinaryConfigured) {
         return NextResponse.json({
