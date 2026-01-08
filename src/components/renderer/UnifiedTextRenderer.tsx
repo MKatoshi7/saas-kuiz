@@ -7,6 +7,7 @@ interface UnifiedTextRendererProps {
     align?: string;
     color?: string;
     className?: string;
+    fontWeight?: string;
     // Phase 1 Enhancements
     letterSpacing?: 'tighter' | 'tight' | 'normal' | 'wide' | 'wider' | 'widest';
     lineHeight?: 'tight' | 'snug' | 'normal' | 'relaxed' | 'loose';
@@ -25,6 +26,7 @@ export function UnifiedTextRenderer({
     align,
     color,
     className = '',
+    fontWeight,
     letterSpacing,
     lineHeight,
     textTransform,
@@ -33,22 +35,22 @@ export function UnifiedTextRenderer({
 }: UnifiedTextRendererProps) {
     const Tag = tag as React.ElementType;
 
-    // Font size mapping - supports all TextToolbar size options
+    // Font size mapping - atualizado com novos tamanhos
     const getFontSizeClass = () => {
         switch (fontSize) {
             // New size system (from TextToolbar)
             case 'small':
-                return 'text-sm';
+                return 'text-base';  // 16px (era 14px)
             case 'normal':
-                return 'text-base';
+                return 'text-lg';    // 18px (era 16px)
             case 'medium':
-                return 'text-lg';
+                return 'text-xl';    // 20px (era 18px)
             case 'big':
-                return 'text-xl';
+                return 'text-2xl';   // 24px
             case 'bigger':
-                return 'text-2xl';
+                return 'text-3xl';   // 30px (era 32px)
             case 'huge':
-                return 'text-4xl';
+                return 'text-4xl';   // 36px (era 48px)
 
             // Legacy size system (for backwards compatibility)
             case '4xl':
@@ -126,6 +128,10 @@ export function UnifiedTextRenderer({
 
         if (color) {
             styles.color = color;
+        }
+
+        if (fontWeight) {
+            styles.fontWeight = fontWeight;
         }
 
         // Drop shadow

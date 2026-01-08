@@ -14,6 +14,7 @@ import { CarouselProperties } from './CarouselProperties';
 import { FooterProperties } from './FooterProperties';
 import { TextStyleToolbar } from './TextStyleToolbar';
 import { RichTextEditor } from './RichTextEditor';
+import { FullTextProperties } from './FullTextProperties';
 import { ColorPickerWithPalette } from './ColorPickerWithPalette';
 import { ImageUploadWithPreview } from './ImageUploadWithPreview';
 import { VideoUploadWithPreview } from './VideoUploadWithPreview';
@@ -99,10 +100,11 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                     />
                                 </div>
 
-                                <TextStyleToolbar
+                                <FullTextProperties
                                     data={selectedComponent.data}
                                     onUpdate={handleUpdate}
                                 />
+
                                 <div className="pt-4 border-t border-gray-200 mt-4">
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Nome da Variável (Analytics)</label>
                                     <Input
@@ -138,16 +140,11 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                     />
                                 </div>
 
-                                <TextStyleToolbar
+                                <FullTextProperties
                                     data={selectedComponent.data}
                                     onUpdate={handleUpdate}
-                                    showAlignment={true}
-                                    showFontSize={true}
-                                    showLetterSpacing={true}
-                                    showLineHeight={true}
-                                    showTextTransform={false}
-                                    showFontFamily={true}
                                 />
+
                                 <div className="pt-4 border-t border-gray-200 mt-4">
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Nome da Variável (Analytics)</label>
                                     <Input

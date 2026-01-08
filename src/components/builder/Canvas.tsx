@@ -180,32 +180,29 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
         case 'headline':
             return (
                 <div className="p-2 relative">
-                    {isSelected && (
-                        <TextToolbar
-                            currentData={component.data}
-                            onUpdate={(key, value) => onUpdate(component.id, { data: { ...component.data, [key]: value } } as any)}
-                            isVisible={true}
-                            className="top-0 right-full mr-2"
-                            anchorRef={anchorRef}
-                        />
-                    )}
                     {isSelected ? (
-                        <InlineTextEditor
-                            value={component.data.text || ''}
-                            onChange={(html) => onUpdate(component.id, { data: { ...component.data, text: html } } as any)}
-                            className={`font-bold text-gray-900 ${component.data.fontSize === 'huge' ? 'text-4xl' :
-                                component.data.fontSize === 'bigger' ? 'text-2xl' :
-                                    component.data.fontSize === 'big' ? 'text-xl' :
-                                        component.data.fontSize === 'medium' ? 'text-lg' :
-                                            component.data.fontSize === 'normal' ? 'text-base' :
-                                                component.data.fontSize === 'small' ? 'text-sm' : 'text-base'
-                                }`}
-                            style={{
-                                textAlign: component.data.align as any,
-                                color: component.data.color
-                            }}
-                            placeholder="Digite seu título..."
-                        />
+                        (() => {
+                            const editorStyle = {
+                                textAlign: (component.data as any).align as any,
+                                color: (component.data as any).color,
+                                fontWeight: (component.data as any).fontWeight || 700
+                            } as React.CSSProperties;
+                            return (
+                                <InlineTextEditor
+                                    value={component.data.text || ''}
+                                    onChange={(html) => onUpdate(component.id, { data: { ...component.data, text: html } } as any)}
+                                    className={`font-bold text-gray-900 ${component.data.fontSize === 'huge' ? 'text-4xl' :
+                                        component.data.fontSize === 'bigger' ? 'text-3xl' :
+                                            component.data.fontSize === 'big' ? 'text-2xl' :
+                                                component.data.fontSize === 'medium' ? 'text-xl' :
+                                                    component.data.fontSize === 'normal' ? 'text-lg' :
+                                                        component.data.fontSize === 'small' ? 'text-base' : 'text-base'
+                                        }`}
+                                    style={editorStyle}
+                                    placeholder="Digite seu título..."
+                                />
+                            );
+                        })()
                     ) : (
                         <UnifiedTextRenderer
                             text={component.data.text || 'Clique para editar...'}
@@ -218,6 +215,7 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
                             textTransform={component.data.textTransform}
                             dropShadow={component.data.dropShadow}
                             textStroke={component.data.textStroke}
+                            fontWeight={(component.data as any).fontWeight}
                         />
                     )}
                 </div>
@@ -226,32 +224,29 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
         case 'paragraph':
             return (
                 <div className="p-2 relative">
-                    {isSelected && (
-                        <TextToolbar
-                            currentData={component.data}
-                            onUpdate={(key, value) => onUpdate(component.id, { data: { ...component.data, [key]: value } } as any)}
-                            isVisible={true}
-                            className="top-0 right-full mr-2"
-                            anchorRef={anchorRef}
-                        />
-                    )}
                     {isSelected ? (
-                        <InlineTextEditor
-                            value={component.data.text || ''}
-                            onChange={(html) => onUpdate(component.id, { data: { ...component.data, text: html } } as any)}
-                            className={`text-gray-600 ${component.data.fontSize === 'huge' ? 'text-4xl' :
-                                component.data.fontSize === 'bigger' ? 'text-2xl' :
-                                    component.data.fontSize === 'big' ? 'text-xl' :
-                                        component.data.fontSize === 'medium' ? 'text-lg' :
-                                            component.data.fontSize === 'normal' ? 'text-base' :
-                                                component.data.fontSize === 'small' ? 'text-sm' : 'text-base'
-                                }`}
-                            style={{
-                                textAlign: component.data.align as any,
-                                color: component.data.color
-                            }}
-                            placeholder="Digite seu parágrafo..."
-                        />
+                        (() => {
+                            const editorStyle = {
+                                textAlign: (component.data as any).align as any,
+                                color: (component.data as any).color,
+                                fontWeight: (component.data as any).fontWeight || 400
+                            } as React.CSSProperties;
+                            return (
+                                <InlineTextEditor
+                                    value={component.data.text || ''}
+                                    onChange={(html) => onUpdate(component.id, { data: { ...component.data, text: html } } as any)}
+                                    className={`text-gray-600 ${component.data.fontSize === 'huge' ? 'text-3xl' :
+                                        component.data.fontSize === 'bigger' ? 'text-2xl' :
+                                            component.data.fontSize === 'big' ? 'text-xl' :
+                                                component.data.fontSize === 'medium' ? 'text-lg' :
+                                                    component.data.fontSize === 'normal' ? 'text-base' :
+                                                        component.data.fontSize === 'small' ? 'text-sm' : 'text-base'
+                                        }`}
+                                    style={editorStyle}
+                                    placeholder="Digite seu parágrafo..."
+                                />
+                            );
+                        })()
                     ) : (
                         <UnifiedTextRenderer
                             text={component.data.text || 'Clique para editar...'}
@@ -264,6 +259,7 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
                             textTransform={component.data.textTransform}
                             dropShadow={component.data.dropShadow}
                             textStroke={component.data.textStroke}
+                            fontWeight={(component.data as any).fontWeight}
                         />
                     )}
                 </div>
