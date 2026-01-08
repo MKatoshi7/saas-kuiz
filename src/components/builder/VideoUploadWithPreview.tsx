@@ -122,7 +122,7 @@ export function VideoUploadWithPreview({
                             <UploadCloud className="w-8 h-8 text-gray-400" />
                             <div className="text-center">
                                 <p className="text-xs font-medium text-gray-700">Arraste ou clique para enviar</p>
-                                <p className="text-[10px] text-gray-400">MP4, MOV ou WebM (Max 50MB recomendado)</p>
+                                <p className="text-[10px] text-gray-400">MP4, MOV ou WebM (Max 100MB recomendado)</p>
                             </div>
                         </div>
                     )}
