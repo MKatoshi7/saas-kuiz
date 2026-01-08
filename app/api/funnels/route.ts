@@ -54,6 +54,35 @@ export async function POST(request: Request) {
                 slug: `${slug}-${Date.now()}`,
                 userId: session.userId,
                 status: 'draft',
+                themeConfig: {
+                    primaryColor: '#2563EB',
+                    textColor: '#1F2937',
+                    fontFamily: 'Inter',
+                    page: {
+                        type: 'color',
+                        value: '#FFFFFF',
+                    },
+                    container: {
+                        show: true,
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: '16px',
+                        shadow: 'lg',
+                        opacity: 100,
+                        blur: 0,
+                    },
+                    logo: {
+                        url: '',
+                        size: 'md',
+                        height: 60,
+                        link: '',
+                        isSticky: false,
+                    },
+                    progressBar: {
+                        show: true,
+                        color: '#2563EB',
+                        isSticky: false,
+                    },
+                },
                 steps: {
                     create: [
                         {
