@@ -828,11 +828,7 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
 
         case 'spacer':
             return (
-                <div className="p-2">
-                    <div className="border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-xs text-gray-400" style={{ height: `${component.data.height || 32}px` }}>
-                        Espaçamento: {component.data.height || 32}px
-                    </div>
-                </div>
+                <div style={{ height: `${component.data.height || 32}px` }} className="w-full" />
             );
 
         case 'code':
