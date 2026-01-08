@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
 
         // Upload to Cloudinary
         const isVideo = file.type.startsWith('video/');
+        const isAudio = file.type.startsWith('audio/');
 
         const result = await new Promise<any>((resolve, reject) => {
             const uploadStream = cloudinary.uploader.upload_stream(
@@ -46,6 +47,8 @@ export async function POST(request: NextRequest) {
                     // Incoming transformations (resize only, format happens at delivery)
                     transformation: isVideo ? [
                         { width: 1280, height: 720, crop: 'limit' }, // HD max for speed
+                    ] : isAudio ? [
+                        // No specific incoming transformation for audio needed, maybe bitrate limit if desired
                     ] : [
                         { width: 1920, height: 1080, crop: 'limit' }, // Max dimensions for images
                     ],
@@ -64,7 +67,7 @@ export async function POST(request: NextRequest) {
             resource_type: result.resource_type,
             secure: true,
             transformation: [
-                { width: isVideo ? 1280 : 1920, crop: 'limit' },
+                { width: isVideo ? 1280 : (isAudio ? undefined : 1920), crop: isAudio ? undefined : 'limit' },
                 { quality: 'auto' },
                 { fetch_format: 'auto' }
             ]

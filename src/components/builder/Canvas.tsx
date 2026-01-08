@@ -129,6 +129,7 @@ export function Canvas({ previewDevice }: { previewDevice: 'mobile' | 'desktop' 
 
 import '@/styles/button-animations.css';
 
+import { ComponentControls } from './ComponentControls';
 // ... (imports remain the same)
 
 // Component Renderer with memoization
@@ -148,48 +149,21 @@ const ComponentRenderer = React.memo(function ComponentRenderer({
     onUpdate: (id: string, data: Partial<FunnelComponentData>) => void;
 }) {
     const baseClasses = `cursor-pointer rounded transition-all ${isSelected ? 'ring-2 ring-black bg-black/5' : 'hover:ring-1 hover:ring-black/10'}`;
+    const contentRef = React.useRef<HTMLDivElement>(null);
 
     return (
         <div className="relative group">
-            {/* Black Mini-Menu - Visible on Hover */}
-            <div className={`absolute -top-8 right-0 bg-black rounded-t-lg flex items-center gap-0.5 px-1.5 py-1 z-50 shadow-lg transition-opacity duration-200 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                {/* Drag Handle */}
-                <div className="text-white hover:text-white/90 cursor-grab p-1">
-                    <GripHorizontal className="w-3 h-3" />
-                </div>
+            {/* Component Controls via Portal */}
+            <ComponentControls
+                anchorRef={contentRef as React.RefObject<HTMLElement>}
+                isVisible={isSelected}
+                onEdit={onClick}
+                onDuplicate={onDuplicate}
+                onDelete={onDelete}
+            />
 
-                <div className="w-px h-3 bg-white/30 mx-0.5" />
-
-                {/* Edit */}
-                <button
-                    onClick={(e) => { e.stopPropagation(); onClick(); }}
-                    className="text-white hover:text-white/90 p-1 hover:bg-white/20 rounded transition-colors"
-                    title="Editar"
-                >
-                    <Edit2 className="w-3 h-3" />
-                </button>
-
-                {/* Duplicate */}
-                <button
-                    onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
-                    className="text-white hover:text-white/90 p-1 hover:bg-white/20 rounded transition-colors"
-                    title="Duplicar"
-                >
-                    <Copy className="w-3 h-3" />
-                </button>
-
-                {/* Delete */}
-                <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                    className="text-white hover:text-white/90 p-1 hover:bg-red-500 rounded transition-colors"
-                    title="Excluir"
-                >
-                    <Trash2 className="w-3 h-3" />
-                </button>
-            </div>
-
-            <div className={baseClasses} onClick={onClick}>
-                {renderContent(component, onUpdate, isSelected)}
+            <div className={baseClasses} onClick={onClick} ref={contentRef}>
+                {renderContent(component, onUpdate, isSelected, contentRef as React.RefObject<HTMLElement>)}
             </div>
         </div>
     );
@@ -200,7 +174,7 @@ const ComponentRenderer = React.memo(function ComponentRenderer({
         JSON.stringify(prevProps.component.data) === JSON.stringify(nextProps.component.data);
 });
 
-function renderContent(component: FunnelComponentData, onUpdate: (id: string, data: Partial<FunnelComponentData>) => void, isSelected: boolean) {
+function renderContent(component: FunnelComponentData, onUpdate: (id: string, data: Partial<FunnelComponentData>) => void, isSelected: boolean, anchorRef?: React.RefObject<HTMLElement>) {
     switch (component.type) {
         // ... (other cases remain the same until button)
         case 'headline':
@@ -212,6 +186,7 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
                             onUpdate={(key, value) => onUpdate(component.id, { data: { ...component.data, [key]: value } } as any)}
                             isVisible={true}
                             className="top-0 right-full mr-2"
+                            anchorRef={anchorRef}
                         />
                     )}
                     {isSelected ? (
@@ -257,6 +232,7 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
                             onUpdate={(key, value) => onUpdate(component.id, { data: { ...component.data, [key]: value } } as any)}
                             isVisible={true}
                             className="top-0 right-full mr-2"
+                            anchorRef={anchorRef}
                         />
                     )}
                     {isSelected ? (

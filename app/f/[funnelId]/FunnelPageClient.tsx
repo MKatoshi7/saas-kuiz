@@ -7,6 +7,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { ThemeWrapper } from '@/components/renderer/ThemeWrapper';
 import { FunnelTheme } from '@/types/funnel';
 import { useFunnelTracker } from '@/hooks/useFunnelTracker';
+import { sendFacebookEvent } from '../actions';
 
 interface Step {
     id: string;
@@ -19,9 +20,14 @@ interface FunnelPageClientProps {
     initialSteps: Step[];
     initialComponents: Record<string, FunnelComponentData[]>;
     themeConfig?: FunnelTheme;
+    marketingConfig?: {
+        fbPixelId?: string;
+        fbAccessToken?: string;
+        gtmId?: string;
+    };
 }
 
-export default function FunnelPageClient({ funnelId, initialSteps, initialComponents, themeConfig }: FunnelPageClientProps) {
+export default function FunnelPageClient({ funnelId, initialSteps, initialComponents, themeConfig, marketingConfig }: FunnelPageClientProps) {
     const [isCompleted, setIsCompleted] = useState(false);
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const { visitorId, trackAnswer, trackLead } = useFunnelTracker(funnelId);
@@ -35,6 +41,22 @@ export default function FunnelPageClient({ funnelId, initialSteps, initialCompon
             console.log('✅ Visitor session initialized:', visitorId);
         }
     }, [visitorId]);
+
+    // Track PageView via CAPI on mount
+    useEffect(() => {
+        if (marketingConfig?.fbPixelId && marketingConfig?.fbAccessToken) {
+            sendFacebookEvent(
+                marketingConfig.fbPixelId,
+                marketingConfig.fbAccessToken,
+                'PageView',
+                { funnelId },
+                { external_id: visitorId }
+            ).then(res => {
+                if (res.success) console.log('✅ FB CAPI PageView sent');
+                else console.error('❌ FB CAPI PageView failed', res.error);
+            });
+        }
+    }, [marketingConfig, funnelId, visitorId]);
 
     const handleStepChange = (stepIndex: number) => {
         console.log(`📍 Step changed to ${stepIndex}`, initialSteps[stepIndex]?.title);
@@ -98,6 +120,25 @@ export default function FunnelPageClient({ funnelId, initialSteps, initialCompon
     const handleComplete = async () => {
         console.log('✅ Funnel completed!');
         await trackLead(undefined, undefined, undefined, true); // Final lead event with isConverted=true
+
+        // Send Lead event via CAPI
+        if (marketingConfig?.fbPixelId && marketingConfig?.fbAccessToken) {
+            sendFacebookEvent(
+                marketingConfig.fbPixelId,
+                marketingConfig.fbAccessToken,
+                'Lead',
+                { funnelId, status: 'completed' },
+                {
+                    external_id: visitorId,
+                    em: contactData.email ? [contactData.email] : undefined, // Should be hashed ideally
+                    ph: contactData.phone ? [contactData.phone] : undefined  // Should be hashed ideally
+                }
+            ).then(res => {
+                if (res.success) console.log('✅ FB CAPI Lead sent');
+                else console.error('❌ FB CAPI Lead failed', res.error);
+            });
+        }
+
         setIsCompleted(true);
     };
 

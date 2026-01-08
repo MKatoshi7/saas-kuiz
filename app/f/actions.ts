@@ -1,6 +1,7 @@
 'use server';
 
 import prisma from '@/lib/prisma';
+import { headers } from 'next/headers';
 
 export async function saveFunnelAnswer(sessionId: string, funnelId: string, stepId: string, componentId: string, value: any) {
     if (!sessionId || !funnelId) return;
@@ -64,5 +65,57 @@ export async function completeFunnelSession(sessionId: string) {
         });
     } catch (error) {
         console.error('Error completing session:', error);
+    }
+}
+
+export async function sendFacebookEvent(
+    pixelId: string,
+    accessToken: string,
+    eventName: string,
+    eventData: any = {},
+    userData: any = {}
+) {
+    if (!pixelId || !accessToken) return { success: false, error: 'Missing Pixel ID or Access Token' };
+
+    try {
+        const headersList = await headers();
+        const clientIp = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || '0.0.0.0';
+        const userAgent = headersList.get('user-agent') || '';
+
+        const payload = {
+            data: [
+                {
+                    event_name: eventName,
+                    event_time: Math.floor(Date.now() / 1000),
+                    action_source: 'website',
+                    user_data: {
+                        client_ip_address: clientIp,
+                        client_user_agent: userAgent,
+                        ...userData
+                    },
+                    custom_data: eventData
+                }
+            ]
+        };
+
+        const response = await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${accessToken}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.error('Facebook CAPI Error:', data);
+            return { success: false, error: data };
+        }
+
+        return { success: true, data };
+    } catch (error) {
+        console.error('Error sending Facebook event:', error);
+        return { success: false, error };
     }
 }

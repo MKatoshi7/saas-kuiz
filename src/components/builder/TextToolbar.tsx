@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
     Heading1, Heading2, Type, AlignLeft, AlignCenter, AlignRight, Palette, ChevronDown, Check
 } from "lucide-react";
@@ -9,6 +10,7 @@ interface ToolbarProps {
     onUpdate: (key: string, value: any) => void;
     isVisible: boolean;
     className?: string;
+    anchorRef?: React.RefObject<HTMLElement>;
 }
 
 const PRESET_COLORS = [
@@ -20,10 +22,11 @@ const PRESET_COLORS = [
 
 const STORAGE_KEY = 'quizk_recent_colors';
 
-export function TextToolbar({ currentData, onUpdate, isVisible, className }: ToolbarProps) {
+export function TextToolbar({ currentData, onUpdate, isVisible, className, anchorRef }: ToolbarProps) {
     const [showPalette, setShowPalette] = useState(false);
     const [recentColors, setRecentColors] = useState<string[]>([]);
     const paletteRef = useRef<HTMLDivElement>(null);
+    const [coords, setCoords] = useState({ top: 0, left: 0 });
 
     // Get theme primary color
     const theme = useBuilderStore((state) => state.theme);
@@ -71,6 +74,31 @@ export function TextToolbar({ currentData, onUpdate, isVisible, className }: Too
         };
     }, [showPalette]);
 
+    // Update position if anchorRef is provided
+    useEffect(() => {
+        if (!anchorRef?.current || !isVisible) return;
+
+        const updatePosition = () => {
+            if (anchorRef.current) {
+                const rect = anchorRef.current.getBoundingClientRect();
+                setCoords({
+                    top: rect.top - 8, // 8px padding above
+                    left: rect.left
+                });
+            }
+        };
+
+        updatePosition();
+        // Capture phase to handle all scrolling in parent containers
+        window.addEventListener('scroll', updatePosition, true);
+        window.addEventListener('resize', updatePosition);
+
+        return () => {
+            window.removeEventListener('scroll', updatePosition, true);
+            window.removeEventListener('resize', updatePosition);
+        };
+    }, [anchorRef, isVisible]);
+
     if (!isVisible) return null;
 
     const handleColorChange = (color: string) => {
@@ -99,12 +127,22 @@ export function TextToolbar({ currentData, onUpdate, isVisible, className }: Too
             setRecentColors(newColors);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(newColors));
         }
+        // Close palette after selection
+        setShowPalette(false);
     };
 
     const currentColor = currentData.color || '#000000';
 
-    return (
-        <div className={`absolute z-[100] flex flex-col items-start gap-1 bg-slate-900 text-white p-1.5 rounded-lg shadow-xl animate-in fade-in slide-in-from-left duration-200 border border-slate-700 pointer-events-auto ${className || '-top-20 left-0'}`}>
+    const toolbarContent = (
+        <div
+            className={`flex flex-col items-start gap-1 bg-slate-900 text-white p-1.5 rounded-lg shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-200 border border-slate-700 pointer-events-auto ${anchorRef ? 'fixed z-[9999]' : `absolute z-[9999] ${className || '-top-16 left-0'}`
+                }`}
+            style={anchorRef ? {
+                top: coords.top,
+                left: coords.left,
+                transform: 'translateY(-100%)'
+            } : undefined}
+        >
 
             <div className="flex items-center gap-2">
                 {/* Tag Selector */}
@@ -263,10 +301,10 @@ export function TextToolbar({ currentData, onUpdate, isVisible, className }: Too
                         </div>
                     )}
                 </div>
-            </div >
+            </div>
 
             {/* Size Selector (Compact Row) */}
-            < div className="w-full pt-1 border-t border-slate-800 mt-1 flex justify-between items-center px-1" >
+            <div className="w-full pt-1 border-t border-slate-800 mt-1 flex justify-between items-center px-1">
                 <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Tamanho</span>
                 <select
                     value={currentData.fontSize || 'normal'}
@@ -281,7 +319,7 @@ export function TextToolbar({ currentData, onUpdate, isVisible, className }: Too
                     <option value="bigger" className="bg-slate-800">Muito Grande</option>
                     <option value="huge" className="bg-slate-800">Gigante</option>
                 </select>
-            </div >
+            </div>
 
             {/* NEW: Letter Spacing */}
             <div className="w-full pt-1 border-t border-slate-800 mt-1 flex justify-between items-center px-1">
@@ -409,7 +447,12 @@ export function TextToolbar({ currentData, onUpdate, isVisible, className }: Too
                 )}
             </div>
 
-        </div >
+        </div>
     );
-}
 
+    if (anchorRef && typeof document !== 'undefined') {
+        return createPortal(toolbarContent, document.body);
+    }
+
+    return toolbarContent;
+}

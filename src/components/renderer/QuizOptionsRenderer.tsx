@@ -42,6 +42,7 @@ export function QuizOptionsRenderer({ component, onNext, onAnswer, funnelId, ste
             setSelectedValues(newSelected);
         } else {
             // Single select
+            // Ensure we clear any previous selection first to avoid visual glitches
             setSelectedValues([value]);
 
             // Call onAnswer to trigger tracking in parent

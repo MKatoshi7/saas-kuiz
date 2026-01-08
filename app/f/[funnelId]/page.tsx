@@ -2,6 +2,7 @@ import prisma from '@/lib/prisma';
 import FunnelPageClient from './FunnelPageClient';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import Script from 'next/script';
 
 export async function generateMetadata({ params }: { params: Promise<{ funnelId: string }> }): Promise<Metadata> {
     const { funnelId } = await params;
@@ -80,12 +81,34 @@ export default async function FunnelPage({ params }: { params: Promise<{ funnelI
         order: s.order
     }));
 
+    const marketingConfig = funnel.marketingConfig as any;
+    const fbPixelId = marketingConfig?.fbPixelId;
+
     return (
-        <FunnelPageClient
-            funnelId={funnel.id}
-            initialSteps={steps}
-            initialComponents={componentsByStep}
-            themeConfig={funnel.themeConfig as any}
-        />
+        <>
+            {fbPixelId && (
+                <Script id="facebook-pixel" strategy="afterInteractive">
+                    {`
+                        !function(f,b,e,v,n,t,s)
+                        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+                        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+                        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+                        n.queue=[];t=b.createElement(e);t.async=!0;
+                        t.src=v;s=b.getElementsByTagName(e)[0];
+                        s.parentNode.insertBefore(t,s)}(window, document,'script',
+                        'https://connect.facebook.net/en_US/fbevents.js');
+                        fbq('init', '${fbPixelId}');
+                        fbq('track', 'PageView');
+                    `}
+                </Script>
+            )}
+            <FunnelPageClient
+                funnelId={funnel.id}
+                initialSteps={steps}
+                initialComponents={componentsByStep}
+                themeConfig={funnel.themeConfig as any}
+                marketingConfig={marketingConfig}
+            />
+        </>
     );
 }
