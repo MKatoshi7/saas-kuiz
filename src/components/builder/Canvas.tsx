@@ -94,7 +94,24 @@ export function Canvas({ previewDevice }: { previewDevice: 'mobile' | 'desktop' 
                                                     isSelected={selectedComponentId === component.id}
                                                     onClick={() => setSelectedComponent(component.id)}
                                                     onDuplicate={() => duplicateComponent(component.id)}
-                                                    onDelete={() => deleteComponent(component.id)}
+                                                    onDelete={async () => {
+                                                        if (confirm('Tem certeza que deseja excluir este componente?')) {
+                                                            // If component has a publicId (Cloudinary asset), delete it
+                                                            const componentData = component.data as any;
+                                                            if (componentData.publicId) {
+                                                                try {
+                                                                    await fetch('/api/upload/delete', {
+                                                                        method: 'POST',
+                                                                        headers: { 'Content-Type': 'application/json' },
+                                                                        body: JSON.stringify({ publicId: componentData.publicId }),
+                                                                    });
+                                                                } catch (error) {
+                                                                    console.error('Failed to delete asset from Cloudinary:', error);
+                                                                }
+                                                            }
+                                                            deleteComponent(component.id);
+                                                        }
+                                                    }}
                                                     onUpdate={updateComponent}
                                                 />
                                             </SortableComponent>
@@ -545,6 +562,33 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
                             </div>
                         </div>
                     )}
+                </div>
+            );
+
+        case 'vsl-video':
+            return (
+                <div className="p-2">
+                    <div className="aspect-video w-full bg-black rounded-lg overflow-hidden relative flex flex-col items-center justify-center border-2 border-dashed border-gray-700">
+                        {component.data.url ? (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
+                                <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center mb-2">
+                                    <Video className="w-6 h-6 text-white" />
+                                </div>
+                                <span className="text-white text-xs font-bold uppercase tracking-wider">VSL Video Player</span>
+                                <span className="text-gray-400 text-[10px] mt-1 truncate max-w-[200px]">{component.data.url}</span>
+                            </div>
+                        ) : (
+                            <div className="text-center text-gray-500">
+                                <Video className="w-8 h-8 mx-auto mb-2 text-white" />
+                                <span className="text-sm text-white font-bold">VSL Video Player</span>
+                                <p className="text-[10px] text-gray-400 mt-1">Configure a URL nas propriedades</p>
+                            </div>
+                        )}
+                        {/* Fake Progress Bar Preview */}
+                        <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-800">
+                            <div className="h-full bg-blue-600 w-1/3 shadow-[0_0_8px_rgba(37,99,235,0.5)]" />
+                        </div>
+                    </div>
                 </div>
             );
 

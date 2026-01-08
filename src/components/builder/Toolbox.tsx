@@ -96,6 +96,11 @@ const categories: Category[] = [
                 icon: <MessageSquareQuote className="w-4 h-4" />
             },
             {
+                type: 'vsl-video',
+                label: 'Vídeo VSL',
+                icon: <Video className="w-4 h-4" />
+            },
+            {
                 type: 'audio',
                 label: 'Áudio',
                 icon: <Music className="w-4 h-4" />

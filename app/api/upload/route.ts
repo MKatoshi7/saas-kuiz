@@ -36,13 +36,19 @@ export async function POST(request: NextRequest) {
         const buffer = Buffer.from(bytes);
 
         // Upload to Cloudinary
+        const isVideo = file.type.startsWith('video/');
+
         const result = await new Promise<any>((resolve, reject) => {
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
                     folder: funnelId ? `kuiz-uploads/${funnelId}` : 'kuiz-uploads',
                     resource_type: 'auto',
-                    transformation: [
-                        { width: 1920, height: 1080, crop: 'limit' }, // Max dimensions
+                    transformation: isVideo ? [
+                        { quality: 'auto' },
+                        { fetch_format: 'auto' },
+                        { width: 1280, height: 720, crop: 'limit' }, // HD max for speed
+                    ] : [
+                        { width: 1920, height: 1080, crop: 'limit' }, // Max dimensions for images
                         { quality: 'auto:good' }, // Auto quality optimization
                         { fetch_format: 'auto' }, // Auto format (WebP when supported)
                     ],

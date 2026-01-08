@@ -435,6 +435,10 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                         label="Imagem"
                                         value={selectedComponent.data.src || ''}
                                         onChange={(url) => handleUpdate('src', url)}
+                                        onUploadComplete={(data) => {
+                                            handleUpdate('src', data.url);
+                                            handleUpdate('publicId', data.publicId);
+                                        }}
                                         placeholder="https://exemplo.com/imagem.jpg"
                                         helpText="Arraste ou cole a URL da imagem"
                                         previewShape="rounded"
@@ -1300,7 +1304,101 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                             </>
                         )}
 
-                        {!['headline', 'paragraph', 'button', 'quiz-option', 'video', 'image', 'input', 'slider', 'audio', 'alert', 'testimonial', 'pricing', 'spacer', 'code', 'loading', 'argument'].includes(selectedComponent.type) && (
+                        {selectedComponent.type === 'vsl-video' && (
+                            <>
+                                <div>
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">URL do Vídeo (Direto ou Cloudinary)</label>
+                                    <Input
+                                        value={selectedComponent.data.url || ''}
+                                        onChange={(e) => handleUpdate('url', e.target.value)}
+                                        placeholder="https://..."
+                                    />
+                                </div>
+
+                                <ImageUploadWithPreview
+                                    label="Thumbnail (Capa)"
+                                    value={selectedComponent.data.thumbnailUrl || ''}
+                                    onChange={(url) => handleUpdate('thumbnailUrl', url)}
+                                    onUploadComplete={(data) => {
+                                        handleUpdate('thumbnailUrl', data.url);
+                                        // We don't necessarily need the publicId for thumbnail here, but it's good practice
+                                    }}
+                                    funnelId={funnelId || undefined}
+                                />
+
+                                <div className="space-y-3 pt-2">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-medium text-gray-700">Autoplay Mudo</label>
+                                        <Switch
+                                            checked={selectedComponent.data.autoPlay !== false}
+                                            onCheckedChange={(checked) => handleUpdate('autoPlay', checked)}
+                                        />
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-medium text-gray-700">Reiniciar ao Clicar</label>
+                                        <Switch
+                                            checked={selectedComponent.data.restartOnClick !== false}
+                                            onCheckedChange={(checked) => handleUpdate('restartOnClick', checked)}
+                                        />
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-medium text-gray-700">Desmutar ao Clicar</label>
+                                        <Switch
+                                            checked={selectedComponent.data.unmuteOnClick !== false}
+                                            onCheckedChange={(checked) => handleUpdate('unmuteOnClick', checked)}
+                                        />
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-medium text-gray-700">Mostrar Barra de Progresso</label>
+                                        <Switch
+                                            checked={selectedComponent.data.showProgressBar !== false}
+                                            onCheckedChange={(checked) => handleUpdate('showProgressBar', checked)}
+                                        />
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-medium text-gray-700">Progresso Acelerado (Fake)</label>
+                                        <Switch
+                                            checked={selectedComponent.data.fakeProgress !== false}
+                                            onCheckedChange={(checked) => handleUpdate('fakeProgress', checked)}
+                                        />
+                                    </div>
+                                </div>
+
+                                {selectedComponent.data.showProgressBar !== false && (
+                                    <ColorPickerWithPalette
+                                        label="Cor da Barra de Progresso"
+                                        value={selectedComponent.data.progressBarColor || '#2563EB'}
+                                        onChange={(color) => handleUpdate('progressBarColor', color)}
+                                    />
+                                )}
+
+                                <div>
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Texto do Botão de Play</label>
+                                    <Input
+                                        value={selectedComponent.data.playButtonText || 'CLIQUE PARA OUVIR'}
+                                        onChange={(e) => handleUpdate('playButtonText', e.target.value)}
+                                    />
+                                </div>
+
+                                <ColorPickerWithPalette
+                                    label="Cor do Botão de Play"
+                                    value={selectedComponent.data.playButtonColor || '#2563EB'}
+                                    onChange={(color) => handleUpdate('playButtonColor', color)}
+                                />
+
+                                <div>
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Duração Estimada (Segundos)</label>
+                                    <Input
+                                        type="number"
+                                        value={selectedComponent.data.fakeProgressDuration || 300}
+                                        onChange={(e) => handleUpdate('fakeProgressDuration', Number(e.target.value))}
+                                    />
+                                    <p className="text-[10px] text-gray-400 mt-1">Usado para calcular a velocidade da barra fake.</p>
+                                </div>
+                            </>
+                        )}
+
+                        {!['headline', 'paragraph', 'button', 'quiz-option', 'video', 'vsl-video', 'image', 'input', 'slider', 'audio', 'alert', 'testimonial', 'pricing', 'spacer', 'code', 'loading', 'argument'].includes(selectedComponent.type) && (
                             <p className="text-xs text-gray-500">
                                 Edição avançada para {selectedComponent.type} em breve...
                             </p>
@@ -1488,8 +1586,21 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                     <Button
                         variant="outline"
                         className="w-full text-red-600 border-red-300 hover:bg-red-50 gap-2"
-                        onClick={() => {
+                        onClick={async () => {
                             if (confirm('Tem certeza que deseja excluir este componente?')) {
+                                // If component has a publicId (Cloudinary asset), delete it
+                                const componentData = selectedComponent.data as any;
+                                if (componentData.publicId) {
+                                    try {
+                                        await fetch('/api/upload/delete', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ publicId: componentData.publicId }),
+                                        });
+                                    } catch (error) {
+                                        console.error('Failed to delete asset from Cloudinary:', error);
+                                    }
+                                }
                                 deleteComponent(selectedComponent.id);
                             }
                         }}

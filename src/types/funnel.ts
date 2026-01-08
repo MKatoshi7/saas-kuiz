@@ -31,7 +31,8 @@ export type ComponentType =
   | 'poll'
   | 'notification'
   | 'animated-counter'
-  | 'confetti';
+  | 'confetti'
+  | 'vsl-video';
 
 export type ActionType = 'next_step' | 'jump_to_step' | 'submit_funnel' | 'open_url';
 
@@ -138,6 +139,7 @@ export interface ImageComponent extends BaseComponent {
     src?: string;
     alt?: string;
     width?: string; // e.g., '100%', '50%', '300px'
+    publicId?: string; // Cloudinary public ID
     variableName?: string;
   };
 }
@@ -151,6 +153,28 @@ export interface VideoComponent extends BaseComponent {
     autoplay?: boolean;
     controls?: boolean;
     aspectRatio?: '16:9' | '9:16' | '4:3' | '1:1';
+    publicId?: string; // Cloudinary public ID
+    variableName?: string;
+  };
+}
+
+// VSL Video component (Video Sales Letter)
+export interface VSLVideoComponent extends BaseComponent {
+  type: 'vsl-video';
+  data: {
+    url: string;
+    thumbnailUrl?: string;
+    autoPlay?: boolean;
+    loop?: boolean;
+    showProgressBar?: boolean;
+    progressBarColor?: string;
+    playButtonText?: string;
+    playButtonColor?: string;
+    restartOnClick?: boolean;
+    unmuteOnClick?: boolean;
+    fakeProgress?: boolean; // If true, progress bar moves faster to give impression of speed
+    fakeProgressDuration?: number; // Duration in seconds for the fake progress
+    publicId?: string; // Cloudinary public ID
     variableName?: string;
   };
 }
@@ -536,7 +560,8 @@ export type FunnelComponentData =
   | PollComponent
   | NotificationComponent
   | AnimatedCounterComponent
-  | ConfettiComponent;
+  | ConfettiComponent
+  | VSLVideoComponent;
 
 // ===========================
 // Funnel & Step Types
@@ -551,6 +576,7 @@ export interface FunnelTheme {
     value: string;
     secondaryColor?: string;
     overlayOpacity?: number;
+    publicId?: string; // Cloudinary public ID
     customCss?: string;
   };
   container: {
@@ -567,6 +593,7 @@ export interface FunnelTheme {
     height?: number;
     link?: string;
     isSticky?: boolean;
+    publicId?: string; // Cloudinary public ID
   };
   progressBar?: {
     show: boolean;

@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 interface ImageUploadWithPreviewProps {
     value: string;
     onChange: (url: string) => void;
+    onUploadComplete?: (data: { url: string; publicId: string }) => void;
     label?: string;
     placeholder?: string;
     previewShape?: 'circle' | 'rounded' | 'square';
@@ -20,6 +21,7 @@ interface ImageUploadWithPreviewProps {
 export function ImageUploadWithPreview({
     value,
     onChange,
+    onUploadComplete,
     label,
     placeholder = 'https://...',
     previewShape = 'rounded',
@@ -47,8 +49,11 @@ export function ImageUploadWithPreview({
                 });
 
                 if (response.ok) {
-                    const { url } = await response.json();
-                    onChange(url);
+                    const data = await response.json();
+                    onChange(data.url);
+                    if (onUploadComplete) {
+                        onUploadComplete({ url: data.url, publicId: data.publicId });
+                    }
                     toast.success('Imagem enviada com sucesso!');
                 } else {
                     const error = await response.json();

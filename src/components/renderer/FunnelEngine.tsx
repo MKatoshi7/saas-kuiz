@@ -12,6 +12,7 @@ import { UnifiedTextRenderer } from '@/components/renderer/UnifiedTextRenderer';
 import { LoadingComponentRenderer } from '@/components/renderer/LoadingComponentRenderer';
 import { PricingComponent } from '@/types/funnel';
 import { DelayedButton } from './DelayedButton';
+import { VSLVideo } from './VSLVideo';
 
 // Lazy load heavy components
 const QuizOptionsRenderer = lazy(() => import('./QuizOptionsRenderer').then(m => ({ default: m.QuizOptionsRenderer })));
@@ -381,6 +382,24 @@ function PublicComponentRenderer({
                         )}
                     </div>
                 </div>
+            );
+
+        case 'vsl-video':
+            return (
+                <VSLVideo
+                    url={data.url}
+                    thumbnailUrl={data.thumbnailUrl}
+                    autoPlay={data.autoPlay}
+                    loop={data.loop}
+                    showProgressBar={data.showProgressBar}
+                    progressBarColor={data.progressBarColor}
+                    playButtonText={data.playButtonText}
+                    playButtonColor={data.playButtonColor}
+                    restartOnClick={data.restartOnClick}
+                    unmuteOnClick={data.unmuteOnClick}
+                    fakeProgress={data.fakeProgress}
+                    fakeProgressDuration={data.fakeProgressDuration}
+                />
             );
 
         case 'video':

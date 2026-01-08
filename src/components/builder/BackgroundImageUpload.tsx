@@ -7,10 +7,11 @@ import { toast } from 'sonner';
 interface BackgroundImageUploadProps {
     currentUrl?: string;
     onUpload: (url: string) => void;
+    onUploadComplete?: (data: { url: string; publicId: string }) => void;
     funnelId: string | null;
 }
 
-export function BackgroundImageUpload({ currentUrl, onUpload, funnelId }: BackgroundImageUploadProps) {
+export function BackgroundImageUpload({ currentUrl, onUpload, onUploadComplete, funnelId }: BackgroundImageUploadProps) {
     const [isUploading, setIsUploading] = useState(false);
 
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -34,8 +35,11 @@ export function BackgroundImageUpload({ currentUrl, onUpload, funnelId }: Backgr
             });
 
             if (response.ok) {
-                const { url } = await response.json();
-                onUpload(url);
+                const data = await response.json();
+                onUpload(data.url);
+                if (onUploadComplete) {
+                    onUploadComplete({ url: data.url, publicId: data.publicId });
+                }
                 toast.success('Imagem de fundo atualizada!');
             } else {
                 const error = await response.json();

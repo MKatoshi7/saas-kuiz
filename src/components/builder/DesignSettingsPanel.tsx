@@ -46,10 +46,11 @@ export function DesignSettingsPanel() {
             });
 
             if (response.ok) {
-                const { url } = await response.json();
+                const data = await response.json();
                 updateTheme({
                     logo: {
-                        url: url,
+                        url: data.url,
+                        publicId: data.publicId,
                         size: theme.logo?.size || 'md',
                         height: theme.logo?.height,
                         link: theme.logo?.link
@@ -172,6 +173,10 @@ export function DesignSettingsPanel() {
                                 <BackgroundImageUpload
                                     currentUrl={theme.page.type === 'image' ? theme.page.value : ''}
                                     onUpload={(url) => handleThemeUpdate('page', 'value', url)}
+                                    onUploadComplete={(data) => {
+                                        handleThemeUpdate('page', 'value', data.url);
+                                        handleThemeUpdate('page', 'publicId', data.publicId);
+                                    }}
                                     funnelId={currentFunnelId}
                                 />
 
