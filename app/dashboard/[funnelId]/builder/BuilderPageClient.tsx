@@ -333,7 +333,7 @@ export default function BuilderPageClient({ funnelId }: { funnelId: string }) {
                     )}
 
                     <Canvas previewDevice={previewDevice} />
-                    <PropertiesPanel />
+                    <PropertiesPanel funnelId={funnelId} />
                 </div>
 
                 <DragOverlay>

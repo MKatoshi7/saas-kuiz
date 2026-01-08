@@ -4,6 +4,7 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud, X, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 interface ImageUploadWithPreviewProps {
     value: string;
@@ -13,6 +14,7 @@ interface ImageUploadWithPreviewProps {
     previewShape?: 'circle' | 'rounded' | 'square';
     previewSize?: 'sm' | 'md' | 'lg';
     helpText?: string;
+    funnelId?: string;
 }
 
 export function ImageUploadWithPreview({
@@ -22,7 +24,8 @@ export function ImageUploadWithPreview({
     placeholder = 'https://...',
     previewShape = 'rounded',
     previewSize = 'md',
-    helpText
+    helpText,
+    funnelId
 }: ImageUploadWithPreviewProps) {
     const [isUploading, setIsUploading] = useState(false);
 
@@ -34,6 +37,9 @@ export function ImageUploadWithPreview({
             try {
                 const formData = new FormData();
                 formData.append('file', file);
+                if (funnelId) {
+                    formData.append('funnelId', funnelId);
+                }
 
                 const response = await fetch('/api/upload', {
                     method: 'POST',
@@ -43,11 +49,19 @@ export function ImageUploadWithPreview({
                 if (response.ok) {
                     const { url } = await response.json();
                     onChange(url);
+                    toast.success('Imagem enviada com sucesso!');
                 } else {
-                    console.error('Upload failed');
+                    const error = await response.json();
+                    console.error('Upload failed:', error);
+                    toast.error('Erro ao fazer upload da imagem', {
+                        description: error.details || 'Tente novamente.'
+                    });
                 }
             } catch (error) {
                 console.error('Upload error:', error);
+                toast.error('Erro ao fazer upload da imagem', {
+                    description: 'Verifique sua conexão e tente novamente.'
+                });
             } finally {
                 setIsUploading(false);
             }
@@ -58,7 +72,7 @@ export function ImageUploadWithPreview({
                 onChange(url);
             }
         }
-    }, [onChange]);
+    }, [onChange, funnelId]);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,

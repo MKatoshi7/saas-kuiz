@@ -20,7 +20,7 @@ import EmojiPicker from 'emoji-picker-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Smile } from 'lucide-react';
 
-export function PropertiesPanel() {
+export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
     const { selectedComponentId, deleteComponent, setSelectedComponent } = useBuilderStore();
     const componentsData = useBuilderStore((state) => state.getCurrentComponents());
     const components = Array.isArray(componentsData) ? componentsData : [];
@@ -438,6 +438,7 @@ export function PropertiesPanel() {
                                         placeholder="https://exemplo.com/imagem.jpg"
                                         helpText="Arraste ou cole a URL da imagem"
                                         previewShape="rounded"
+                                        funnelId={funnelId}
                                     />
                                 </div>
                                 <div>
