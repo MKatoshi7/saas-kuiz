@@ -81,7 +81,7 @@ export function CustomDomainSettings({ funnelId, initialDomain, currentSlug }: C
                         </div>
                         <div className="flex-1">
                             <p className="text-sm font-medium text-blue-900">Domínio Atual</p>
-                            <p className="text-sm text-blue-700 font-mono">quizk.com/f/{currentSlug}</p>
+                            <p className="text-sm text-blue-700 font-mono">kuiz.digital/{currentSlug}</p>
                         </div>
                     </div>
                 </div>
@@ -148,7 +148,7 @@ export function CustomDomainSettings({ funnelId, initialDomain, currentSlug }: C
                                                 <td className="py-2 px-3 font-mono text-slate-700">
                                                     {domain.split('.').length > 2 ? domain.split('.')[0] : '@'}
                                                 </td>
-                                                <td className="py-2 px-3 font-mono text-slate-700">quizk.com</td>
+                                                <td className="py-2 px-3 font-mono text-slate-700">kuiz.digital</td>
                                             </tr>
                                         </tbody>
                                     </table>
