@@ -252,7 +252,7 @@ export function StepsPanel() {
     };
 
     return (
-        <div className="w-64 bg-[#FAFAFA] border-r border-black/5 flex flex-col h-full z-20">
+        <div className="flex flex-col h-full bg-[#FAFAFA]">
             <div className="p-4 border-b border-black/5 flex items-center justify-between shrink-0">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Etapas</span>
                 <Button size="icon" variant="ghost" onClick={addStep} className="h-7 w-7 hover:bg-black/5 hover:text-black rounded-lg transition-all">

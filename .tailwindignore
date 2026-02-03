@@ -1,0 +1,10 @@
+node_modules
+.next
+.agent
+.docs
+.git
+*.md
+*.json
+!package.json
+!tsconfig.json
+!components.json

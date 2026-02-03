@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { StepsPanel } from '@/components/builder/StepsPanel';
 import { Toolbox } from '@/components/builder/Toolbox';
 import { Canvas } from '@/components/builder/Canvas';
+import { LeftSidebar } from '@/components/builder/LeftSidebar';
 import { PropertiesPanel } from '@/components/builder/PropertiesPanel';
 import { DesignSettingsPanel } from '@/components/builder/DesignSettingsPanel';
 import { useBuilderStore } from '@/store/builderStore';
@@ -146,7 +147,20 @@ export default function BuilderPageClient({ funnelId }: { funnelId: string }) {
 
         if (active.data.current?.isToolboxItem) {
             const type = active.data.current.type as ComponentType;
-            addComponent(type);
+
+            // Find index to insert at if dropped over a specific component
+            let insertIndex: number | undefined = undefined;
+
+            if (over.id !== 'canvas-droppable') {
+                const overIndex = components.findIndex((c) => c.id === over.id);
+                if (overIndex !== -1) {
+                    // Insert at the index of the component we dropped over
+                    // This effectively places it "before" or "at the position of" the target
+                    insertIndex = overIndex;
+                }
+            }
+
+            addComponent(type, insertIndex);
             return;
         }
 
@@ -311,10 +325,28 @@ export default function BuilderPageClient({ funnelId }: { funnelId: string }) {
                                         description: "Suas alterações agora estão visíveis publicamente.",
                                     });
                                 } else {
-                                    const data = await response.json();
-                                    throw new Error(data.error || data.details || 'Failed to publish');
+                                    // Check if response is JSON or HTML
+                                    const contentType = response.headers.get('content-type');
+                                    let errorMessage = 'Failed to publish';
+
+                                    if (contentType && contentType.includes('application/json')) {
+                                        try {
+                                            const data = await response.json();
+                                            errorMessage = data.error || data.details || errorMessage;
+                                        } catch (jsonError) {
+                                            errorMessage = `Server error (${response.status})`;
+                                        }
+                                    } else {
+                                        // Response is not JSON (probably HTML error page)
+                                        const text = await response.text();
+                                        console.error('Server returned non-JSON response:', text);
+                                        errorMessage = `Server error (${response.status}). Check console for details.`;
+                                    }
+
+                                    throw new Error(errorMessage);
                                 }
                             } catch (error) {
+                                console.error('Publish error:', error);
                                 toast.error("Erro ao publicar", {
                                     description: error instanceof Error ? error.message : "Não foi possível publicar o site. Tente novamente."
                                 });
@@ -331,10 +363,7 @@ export default function BuilderPageClient({ funnelId }: { funnelId: string }) {
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 <div className="flex-1 flex overflow-hidden relative z-10">
                     {leftTab === 'steps' ? (
-                        <>
-                            <StepsPanel />
-                            <Toolbox />
-                        </>
+                        <LeftSidebar />
                     ) : (
                         <DesignSettingsPanel />
                     )}

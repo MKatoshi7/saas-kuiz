@@ -252,6 +252,8 @@ export interface CarouselComponent extends BaseComponent {
       targetStepId?: string;
     }>;
     variableName?: string;
+    autoPlay?: boolean;
+    interval?: number;
   };
 }
 

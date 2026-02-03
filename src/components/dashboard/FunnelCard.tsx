@@ -166,7 +166,7 @@ export function FunnelCard({ project, isSubscriptionExpired }: FunnelCardProps) 
                             title={isSubscriptionExpired ? "Assinatura expirada" : "Editar"}
                         >
                             <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
-                            Editor
+                            Kuiz Editor
                         </Button>
                         <Button
                             onClick={handlePreview}

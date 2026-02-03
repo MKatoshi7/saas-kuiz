@@ -133,7 +133,7 @@ export function FunnelEngine({ funnelId, steps, componentsByStep, onStepChange, 
             }}
         >
             <div
-                className={`space-y-6 transition-opacity duration-200 ${isTransitioning ? 'opacity-0' : 'opacity-100'
+                className={`space-y-4 transition-opacity duration-200 ${isTransitioning ? 'opacity-0' : 'opacity-100'
                     }`}
             >
                 {components.map((component) => (
@@ -185,6 +185,12 @@ function PublicComponentRenderer({
                     fontSize={data.fontSize}
                     align={data.align}
                     color={data.color}
+                    fontWeight={(data as any).fontWeight}
+                    letterSpacing={(data as any).letterSpacing}
+                    lineHeight={(data as any).lineHeight}
+                    textTransform={(data as any).textTransform}
+                    dropShadow={(data as any).dropShadow}
+                    textStroke={(data as any).textStroke}
                 />
             );
 
@@ -196,6 +202,12 @@ function PublicComponentRenderer({
                     fontSize={data.fontSize}
                     align={data.align}
                     color={data.color}
+                    fontWeight={(data as any).fontWeight}
+                    letterSpacing={(data as any).letterSpacing}
+                    lineHeight={(data as any).lineHeight}
+                    textTransform={(data as any).textTransform}
+                    dropShadow={(data as any).dropShadow}
+                    textStroke={(data as any).textStroke}
                 />
             );
 
@@ -232,11 +244,22 @@ function PublicComponentRenderer({
                 </div>
             );
 
+
         case 'code':
             const sanitizedCode = DOMPurify.sanitize(data.code || '', { ADD_TAGS: ['iframe', 'script'], ADD_ATTR: ['src', 'frameborder', 'allow', 'allowfullscreen'] });
             return (
                 <div dangerouslySetInnerHTML={{ __html: sanitizedCode }} />
             );
+
+        case 'loading':
+            return (
+                <LoadingComponentRenderer
+                    data={data}
+                    onNext={onNext || (() => { })}
+                    onJump={onJump || (() => { })}
+                />
+            );
+
 
         case 'button':
             // Helper function to darken color for 3D shadow

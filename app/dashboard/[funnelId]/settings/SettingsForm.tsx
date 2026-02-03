@@ -151,6 +151,65 @@ export function SettingsForm({ funnel }: SettingsFormProps) {
                             onChange={(e) => handleUpdate('marketingConfig', { gtmId: e.target.value })}
                         />
                     </div>
+
+                    <div className="grid gap-2 pt-4 border-t border-gray-100">
+                        <Label htmlFor="custom_head">Scripts Personalizados (Head)</Label>
+                        <textarea
+                            id="custom_head"
+                            className="w-full min-h-[120px] p-3 rounded-md border border-gray-300 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="<!-- Cole aqui scripts como UTMify, Hotjar, etc -->&#10;<script>...</script>"
+                            value={formData.marketingConfig?.customHeadScript || ''}
+                            onChange={(e) => handleUpdate('marketingConfig', { customHeadScript: e.target.value })}
+                        />
+                        <p className="text-xs text-gray-500">
+                            Estes scripts serão injetados logo após a tag &lt;head&gt;. Ideal para UTMify, Hotjar, etc.
+                        </p>
+                    </div>
+
+                    <div className="grid gap-2 pt-4 border-t border-gray-100">
+                        <Label>Parâmetros UTM Padrão (Opcional)</Label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <Label htmlFor="utm_source" className="text-xs text-gray-500 mb-1 block">utm_source</Label>
+                                <Input
+                                    id="utm_source"
+                                    placeholder="ex: facebook"
+                                    value={formData.marketingConfig?.defaultUtmSource || ''}
+                                    onChange={(e) => handleUpdate('marketingConfig', { defaultUtmSource: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="utm_medium" className="text-xs text-gray-500 mb-1 block">utm_medium</Label>
+                                <Input
+                                    id="utm_medium"
+                                    placeholder="ex: cpc"
+                                    value={formData.marketingConfig?.defaultUtmMedium || ''}
+                                    onChange={(e) => handleUpdate('marketingConfig', { defaultUtmMedium: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="utm_campaign" className="text-xs text-gray-500 mb-1 block">utm_campaign</Label>
+                                <Input
+                                    id="utm_campaign"
+                                    placeholder="ex: promocao_verao"
+                                    value={formData.marketingConfig?.defaultUtmCampaign || ''}
+                                    onChange={(e) => handleUpdate('marketingConfig', { defaultUtmCampaign: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="utm_content" className="text-xs text-gray-500 mb-1 block">utm_content</Label>
+                                <Input
+                                    id="utm_content"
+                                    placeholder="ex: ad_video_01"
+                                    value={formData.marketingConfig?.defaultUtmContent || ''}
+                                    onChange={(e) => handleUpdate('marketingConfig', { defaultUtmContent: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                            Estes valores serão usados se a URL não contiver parâmetros UTM.
+                        </p>
+                    </div>
                 </CardContent>
                 <CardFooter className="border-t bg-slate-50/50 px-6 py-4">
                     <Button variant="outline" onClick={handleSave} disabled={isLoading}>

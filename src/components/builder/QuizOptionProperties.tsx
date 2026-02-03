@@ -354,6 +354,21 @@ export function QuizOptionProperties({ component }: { component: QuizOptionCompo
 
                 <div className="grid grid-cols-2 gap-2">
                     <div>
+                        <Label className="text-[10px] text-gray-500 mb-1 block">Colunas</Label>
+                        <Select
+                            value={component.data.layout === 'grid' ? 'grid' : 'list'}
+                            onValueChange={(val) => handleUpdate('layout', val)}
+                        >
+                            <SelectTrigger className="h-7 text-xs">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="list">1 Coluna</SelectItem>
+                                <SelectItem value="grid">2 Colunas</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div>
                         <Label className="text-[10px] text-gray-500 mb-1 block">Check</Label>
                         <Select
                             value={component.data.checkPosition || 'right'}

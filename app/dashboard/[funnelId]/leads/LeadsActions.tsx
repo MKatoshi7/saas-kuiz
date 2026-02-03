@@ -27,9 +27,10 @@ interface LeadData {
 interface LeadsActionsProps {
     funnelId: string;
     leads: LeadData[];
+    steps: any[];
 }
 
-export function LeadsActions({ funnelId, leads }: LeadsActionsProps) {
+export function LeadsActions({ funnelId, leads, steps }: LeadsActionsProps) {
     const [isClearing, setIsClearing] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
 
@@ -61,8 +62,8 @@ export function LeadsActions({ funnelId, leads }: LeadsActionsProps) {
     const handleExportLeads = async () => {
         setIsExporting(true);
         try {
-            // Create CSV content
-            const headers = [
+            // Create dynamic headers with step columns
+            const baseHeaders = [
                 'Lead #',
                 'ID Sessão',
                 'Data/Hora Início',
@@ -78,29 +79,39 @@ export function LeadsActions({ funnelId, leads }: LeadsActionsProps) {
                 'UTM Campaign',
                 'UTM Content',
                 'UTM Term',
-                'Respostas',
-                'System ID'
             ];
 
-            const rows = leads.map((lead, index) => [
-                `LEAD-${String(index + 1).padStart(4, '0')}`,
-                lead.sessionId,
-                new Date(lead.startedAt).toLocaleString('pt-BR'),
-                lead.completedAt ? new Date(lead.completedAt).toLocaleString('pt-BR') : 'Não completou',
-                lead.completedAt ? 'Completado' : 'Abandonado',
-                lead.ip || '-',
-                lead.city || '-',
-                lead.region || '-',
-                lead.country || '-',
-                lead.userAgent || '-',
-                lead.utmSource || '-',
-                lead.utmMedium || '-',
-                lead.utmCampaign || '-',
-                lead.utmContent || '-',
-                lead.utmTerm || '-',
-                JSON.stringify(lead.answersSnapshot),
-                lead.id
-            ]);
+            // Add one column per step
+            const stepHeaders = steps.map((step, index) => `Etapa ${index + 1}: ${step.title}`);
+            const headers = [...baseHeaders, ...stepHeaders, 'System ID'];
+
+            const rows = leads.map((lead, index) => {
+                const baseData = [
+                    `LEAD-${String(index + 1).padStart(4, '0')}`,
+                    lead.sessionId,
+                    new Date(lead.startedAt).toLocaleString('pt-BR'),
+                    lead.completedAt ? new Date(lead.completedAt).toLocaleString('pt-BR') : 'Não completou',
+                    lead.completedAt ? 'Completado' : 'Abandonado',
+                    lead.ip || '-',
+                    lead.city || '-',
+                    lead.region || '-',
+                    lead.country || '-',
+                    lead.userAgent || '-',
+                    lead.utmSource || '-',
+                    lead.utmMedium || '-',
+                    lead.utmCampaign || '-',
+                    lead.utmContent || '-',
+                    lead.utmTerm || '-',
+                ];
+
+                // Extract answer for each step
+                const stepAnswers = steps.map(step => {
+                    const answer = lead.answersSnapshot[step.id];
+                    return answer ? String(answer) : '-';
+                });
+
+                return [...baseData, ...stepAnswers, lead.id];
+            });
 
             const csvContent = [
                 headers.join(','),

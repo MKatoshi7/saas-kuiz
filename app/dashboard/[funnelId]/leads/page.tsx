@@ -86,7 +86,7 @@ export default async function LeadsPage({ params }: { params: Promise<{ funnelId
                     <h2 className="text-2xl font-bold text-slate-900">Dashboard Analytics</h2>
                     <p className="text-slate-500">Funil ID: <span className="font-mono text-xs bg-slate-100 px-1 rounded">{funnelId}</span></p>
                 </div>
-                <LeadsActions funnelId={funnelId} leads={leadsData} />
+                <LeadsActions funnelId={funnelId} leads={leadsData} steps={funnel.steps} />
             </div>
 
             {/* Metrics Cards */}

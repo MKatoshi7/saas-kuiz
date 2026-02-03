@@ -1,4 +1,5 @@
 import React from 'react';
+import DOMPurify from 'isomorphic-dompurify';
 
 interface UnifiedTextRendererProps {
     text: string;
@@ -158,11 +159,13 @@ export function UnifiedTextRenderer({
         return styles;
     };
 
+    const sanitizedText = DOMPurify.sanitize(text || '');
+
     return (
         <Tag
             className={`${baseClass} ${sizeClass} ${alignClass} ${letterSpacingClass} ${lineHeightClass} ${textTransformClass} ${className}`}
             style={buildStyles()}
-            dangerouslySetInnerHTML={{ __html: text || '' }}
+            dangerouslySetInnerHTML={{ __html: sanitizedText }}
         />
     );
 }

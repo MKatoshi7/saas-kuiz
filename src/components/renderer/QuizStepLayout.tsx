@@ -86,13 +86,13 @@ export function QuizStepLayout({ children, progress = 0, onBack, showBack = true
             )}
 
             {/* Back Button & Content */}
-            <div className="px-6 pb-2 pt-2 shrink-0">
-                {showBack && (
+            {showBack && (
+                <div className="px-6 pb-2 pt-2 shrink-0">
                     <button onClick={onBack} className="text-gray-400 hover:text-gray-600 transition-colors -ml-2 p-2">
                         <ChevronLeft size={24} />
                     </button>
-                )}
-            </div>
+                </div>
+            )}
 
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto px-6 pt-2 pb-24">

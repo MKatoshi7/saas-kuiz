@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ funnelId: string }> }
@@ -31,7 +33,11 @@ export async function GET(
             include: {
                 steps: {
                     include: {
-                        components: true,
+                        components: {
+                            orderBy: {
+                                order: 'asc',
+                            },
+                        },
                     },
                     orderBy: {
                         order: 'asc',
@@ -116,7 +122,7 @@ export async function PUT(
 
         const funnelId = targetFunnel.id;
 
-        // OPTIMIZED: Use UPSERT strategy instead of DELETE ALL + CREATE ALL
+        // OPTIMIZED: Use UPSERT strategy with batched operations
         const stepIdMap = await prisma.$transaction(async (tx: any) => {
             const map = new Map<string, string>();
 
@@ -125,35 +131,29 @@ export async function PUT(
             const existingStepIds = new Set(existingSteps.map((s: any) => s.id));
             const incomingStepIds = new Set(steps.map((s: any) => s.id));
 
-            // 1. First DELETE steps that were removed to free up order positions
+            // 1. First DELETE steps that were removed
             const stepsToDelete = existingSteps
                 .filter((s: any) => !incomingStepIds.has(s.id))
                 .map((s: any) => s.id);
 
             if (stepsToDelete.length > 0) {
-                // Components will be deleted via CASCADE
                 await tx.funnelStep.deleteMany({
                     where: { id: { in: stepsToDelete } }
                 });
             }
 
-            // 2. UPSERT steps sequentially to avoid order conflicts
+            // 2. UPSERT steps sequentially
             for (let index = 0; index < steps.length; index++) {
                 const step = steps[index];
                 const isExisting = existingStepIds.has(step.id);
 
                 if (isExisting) {
-                    // UPDATE existing step
                     const updated = await tx.funnelStep.update({
                         where: { id: step.id },
-                        data: {
-                            title: step.title,
-                            order: index
-                        }
+                        data: { title: step.title, order: index }
                     });
                     map.set(step.id, updated.id);
                 } else {
-                    // CREATE new step
                     const created = await tx.funnelStep.create({
                         data: {
                             funnelId,
@@ -167,7 +167,7 @@ export async function PUT(
                 }
             }
 
-            // 3. BATCH UPSERT components for each step
+            // 3. Process components for all steps
             for (const step of steps) {
                 const newStepId = map.get(step.id);
                 if (!newStepId) continue;
@@ -175,20 +175,25 @@ export async function PUT(
                 const stepComponents = componentsByStep[step.id] || [];
                 const existingStep = existingSteps.find((s: any) => s.id === step.id);
                 const existingComponents = existingStep?.components || [];
-                const existingCompIds = new Set(existingComponents.map((c: any) => c.id));
-                const incomingCompIds = new Set(stepComponents.map((c: any) => c.id));
+                // SIMPLIFIED STRATEGY: Delete all components and recreate them
+                // This guarantees order and prevents ID mismatches or ghost components
 
-                // Components to create (new ones)
-                const componentsToCreate = stepComponents
-                    .filter((c: any) => !existingCompIds.has(c.id))
-                    .map((comp: any, index: number) => {
+                // 1. Delete all existing components for this step
+                if (existingComponents.length > 0) {
+                    await tx.funnelComponent.deleteMany({
+                        where: { stepId: newStepId }
+                    });
+                }
+
+                // 2. Recreate all components in the correct order
+                if (stepComponents.length > 0) {
+                    const componentsToCreate = stepComponents.map((comp: any, index: number) => {
                         const componentData = { ...comp.data };
 
                         // Fix references
                         if (componentData.targetStepId && map.has(componentData.targetStepId)) {
                             componentData.targetStepId = map.get(componentData.targetStepId);
                         }
-
                         if (componentData.options && Array.isArray(componentData.options)) {
                             componentData.options = componentData.options.map((opt: any) => {
                                 if (opt.targetStepId && map.has(opt.targetStepId)) {
@@ -201,59 +206,21 @@ export async function PUT(
                         return {
                             stepId: newStepId,
                             type: comp.type,
-                            order: stepComponents.findIndex((c: any) => c.id === comp.id),
+                            order: index, // Guaranteed correct index
                             data: componentData,
+                            // We don't preserve the ID here to avoid conflicts, 
+                            // the frontend will reload and get the new IDs
                         };
                     });
 
-                // Components to update (existing ones)
-                const updatePromises = stepComponents
-                    .filter((c: any) => existingCompIds.has(c.id))
-                    .map(async (comp: any) => {
-                        const componentData = { ...comp.data };
-
-                        // Fix references
-                        if (componentData.targetStepId && map.has(componentData.targetStepId)) {
-                            componentData.targetStepId = map.get(componentData.targetStepId);
-                        }
-
-                        if (componentData.options && Array.isArray(componentData.options)) {
-                            componentData.options = componentData.options.map((opt: any) => {
-                                if (opt.targetStepId && map.has(opt.targetStepId)) {
-                                    return { ...opt, targetStepId: map.get(opt.targetStepId) };
-                                }
-                                return opt;
-                            });
-                        }
-
-                        return tx.funnelComponent.update({
-                            where: { id: comp.id },
-                            data: {
-                                type: comp.type,
-                                order: stepComponents.findIndex((c: any) => c.id === comp.id),
-                                data: componentData,
-                            }
-                        });
+                    await tx.funnelComponent.createMany({
+                        data: componentsToCreate
                     });
-
-                // Components to delete (removed ones)
-                const componentsToDelete = existingComponents
-                    .filter((c: any) => !incomingCompIds.has(c.id))
-                    .map((c: any) => c.id);
-
-                // Execute all operations in parallel
-                await Promise.all([
-                    ...updatePromises,
-                    componentsToCreate.length > 0
-                        ? tx.funnelComponent.createMany({ data: componentsToCreate })
-                        : Promise.resolve(),
-                    componentsToDelete.length > 0
-                        ? tx.funnelComponent.deleteMany({ where: { id: { in: componentsToDelete } } })
-                        : Promise.resolve()
-                ]);
+                }
             }
 
-            // 4. Update funnel timestamp and theme
+
+            // 4. Update funnel timestamp
             await tx.funnel.update({
                 where: { id: funnelId },
                 data: {
@@ -264,8 +231,8 @@ export async function PUT(
 
             return map;
         }, {
-            maxWait: 3000,
-            timeout: 10000 // Reduced from 20s since UPSERT is much faster
+            maxWait: 10000,
+            timeout: 30000 // Increased to 30s
         });
 
         // Convert Map to object for JSON

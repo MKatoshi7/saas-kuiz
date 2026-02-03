@@ -488,10 +488,18 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
             // Map DB components to store componentsByStep
             const storeComponentsByStep: Record<string, FunnelComponentData[]> = {};
             funnel.steps.forEach((s: any) => {
-                storeComponentsByStep[s.id] = s.components.map((c: any) => ({
+                // Sort components by order to be safe
+                // Force sort by order number, treating missing/null as 0
+                const sortedComponents = [...(s.components || [])].sort((a: any, b: any) => {
+                    const orderA = (a.order !== null && a.order !== undefined) ? Number(a.order) : 0;
+                    const orderB = (b.order !== null && b.order !== undefined) ? Number(b.order) : 0;
+                    return orderA - orderB;
+                });
+
+                storeComponentsByStep[s.id] = sortedComponents.map((c: any) => ({
                     id: c.id,
                     type: c.type,
-                    order: c.order,
+                    order: (c.order !== null && c.order !== undefined) ? Number(c.order) : 0,
                     data: c.data
                 }));
             });
@@ -538,7 +546,10 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
     saveFunnel: async () => {
         const { currentFunnelId, steps, componentsByStep, theme, isLoading, isInitialized } = get();
 
+        console.log('💾 saveFunnel called:', { currentFunnelId, stepsCount: steps.length, isLoading, isInitialized, hasError: !!get().error });
+
         if (!currentFunnelId || isLoading || !isInitialized || get().error) {
+            console.warn('⚠️ Save aborted:', { currentFunnelId, isLoading, isInitialized, error: get().error });
             return false;
         }
 
@@ -549,6 +560,8 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
                 themeConfig: theme
             };
 
+            console.log('📤 Sending payload to API:', { steps: steps.length, componentsByStep: Object.keys(componentsByStep) });
+
             const response = await fetch(`/api/funnels/${currentFunnelId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -556,21 +569,25 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
             });
 
             const responseData = await response.json();
+            console.log('📥 Response from API:', { ok: response.ok, status: response.status, data: responseData });
 
             if (!response.ok) {
+                console.error('❌ API returned error:', responseData);
                 throw new Error(responseData.details || responseData.error || 'Failed to save to API');
             }
+
+            console.log('✅ Save successful, reloading from API...');
 
             // CRITICAL: Reload from API to sync IDs and ensure persistence
             // Pass stepIdMap to preserve current step selection even if ID changed
             // Use silent: true to prevent UI flash
-            /* 
             await get().loadFunnel(currentFunnelId, {
                 preserveState: true,
                 stepIdMap: responseData.stepIdMap,
                 silent: true
             });
-            */
+
+            console.log('✅ Reload complete');
 
             return true;
         } catch (error) {

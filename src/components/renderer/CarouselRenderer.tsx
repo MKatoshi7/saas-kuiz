@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CarouselComponent } from '@/types/funnel';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -13,8 +13,28 @@ interface CarouselRendererProps {
 }
 
 export function CarouselRenderer({ component, onNext, onJump }: CarouselRendererProps) {
-    const { options = [], variableName } = component.data;
+    const { options = [], variableName, autoPlay, interval = 3 } = component.data;
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleNext = () => {
+        setCurrentIndex((prev) => (prev === options.length - 1 ? 0 : prev + 1));
+    };
+
+    useEffect(() => {
+        if (autoPlay && options.length > 1 && !isPaused) {
+            timeoutRef.current = setInterval(() => {
+                handleNext();
+            }, interval * 1000);
+        }
+
+        return () => {
+            if (timeoutRef.current) {
+                clearInterval(timeoutRef.current);
+            }
+        };
+    }, [autoPlay, interval, options.length, isPaused]);
 
     if (!options.length) {
         return (
@@ -26,10 +46,6 @@ export function CarouselRenderer({ component, onNext, onJump }: CarouselRenderer
 
     const handlePrevious = () => {
         setCurrentIndex((prev) => (prev === 0 ? options.length - 1 : prev - 1));
-    };
-
-    const handleNext = () => {
-        setCurrentIndex((prev) => (prev === options.length - 1 ? 0 : prev + 1));
     };
 
     const handleSelect = (option: any) => {
@@ -45,7 +61,11 @@ export function CarouselRenderer({ component, onNext, onJump }: CarouselRenderer
     };
 
     return (
-        <div className="relative w-full group">
+        <div
+            className="relative w-full group"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+        >
             <div className="overflow-hidden rounded-xl bg-gray-900 aspect-video relative">
                 <AnimatePresence mode="wait">
                     <motion.div

@@ -209,6 +209,36 @@ export function CarouselProperties({ component }: { component: CarouselComponent
                 </DndContext>
             </div>
 
+            {/* Auto Play Settings */}
+            <div className="pt-4 border-t border-gray-200 space-y-3">
+                <Label className="text-xs font-semibold text-gray-900">Reprodução Automática</Label>
+
+                <div className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        id="autoPlay"
+                        checked={component.data.autoPlay || false}
+                        onChange={(e) => handleUpdate('autoPlay', e.target.checked)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <Label htmlFor="autoPlay" className="font-normal text-xs">Ativar Auto-play</Label>
+                </div>
+
+                {component.data.autoPlay && (
+                    <div>
+                        <Label className="text-[10px] text-gray-500 mb-1 block">Intervalo (segundos)</Label>
+                        <Input
+                            type="number"
+                            min={1}
+                            max={60}
+                            value={component.data.interval || 3}
+                            onChange={(e) => handleUpdate('interval', parseInt(e.target.value))}
+                            className="h-8 text-sm"
+                        />
+                    </div>
+                )}
+            </div>
+
             <div className="pt-4 border-t border-gray-200">
                 <Label className="text-xs font-medium text-gray-700 mb-2 block">Nome da Variável (Analytics)</Label>
                 <Input

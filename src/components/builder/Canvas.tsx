@@ -82,7 +82,7 @@ export function Canvas({ previewDevice }: { previewDevice: 'mobile' | 'desktop' 
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="space-y-2 min-h-[500px] pb-20">
+                                    <div className="space-y-4 min-h-[500px] pb-20">
                                         {components.map((component) => (
                                             <SortableComponent
                                                 key={component.id}
@@ -176,33 +176,28 @@ const ComponentRenderer = React.memo(function ComponentRenderer({
 });
 
 function renderContent(component: FunnelComponentData, onUpdate: (id: string, data: Partial<FunnelComponentData>) => void, isSelected: boolean, anchorRef?: React.RefObject<HTMLElement>) {
-    // Helper function to get font size class
+    // Helper function to get font size class - Synchronized with UnifiedTextRenderer
     const getFontSizeClass = (fontSize: any, isHeadline: boolean = false): string => {
         const size = String(fontSize || '');
-        if (isHeadline) {
-            switch (size) {
-                case 'huge': return 'text-4xl';
-                case 'bigger': return 'text-3xl';
-                case 'big': return 'text-2xl';
-                case 'medium': return 'text-xl';
-                case 'normal': return 'text-lg';
-                case 'small': return 'text-base';
-                case 'minusculo': return 'text-xs';
-                case 'micro': return 'text-[8px]';
-                default: return 'text-base';
-            }
-        } else {
-            switch (size) {
-                case 'huge': return 'text-3xl';
-                case 'bigger': return 'text-2xl';
-                case 'big': return 'text-xl';
-                case 'medium': return 'text-lg';
-                case 'normal': return 'text-base';
-                case 'small': return 'text-sm';
-                case 'minusculo': return 'text-xs';
-                case 'micro': return 'text-[8px]';
-                default: return 'text-base';
-            }
+        // UnifiedTextRenderer uses the same mapping for all tags now
+        switch (size) {
+            case 'micro': return 'text-[8px]';
+            case 'minusculo': return 'text-xs';
+            case 'small': return 'text-base';
+            case 'normal': return 'text-lg';
+            case 'medium': return 'text-xl';
+            case 'big': return 'text-2xl';
+            case 'bigger': return 'text-3xl';
+            case 'huge': return 'text-4xl';
+
+            // Legacy fallbacks
+            case '4xl': return 'text-4xl';
+            case '3xl': return 'text-3xl';
+            case '2xl': return 'text-2xl';
+            case 'xl': return 'text-xl';
+            case 'lg': return 'text-lg';
+
+            default: return 'text-base';
         }
     };
 
@@ -666,14 +661,28 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
 
         case 'input':
             return (
-                <div className="p-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email
-                    </label>
-                    <div className="flex items-center border border-gray-300 rounded-md px-3 py-2 bg-white text-gray-400">
-                        <FormInput className="w-4 h-4 mr-2" />
-                        <span className="text-sm">Digite seu email...</span>
-                    </div>
+                <div className="p-2 space-y-2">
+                    {component.data.label && (
+                        <label className="block text-sm font-medium text-gray-700">
+                            {component.data.label}
+                        </label>
+                    )}
+                    {component.data.inputType === 'textarea' ? (
+                        <textarea
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none min-h-[100px] resize-none"
+                            placeholder={component.data.placeholder || 'Digite aqui...'}
+                            disabled
+                        />
+                    ) : (
+                        <div className="relative">
+                            <input
+                                type={component.data.inputType || 'text'}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                placeholder={component.data.placeholder || 'Digite aqui...'}
+                                disabled
+                            />
+                        </div>
+                    )}
                 </div>
             );
 

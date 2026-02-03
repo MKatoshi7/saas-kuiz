@@ -9,6 +9,41 @@ interface ThemedCanvasPreviewProps {
 export function ThemedCanvasPreview({ children }: ThemedCanvasPreviewProps) {
     const theme = useBuilderStore((state) => state.theme);
 
+    // Load Google Font dynamically (same as ThemeWrapper)
+    React.useEffect(() => {
+        if (theme.fontFamily) {
+            console.log('🎨 Loading font in preview:', theme.fontFamily);
+
+            // Preconnect to Google Fonts
+            const preconnect1 = document.createElement('link');
+            preconnect1.rel = 'preconnect';
+            preconnect1.href = 'https://fonts.googleapis.com';
+            document.head.appendChild(preconnect1);
+
+            const preconnect2 = document.createElement('link');
+            preconnect2.rel = 'preconnect';
+            preconnect2.href = 'https://fonts.gstatic.com';
+            preconnect2.crossOrigin = 'anonymous';
+            document.head.appendChild(preconnect2);
+
+            // Load Font with all weights including 900 (black)
+            const link = document.createElement('link');
+            link.href = `https://fonts.googleapis.com/css2?family=${theme.fontFamily.replace(/ /g, '+')}:wght@100;200;300;400;500;600;700;800;900&display=swap`;
+            link.rel = 'stylesheet';
+            document.head.appendChild(link);
+
+            return () => {
+                try {
+                    if (link.parentNode) document.head.removeChild(link);
+                    if (preconnect1.parentNode) document.head.removeChild(preconnect1);
+                    if (preconnect2.parentNode) document.head.removeChild(preconnect2);
+                } catch (e) {
+                    // Ignore cleanup errors
+                }
+            };
+        }
+    }, [theme.fontFamily]);
+
     // Helper to convert hex to rgba
     const hexToRgba = (hex: string = '#000000', alpha: number) => {
         let r = 0, g = 0, b = 0;
@@ -152,7 +187,7 @@ export function ThemedCanvasPreview({ children }: ThemedCanvasPreviewProps) {
             style={{
                 ...dynamicStyles,
                 ...patternStyle, // Apply pattern styles directly to container
-                fontFamily: 'var(--font-main), sans-serif',
+                fontFamily: `${theme.fontFamily || 'Inter'}, sans-serif`,
                 color: 'var(--text-color)',
                 // If it's a pattern, backgroundColor is handled by patternStyle
                 backgroundColor: theme.page.type === 'color' ? 'var(--page-bg)' : theme.page.type === 'pattern' ? patternStyle.backgroundColor : 'transparent'
@@ -219,7 +254,7 @@ export function ThemedCanvasPreview({ children }: ThemedCanvasPreviewProps) {
                             </>
                         )}
 
-                        <div className="px-6 pb-2 pt-4">
+                        <div className="px-6 pb-2 pt-2">
                             {/* Logo */}
                             {logoUrl && (
                                 <div className="flex justify-center mb-4">
@@ -234,7 +269,7 @@ export function ThemedCanvasPreview({ children }: ThemedCanvasPreviewProps) {
 
                             {/* Progress Bar (Default Layout) */}
                             {theme.headerLayout !== 'stacked' && showProgressBar && (
-                                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mb-4">
+                                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                     <div
                                         className="h-full rounded-full transition-all duration-500 ease-out"
                                         style={{
@@ -248,7 +283,7 @@ export function ThemedCanvasPreview({ children }: ThemedCanvasPreviewProps) {
                     </div>
 
                     {/* Content (Matches QuizStepLayout) */}
-                    <main className="flex-1 overflow-y-auto px-6 pt-8 pb-24">
+                    <main className="flex-1 overflow-y-auto px-6 pt-2 pb-24">
                         {children}
                     </main>
                 </div>
@@ -281,7 +316,7 @@ export function ThemedCanvasPreview({ children }: ThemedCanvasPreviewProps) {
                             </>
                         )}
 
-                        <div className="px-6 pb-2 pt-4">
+                        <div className="px-6 pb-2 pt-2">
                             {/* Logo */}
                             {logoUrl && (
                                 <div className="flex justify-center mb-4">
@@ -296,7 +331,7 @@ export function ThemedCanvasPreview({ children }: ThemedCanvasPreviewProps) {
 
                             {/* Progress Bar (Default Layout) */}
                             {theme.headerLayout !== 'stacked' && showProgressBar && (
-                                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden mb-4">
+                                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                     <div
                                         className="h-full rounded-full transition-all duration-500 ease-out"
                                         style={{
@@ -310,7 +345,7 @@ export function ThemedCanvasPreview({ children }: ThemedCanvasPreviewProps) {
                     </div>
 
                     {/* Content */}
-                    <main className="flex-1 overflow-y-auto px-6 pt-8 pb-24">
+                    <main className="flex-1 overflow-y-auto px-6 pt-2 pb-24">
                         {children}
                     </main>
                 </div>

@@ -34,10 +34,36 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
 
     if (!selectedComponent) {
         return (
-            <div className="w-80 bg-white/80 backdrop-blur-xl border-l border-black/5 p-4 z-20">
-                <div className="flex flex-col items-center justify-center h-full text-center text-gray-400">
-                    <p className="text-sm font-medium text-gray-900 mb-1">Nenhum componente selecionado</p>
-                    <p className="text-xs">Clique em um componente no canvas para editar</p>
+            <div className="w-80 border-l border-gray-200 bg-white flex flex-col h-full overflow-y-auto">
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+                    <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center animate-pulse">
+                        <svg className="w-10 h-10 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-900">Kuiz Maker</h3>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Selecione um componente no canvas para editar suas propriedades ou arraste novos itens da barra lateral.
+                        </p>
+                    </div>
+                    <div className="pt-6 border-t border-gray-100 w-full">
+                        <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">Dicas Rápidas</p>
+                        <ul className="text-xs text-gray-600 space-y-2 text-left mx-auto max-w-[200px]">
+                            <li className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                                Clique para editar texto
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                                Arraste para reordenar
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                                Personalize cores na aba Design
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         );
@@ -1210,6 +1236,7 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                         value={selectedComponent.data.actionType || 'next_step'}
                                         onChange={(e) => handleUpdate('actionType', e.target.value)}
                                     >
+                                        <option value="none">Fazer Nada</option>
                                         <option value="next_step">Ir para Próxima Etapa</option>
                                         <option value="open_url">Abrir URL</option>
                                         <option value="jump_to_step">Pular para Etapa</option>

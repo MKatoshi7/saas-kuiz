@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { useLoadingTimer } from '@/hooks/useLoadingTimer';
 
@@ -16,7 +18,11 @@ export const LoadingComponentRenderer: React.FC<LoadingComponentRendererProps> =
     };
 
     const progress = useLoadingTimer(data.duration || 3000, () => {
-        if (data.actionType === 'open_url' && data.targetUrl) {
+        console.log('⏱️ Loading timer completed!');
+        if (data.actionType === 'none') {
+            // Do nothing
+            return;
+        } else if (data.actionType === 'open_url' && data.targetUrl) {
             window.location.href = data.targetUrl;
         } else if (data.actionType === 'jump_to_step' && data.nextStepId) {
             onJump(data.nextStepId);
@@ -24,6 +30,8 @@ export const LoadingComponentRenderer: React.FC<LoadingComponentRendererProps> =
             onNext();
         }
     });
+
+    console.log('📊 Loading component render:', { progress, duration: data.duration });
 
     // Mensagens dinâmicas baseadas no progresso
     const getMessage = () => {
@@ -73,11 +81,12 @@ export const LoadingComponentRenderer: React.FC<LoadingComponentRendererProps> =
             >
                 {/* O Preenchimento Animado */}
                 <div
-                    className="h-full transition-all ease-linear duration-100"
+                    className="h-full"
                     style={{
-                        width: `${progress}% `,
+                        width: `${progress}%`,
                         backgroundColor: barColor,
-                        boxShadow: `0 0 10px ${barColor} 40`
+                        boxShadow: `0 0 10px ${barColor}40`,
+                        transition: 'width 0.1s linear'
                     }}
                 />
             </div>

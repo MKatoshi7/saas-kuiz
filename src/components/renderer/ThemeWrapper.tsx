@@ -26,9 +26,9 @@ export function ThemeWrapper({ theme, children }: ThemeWrapperProps) {
             preconnect2.crossOrigin = 'anonymous';
             document.head.appendChild(preconnect2);
 
-            // Load Font
+            // Load Font with all weights including 900 (black)
             const link = document.createElement('link');
-            link.href = `https://fonts.googleapis.com/css2?family=${theme.fontFamily.replace(/ /g, '+')}:wght@300;400;500;600;700&display=swap`;
+            link.href = `https://fonts.googleapis.com/css2?family=${theme.fontFamily.replace(/ /g, '+')}:wght@100;200;300;400;500;600;700;800;900&display=swap`;
             link.rel = 'stylesheet';
             document.head.appendChild(link);
 
@@ -159,7 +159,7 @@ export function ThemeWrapper({ theme, children }: ThemeWrapperProps) {
             style={{
                 ...dynamicStyles,
                 ...patternStyle, // Apply pattern styles directly to container
-                fontFamily: 'var(--font-main), sans-serif',
+                fontFamily: `${theme.fontFamily || 'Inter'}, sans-serif`,
                 color: 'var(--text-color)',
                 backgroundColor: theme.page.type === 'color' ? 'var(--page-bg)' : theme.page.type === 'pattern' ? patternStyle.backgroundColor : 'transparent'
             }}

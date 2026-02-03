@@ -216,7 +216,7 @@ function CategorySection({ category }: { category: Category }) {
 
 export function Toolbox() {
     return (
-        <div className="w-64 bg-[#FAFAFA] border-r border-black/5 p-4 overflow-y-auto">
+        <div className="h-full bg-[#FAFAFA] p-4 overflow-y-auto">
             <div className="mb-4">
                 <h3 className="text-xs font-bold text-gray-900 px-2 mb-2 hidden">
                     Componentes
