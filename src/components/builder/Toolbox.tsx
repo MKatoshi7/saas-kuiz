@@ -19,7 +19,9 @@ import {
     GalleryHorizontal,
     LayoutList,
     ChevronDown,
-    ChevronRight
+    ChevronRight,
+    PieChart,
+    BarChart3
 } from 'lucide-react';
 
 interface ToolItem {
@@ -145,6 +147,22 @@ const categories: Category[] = [
                 type: 'spacer',
                 label: 'Espaço',
                 icon: <MoveVertical className="w-4 h-4" />
+            }
+        ]
+    },
+    {
+        name: 'Gráficos',
+        icon: <BarChart3 className="w-4 h-4" />,
+        items: [
+            {
+                type: 'pie-chart',
+                label: 'Gráfico Pizza',
+                icon: <PieChart className="w-4 h-4" />
+            },
+            {
+                type: 'bar-chart',
+                label: 'Gráfico Barras',
+                icon: <BarChart3 className="w-4 h-4" />
             }
         ]
     }

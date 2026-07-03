@@ -10,6 +10,13 @@ import {
     AlignJustify
 } from 'lucide-react';
 
+const FONT_OPTIONS = [
+    'Inter', 'Arial', 'Helvetica', 'Times New Roman', 'Georgia',
+    'Courier New', 'Verdana', 'Roboto', 'Open Sans', 'Lato',
+    'Montserrat', 'Poppins', 'Oswald', 'Raleway', 'Nunito',
+    'Source Sans Pro', 'Ubuntu', 'Playfair Display', 'Merriweather', 'PT Sans'
+];
+
 interface FullTextPropertiesProps {
     data: any;
     onUpdate: (field: string, value: any) => void;
@@ -41,6 +48,18 @@ export function FullTextProperties({ data, onUpdate }: FullTextPropertiesProps) 
                     <option value="big">Grande (24px)</option>
                     <option value="bigger">Muito Grande (30px)</option>
                     <option value="huge">Gigante (36px)</option>
+                </select>
+            </div>
+
+            {/* Fonte */}
+            <div className="space-y-2">
+                <Label className="text-xs font-medium text-gray-700">Fonte</Label>
+                <select
+                    value={data.fontFamily || 'Inter'}
+                    onChange={(e) => onUpdate('fontFamily', e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    {FONT_OPTIONS.map(f => <option key={f} value={f}>{f}</option>)}
                 </select>
             </div>
 

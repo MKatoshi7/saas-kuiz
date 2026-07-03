@@ -1,35 +1,63 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Search, ExternalLink, Loader2, ChevronLeft, ChevronRight, Ban, CheckCircle, AlertTriangle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+    Search, ExternalLink, Loader2, ChevronLeft, ChevronRight,
+    Ban, CheckCircle, Eye, MoreHorizontal, Trash2, X
+} from 'lucide-react';
+import {
+    Table, TableHeader, TableBody, TableRow, TableHead, TableCell
+} from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { Avatar } from '@/components/ui/Avatar';
+import {
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+    DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem
+} from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface Funnel {
     id: string;
     title: string;
+    slug: string;
     status: string;
     createdAt: string;
-    user: { name: string; email: string };
+    publishedAt: string | null;
+    user: { id: string; name: string; email: string };
     _count: { steps: number; sessions: number };
     sessionsThisMonth: number;
     isBanned: boolean;
     banReason?: string;
 }
 
+type StatusFilter = 'all' | 'published' | 'draft' | 'banned';
+
 export default function FunnelsPage() {
     const [funnels, setFunnels] = useState<Funnel[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
 
-    // Ban Dialog State
+    // Bulk
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [bulkBanOpen, setBulkBanOpen] = useState(false);
+    const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+    const [bulkReason, setBulkReason] = useState('');
+    const [bulkWorking, setBulkWorking] = useState(false);
+
+    // Single ban
     const [banDialogOpen, setBanDialogOpen] = useState(false);
     const [selectedFunnel, setSelectedFunnel] = useState<Funnel | null>(null);
     const [banReason, setBanReason] = useState('');
@@ -38,10 +66,15 @@ export default function FunnelsPage() {
     const fetchFunnels = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/admin/funnels?search=${search}&page=${page}`);
+            const params = new URLSearchParams({
+                search,
+                page: String(page),
+                status: statusFilter,
+            });
+            const res = await fetch(`/api/admin/funnels?${params}`);
             const data = await res.json();
-            setFunnels(data.funnels);
-            setTotalPages(data.pages);
+            setFunnels(data.funnels || []);
+            setTotalPages(data.pages || 1);
         } catch (error) {
             console.error(error);
             toast.error('Erro ao carregar funis');
@@ -51,9 +84,32 @@ export default function FunnelsPage() {
     };
 
     useEffect(() => {
-        const timeout = setTimeout(fetchFunnels, 300);
-        return () => clearTimeout(timeout);
-    }, [search, page]);
+        const t = setTimeout(() => {
+            fetchFunnels();
+            setSelectedIds(new Set());
+        }, 300);
+        return () => clearTimeout(t);
+    }, [search, page, statusFilter]);
+
+    const allOnPageSelected = useMemo(
+        () => funnels.length > 0 && funnels.every((f) => selectedIds.has(f.id)),
+        [funnels, selectedIds]
+    );
+
+    const toggleAll = () => {
+        if (allOnPageSelected) {
+            setSelectedIds(new Set())
+        } else {
+            setSelectedIds(new Set(funnels.map((f) => f.id)))
+        }
+    }
+
+    const toggleOne = (id: string) => {
+        const next = new Set(selectedIds)
+        if (next.has(id)) next.delete(id)
+        else next.add(id)
+        setSelectedIds(next)
+    }
 
     const handleOpenBanDialog = (funnel: Funnel) => {
         setSelectedFunnel(funnel);
@@ -63,10 +119,9 @@ export default function FunnelsPage() {
 
     const handleToggleBan = async () => {
         if (!selectedFunnel) return;
-
         const newBanState = !selectedFunnel.isBanned;
         if (newBanState && !banReason.trim()) {
-            toast.error('Por favor, informe o motivo do banimento.');
+            toast.error('Informe o motivo');
             return;
         }
 
@@ -75,175 +130,357 @@ export default function FunnelsPage() {
             const res = await fetch(`/api/admin/funnels/${selectedFunnel.id}/ban`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    isBanned: newBanState,
-                    reason: banReason
-                })
+                body: JSON.stringify({ isBanned: newBanState, reason: banReason })
             });
-
-            if (!res.ok) throw new Error('Failed to update funnel');
-
-            toast.success(newBanState ? 'Funil banido com sucesso' : 'Funil desbanido com sucesso');
+            if (!res.ok) throw new Error()
+            toast.success(newBanState ? 'Funil banido' : 'Funil desbanido');
             setBanDialogOpen(false);
-            fetchFunnels(); // Refresh list
-        } catch (error) {
-            console.error(error);
-            toast.error('Erro ao atualizar status do funil');
+            fetchFunnels();
+        } catch {
+            toast.error('Erro ao atualizar funil');
         } finally {
             setIsSubmittingBan(false);
         }
     };
 
+    const handleBulkBan = async () => {
+        if (!bulkReason.trim()) {
+            toast.error('Informe o motivo');
+            return
+        }
+        setBulkWorking(true)
+        try {
+            const res = await fetch('/api/admin/funnels/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    funnelIds: Array.from(selectedIds),
+                    action: 'ban',
+                    reason: bulkReason,
+                }),
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error)
+            toast.success(`${data.affected} funis banidos`)
+            setBulkBanOpen(false)
+            setBulkReason('')
+            setSelectedIds(new Set())
+            fetchFunnels()
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Erro')
+        } finally {
+            setBulkWorking(false)
+        }
+    }
+
+    const handleBulkDelete = async () => {
+        setBulkWorking(true)
+        try {
+            const res = await fetch('/api/admin/funnels/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    funnelIds: Array.from(selectedIds),
+                    action: 'delete',
+                }),
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error)
+            toast.success(`${data.affected} funis deletados`)
+            setBulkDeleteOpen(false)
+            setSelectedIds(new Set())
+            fetchFunnels()
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : 'Erro')
+        } finally {
+            setBulkWorking(false)
+        }
+    }
+
+    const statusBadge = (f: Funnel) => {
+        if (f.isBanned) return <Badge variant="destructive" dot>Banido</Badge>;
+        if (f.status === 'published') return <Badge variant="success" dot>Publicado</Badge>;
+        return <Badge variant="warning" dot>Rascunho</Badge>;
+    };
+
     return (
-        <div className="space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-gray-900">Gerenciar Funis</h2>
-                    <p className="text-gray-500 mt-1">Visualize todos os funis criados na plataforma.</p>
-                </div>
-                <div className="relative w-full md:w-72">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <div className="space-y-6 animate-fade-in-up">
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight">Gerenciar Funis</h1>
+                <p className="text-muted-foreground mt-1">
+                    Visualize, edite e modere todos os funis da plataforma.
+                </p>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-3">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                     <Input
-                        placeholder="Buscar por título ou dono..."
+                        placeholder="Buscar por título, slug, email do dono..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="pl-11 h-12 rounded-full border-black/5 bg-white shadow-sm focus:ring-2 focus:ring-black/5 transition-all"
+                        className="pl-10"
                     />
+                </div>
+                <div className="inline-flex h-10 items-center gap-1 rounded-full border border-border/60 bg-secondary/40 p-1 overflow-x-auto">
+                    {[
+                        { v: 'all', l: 'Todos' },
+                        { v: 'published', l: 'Publicados' },
+                        { v: 'draft', l: 'Rascunhos' },
+                        { v: 'banned', l: 'Banidos' },
+                    ].map((opt) => (
+                        <button
+                            key={opt.v}
+                            onClick={() => { setStatusFilter(opt.v as StatusFilter); setPage(1); }}
+                            className={`px-3.5 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                                statusFilter === opt.v
+                                    ? 'bg-background text-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            {opt.l}
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            <div className="bg-white border border-black/5 rounded-3xl shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="bg-gray-50/50 border-b border-black/5 text-gray-500 font-medium">
-                            <tr>
-                                <th className="px-8 py-4">Funil</th>
-                                <th className="px-6 py-4">Dono</th>
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4">Visitas (Mês / Total)</th>
-                                <th className="px-6 py-4">Criado em</th>
-                                <th className="px-6 py-4 text-right">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {loading ? (
-                                <tr><td colSpan={6} className="p-12 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto text-black" /></td></tr>
-                            ) : funnels.length === 0 ? (
-                                <tr><td colSpan={6} className="p-12 text-center text-gray-500">Nenhum funil encontrado.</td></tr>
-                            ) : (
-                                funnels.map((funnel) => (
-                                    <tr key={funnel.id} className={`hover:bg-gray-50/80 transition-colors group ${funnel.isBanned ? 'bg-red-50/30' : ''}`}>
-                                        <td className="px-8 py-4 font-medium text-gray-900">
-                                            <div className="flex flex-col">
-                                                <span>{funnel.title}</span>
-                                                {funnel.isBanned && (
-                                                    <span className="text-[10px] text-red-600 font-bold uppercase tracking-wider flex items-center gap-1 mt-1">
-                                                        <AlertTriangle className="w-3 h-3" /> Banido
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500">
-                                                    {funnel.user.name ? funnel.user.name.charAt(0).toUpperCase() : '?'}
-                                                </div>
-                                                <div className="text-xs text-gray-500">{funnel.user.email}</div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${funnel.isBanned ? 'bg-red-50 text-red-700 border-red-100' :
-                                                    funnel.status === 'published' ? 'bg-green-50 text-green-700 border-green-100' :
-                                                        'bg-yellow-50 text-yellow-700 border-yellow-100'
-                                                }`}>
-                                                <span className={`w-1.5 h-1.5 rounded-full ${funnel.isBanned ? 'bg-red-500' :
-                                                        funnel.status === 'published' ? 'bg-green-500' :
-                                                            'bg-yellow-500'
-                                                    }`} />
-                                                {funnel.isBanned ? 'Banido' : funnel.status === 'published' ? 'Publicado' : 'Rascunho'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex gap-4 text-xs text-gray-500">
-                                                <span className="font-semibold text-gray-900">{funnel.sessionsThisMonth}</span>
-                                                <span className="text-gray-300">/</span>
-                                                <span>{funnel._count.sessions}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-gray-500 text-xs">
-                                            {new Date(funnel.createdAt).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => handleOpenBanDialog(funnel)}
-                                                    className={`h-8 w-8 rounded-full transition-colors ${funnel.isBanned ? 'text-green-600 hover:bg-green-50' : 'text-red-500 hover:bg-red-50'}`}
-                                                    title={funnel.isBanned ? "Desbanir Funil" : "Banir Funil"}
-                                                >
-                                                    {funnel.isBanned ? <CheckCircle className="w-4 h-4" /> : <Ban className="w-4 h-4" />}
-                                                </Button>
-                                                <Link href={`/dashboard/${funnel.id}/builder`} target="_blank">
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-black hover:text-white transition-colors">
-                                                        <ExternalLink className="w-4 h-4" />
-                                                    </Button>
-                                                </Link>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Footer Pagination */}
-                <div className="px-8 py-4 border-t border-black/5 bg-gray-50/30 flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Página {page} de {totalPages}</span>
-                    <div className="flex gap-2">
-                        <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)} className="rounded-full h-8 px-4 text-xs">
-                            <ChevronLeft className="w-3 h-3 mr-1" /> Anterior
+            {/* Bulk action bar */}
+            {selectedIds.size > 0 && (
+                <div className="sticky top-2 z-10 bg-foreground text-background rounded-2xl px-4 py-3 flex items-center justify-between shadow-2xl animate-fade-in-up">
+                    <div className="flex items-center gap-3">
+                        <span className="font-semibold text-sm">
+                            {selectedIds.size} selecionado{selectedIds.size > 1 ? 's' : ''}
+                        </span>
+                        <button
+                            onClick={() => setSelectedIds(new Set())}
+                            className="text-background/70 hover:text-background"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setBulkBanOpen(true)}
+                            className="text-background hover:bg-background/10"
+                            leftIcon={<Ban className="w-3.5 h-3.5" />}
+                        >
+                            Banir
                         </Button>
-                        <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="rounded-full h-8 px-4 text-xs">
-                            Próxima <ChevronRight className="w-3 h-3 ml-1" />
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setBulkDeleteOpen(true)}
+                            className="text-red-300 hover:bg-red-500/20"
+                            leftIcon={<Trash2 className="w-3.5 h-3.5" />}
+                        >
+                            Deletar
                         </Button>
                     </div>
                 </div>
-            </div>
+            )}
 
-            {/* Ban Dialog */}
+            <Card>
+                <Table>
+                    <TableHeader>
+                        <TableRow className="hover:bg-transparent">
+                            <TableHead className="w-10">
+                                <input
+                                    type="checkbox"
+                                    checked={allOnPageSelected}
+                                    onChange={toggleAll}
+                                    className="rounded border-border"
+                                />
+                            </TableHead>
+                            <TableHead>Funil</TableHead>
+                            <TableHead>Dono</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Visitas (Mês / Total)</TableHead>
+                            <TableHead>Criado</TableHead>
+                            <TableHead className="text-right">Ações</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {loading ? (
+                            <TableRow>
+                                <TableCell colSpan={7} className="h-32 text-center">
+                                    <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+                                </TableCell>
+                            </TableRow>
+                        ) : funnels.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                                    Nenhum funil encontrado
+                                </TableCell>
+                            </TableRow>
+                        ) : (
+                            funnels.map((funnel) => (
+                                <TableRow key={funnel.id} data-state={selectedIds.has(funnel.id) ? 'selected' : undefined}>
+                                    <TableCell>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedIds.has(funnel.id)}
+                                            onChange={() => toggleOne(funnel.id)}
+                                            className="rounded border-border"
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Link href={`/admin/funnels/${funnel.id}`} className="block">
+                                            <div className="flex flex-col">
+                                                <span className="font-medium text-foreground hover:text-blue-600 transition-colors">
+                                                    {funnel.title}
+                                                </span>
+                                                <span className="text-[11px] text-muted-foreground font-mono">
+                                                    /{funnel.slug}
+                                                </span>
+                                            </div>
+                                        </Link>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2.5">
+                                            <Avatar name={funnel.user.name} email={funnel.user.email} size="sm" />
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-medium truncate">{funnel.user.name || 'Sem nome'}</p>
+                                                <p className="text-[11px] text-muted-foreground truncate">{funnel.user.email}</p>
+                                            </div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>{statusBadge(funnel)}</TableCell>
+                                    <TableCell>
+                                        <div className="flex gap-2 text-sm">
+                                            <span className="font-semibold text-foreground">{funnel.sessionsThisMonth}</span>
+                                            <span className="text-muted-foreground">/</span>
+                                            <span className="text-muted-foreground">{funnel._count.sessions}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <span className="text-sm text-muted-foreground">
+                                            {formatDistanceToNow(new Date(funnel.createdAt), { addSuffix: true, locale: ptBR })}
+                                        </span>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon-sm">
+                                                    <MoreHorizontal className="w-4 h-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/admin/funnels/${funnel.id}`}>
+                                                        <Eye className="w-3.5 h-3.5" /> Ver detalhes
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/dashboard/${funnel.id}/builder`} target="_blank">
+                                                        <ExternalLink className="w-3.5 h-3.5" /> Abrir builder
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleOpenBanDialog(funnel)}>
+                                                    {funnel.isBanned ? (
+                                                        <><CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Desbanir</>
+                                                    ) : (
+                                                        <><Ban className="w-3.5 h-3.5 text-red-600" /> Banir</>
+                                                    )}
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+                <div className="px-4 py-3 border-t border-border/60 flex items-center justify-between bg-secondary/20">
+                    <span className="text-xs text-muted-foreground">
+                        Página <span className="font-semibold text-foreground">{page}</span> de {totalPages}
+                    </span>
+                    <div className="flex gap-2">
+                        <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
+                            <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Anterior
+                        </Button>
+                        <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>
+                            Próxima <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                        </Button>
+                    </div>
+                </div>
+            </Card>
+
+            {/* Single ban dialog */}
             <Dialog open={banDialogOpen} onOpenChange={setBanDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{selectedFunnel?.isBanned ? 'Desbanir Funil' : 'Banir Funil'}</DialogTitle>
+                        <DialogTitle>{selectedFunnel?.isBanned ? 'Desbanir funil' : 'Banir funil'}</DialogTitle>
                         <DialogDescription>
                             {selectedFunnel?.isBanned
-                                ? 'Ao desbanir, o funil voltará a ficar acessível publicamente.'
-                                : 'Ao banir, o funil ficará inacessível e exibirá uma mensagem de erro para os visitantes.'}
+                                ? 'O funil voltará a ficar acessível.'
+                                : 'O funil ficará inacessível aos visitantes.'}
                         </DialogDescription>
                     </DialogHeader>
-
                     {!selectedFunnel?.isBanned && (
-                        <div className="space-y-2 py-4">
-                            <Label>Motivo do Banimento</Label>
+                        <div className="space-y-2 py-2">
+                            <Label>Motivo do banimento</Label>
                             <Textarea
-                                placeholder="Ex: Violação dos termos de uso, conteúdo impróprio..."
                                 value={banReason}
                                 onChange={(e) => setBanReason(e.target.value)}
+                                rows={3}
                             />
                         </div>
                     )}
-
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setBanDialogOpen(false)}>Cancelar</Button>
                         <Button
-                            variant={selectedFunnel?.isBanned ? "default" : "destructive"}
+                            variant={selectedFunnel?.isBanned ? 'default' : 'destructive'}
                             onClick={handleToggleBan}
-                            disabled={isSubmittingBan}
+                            loading={isSubmittingBan}
                         >
-                            {isSubmittingBan ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                            {selectedFunnel?.isBanned ? 'Desbanir' : 'Banir Funil'}
+                            {selectedFunnel?.isBanned ? 'Desbanir' : 'Banir funil'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Bulk ban dialog */}
+            <Dialog open={bulkBanOpen} onOpenChange={setBulkBanOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Banir {selectedIds.size} funis</DialogTitle>
+                        <DialogDescription>
+                            Todos os funis selecionados ficarão inacessíveis aos visitantes.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-2 py-2">
+                        <Label>Motivo do banimento</Label>
+                        <Textarea
+                            value={bulkReason}
+                            onChange={(e) => setBulkReason(e.target.value)}
+                            rows={3}
+                            placeholder="Ex: Spam, violação dos termos..."
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setBulkBanOpen(false)}>Cancelar</Button>
+                        <Button variant="destructive" onClick={handleBulkBan} loading={bulkWorking}>
+                            Banir {selectedIds.size} funis
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Bulk delete dialog */}
+            <Dialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Deletar {selectedIds.size} funis permanentemente?</DialogTitle>
+                        <DialogDescription>
+                            Esta ação não pode ser desfeita. Todos os dados (sessões, leads, eventos) serão perdidos.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setBulkDeleteOpen(false)}>Cancelar</Button>
+                        <Button variant="destructive" onClick={handleBulkDelete} loading={bulkWorking}>
+                            Deletar permanentemente
                         </Button>
                     </DialogFooter>
                 </DialogContent>

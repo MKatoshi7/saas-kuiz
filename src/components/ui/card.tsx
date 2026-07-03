@@ -4,12 +4,17 @@ import { cn } from "@/lib/utils"
 
 const Card = React.forwardRef<
     HTMLDivElement,
-    React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
+    React.HTMLAttributes<HTMLDivElement> & {
+        glass?: boolean
+        hover?: boolean
+    }
+>(({ className, glass = false, hover = false, ...props }, ref) => (
     <div
         ref={ref}
         className={cn(
-            "rounded-xl border bg-card text-card-foreground shadow",
+            "rounded-2xl border border-border/60 bg-card text-card-foreground shadow-soft",
+            glass && "glass",
+            hover && "transition-all duration-200 hover:shadow-pop hover:border-border hover:-translate-y-0.5",
             className
         )}
         {...props}
@@ -30,12 +35,12 @@ const CardHeader = React.forwardRef<
 CardHeader.displayName = "CardHeader"
 
 const CardTitle = React.forwardRef<
-    HTMLParagraphElement,
-    React.HTMLAttributes<HTMLHeadingElement>
+    HTMLDivElement,
+    React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
     <h3
         ref={ref}
-        className={cn("font-semibold leading-none tracking-tight", className)}
+        className={cn("text-lg font-semibold leading-tight tracking-tight", className)}
         {...props}
     />
 ))
@@ -47,7 +52,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
     <p
         ref={ref}
-        className={cn("text-sm text-muted-foreground", className)}
+        className={cn("text-sm text-muted-foreground leading-relaxed", className)}
         {...props}
     />
 ))

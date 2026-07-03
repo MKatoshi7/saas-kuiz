@@ -73,13 +73,15 @@ export default function BuilderPageClient({ funnelId }: { funnelId: string }) {
     const currentFunnel = useBuilderStore((state) => state.currentFunnel);
     const [isAutoSaveEnabled, setIsAutoSaveEnabled] = useState(false);
 
-    // Auto-save setup
-    const autoSave = useAutoSave({
+    // Auto-save setup (legacy, useAutoSave novo exige data)
+    const autoSave = useAutoSave<unknown>({
+        data: null,
         onSave: async () => {
-            await saveFunnel();
+            const ok = await saveFunnel();
+            return ok !== false;
         },
         delay: 5000,
-        enabled: isAutoSaveEnabled
+        enabled: false, // desabilitado — auto-save real é no /builder/[funnelId]
     });
 
     // Ref para rastrear se houve mudanças reais
@@ -96,14 +98,14 @@ export default function BuilderPageClient({ funnelId }: { funnelId: string }) {
         // Comparar com último estado salvo
         if (lastSavedState.current !== currentState && lastSavedState.current !== '') {
             hasUnsavedChanges.current = true;
-            autoSave.scheduleSave();
+            // auto-save é gerenciado pelo novo hook /builder/[funnelId]
         }
 
         // Atualizar referência do último estado após primeira renderização
         if (lastSavedState.current === '') {
             lastSavedState.current = currentState;
         }
-    }, [componentsByStep, isMounted, isInitialized, isLoading, autoSave]);
+    }, [componentsByStep, isMounted, isInitialized, isLoading]);
 
     // Atualizar lastSavedState após salvamento bem-sucedido
     useEffect(() => {

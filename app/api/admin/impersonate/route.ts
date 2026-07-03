@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession, setSession } from "@/lib/auth";
+import { logAdminAction } from "@/lib/audit";
 
 export async function POST(request: NextRequest) {
     try {
         const session = await getSession();
 
-        // Only admins can impersonate
         if (!session || session.role !== 'admin') {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
@@ -23,11 +23,14 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // Set session as target user
-        // This overwrites the current admin session cookie
         await setSession(targetUser.id, targetUser.email);
 
-        console.log(`Admin ${session.email} impersonating user ${targetUser.email}`);
+        await logAdminAction({
+            adminId: session.userId,
+            action: 'impersonate_user',
+            targetUserId: targetUser.id,
+            details: { email: targetUser.email },
+        })
 
         return NextResponse.json({ success: true });
     } catch (error) {

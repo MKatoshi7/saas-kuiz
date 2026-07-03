@@ -7,16 +7,26 @@ export async function GET(req: Request) {
         await requireAdmin();
         const { searchParams } = new URL(req.url);
         const search = searchParams.get('search') || '';
+        const status = searchParams.get('status') || 'all';
         const page = parseInt(searchParams.get('page') || '1');
-        const limit = 10;
+        const limit = 20;
         const skip = (page - 1) * limit;
 
-        const where = search ? {
-            OR: [
+        const where: any = {};
+        if (search) {
+            where.OR = [
                 { title: { contains: search, mode: 'insensitive' } },
-                { user: { email: { contains: search, mode: 'insensitive' } } }
-            ]
-        } : {};
+                { slug: { contains: search, mode: 'insensitive' } },
+                { user: { email: { contains: search, mode: 'insensitive' } } },
+                { user: { name: { contains: search, mode: 'insensitive' } } },
+            ];
+        }
+        if (status === 'banned') where.isBanned = true;
+        else if (status === 'published') { where.status = 'published'; where.isBanned = false; }
+        else if (status === 'draft') { where.status = 'draft'; where.isBanned = false; }
+        else if (status === 'all') {
+            // no extra filter
+        }
 
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
@@ -26,7 +36,7 @@ export async function GET(req: Request) {
             prisma.funnel.findMany({
                 where: where as any,
                 include: {
-                    user: { select: { name: true, email: true } },
+                    user: { select: { id: true, name: true, email: true } },
                     _count: { select: { steps: true, sessions: true } }
                 },
                 skip,
@@ -36,7 +46,6 @@ export async function GET(req: Request) {
             prisma.funnel.count({ where: where as any })
         ]);
 
-        // Enhance with monthly stats
         const funnels = await Promise.all(funnelsData.map(async (f) => {
             const sessionsThisMonth = await prisma.visitorSession.count({
                 where: {
@@ -44,13 +53,7 @@ export async function GET(req: Request) {
                     startedAt: { gte: startOfMonth }
                 }
             });
-            return {
-                ...f,
-                sessionsThisMonth,
-                // Ensure these fields are returned even if null (though prisma does this)
-                isBanned: f.isBanned,
-                banReason: f.banReason
-            };
+            return { ...f, sessionsThisMonth };
         }));
 
         return NextResponse.json({ funnels, total, pages: Math.ceil(total / limit) });

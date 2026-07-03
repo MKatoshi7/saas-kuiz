@@ -16,14 +16,22 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   role      String   @default("user") // user, admin
-  
+
   // Subscription fields
   subscriptionStatus String?   @default("free") // free, active, canceled, expired
   subscriptionPlan   String?   // starter, pro, enterprise
   subscriptionEndsAt DateTime?
-  
-  funnels   Funnel[]
-  transactions SubscriptionTransaction[]
+
+  funnels         Funnel[]
+  transactions    SubscriptionTransaction[]
+  adminActions    AdminAction[]         @relation("AdminActions")
+  auditedActions  AdminAction[]         @relation("TargetUser")
+  userNotes       AdminNote[]           @relation("TargetUserNotes")
+  noteAuthored    AdminNote[]           @relation("AuthorNotes")
+  broadcastsSent  Broadcast[]           @relation("BroadcastAuthor")
+  couponUses      CouponRedemption[]
+  webhookEvents   WebhookEvent[]
+  // planMappings created by this admin
 
   @@map("users")
 }
@@ -48,8 +56,11 @@ model Funnel {
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   integrations    Integration[]
   sessions        VisitorSession[]
+  notes           FunnelNote[]
 
   @@index([userId, status, createdAt])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([isBanned])
   @@map("funnels")
 }
 
@@ -116,6 +127,7 @@ model VisitorSession {
   @@index([funnelId, isLead])
   @@index([email])
   @@index([funnelId, startedAt(sort: Desc)])
+  @@index([startedAt(sort: Desc)])
   @@map("visitor_sessions")
 }
 
@@ -134,6 +146,7 @@ model Event {
   @@index([stepId])
   @@index([eventType])
   @@index([sessionId, eventType, createdAt])
+  @@index([createdAt(sort: Desc)])
   @@map("events")
 }
 
@@ -155,15 +168,16 @@ model SubscriptionTransaction {
   id            String   @id @default(cuid())
   userId        String
   amount        Float
-  status        String   // paid, pending, failed
-  provider      String   // cakto, stripe, etc
-  transactionId String?  // ID na plataforma de pagamento
+  status        String
+  provider      String
+  transactionId String?
   metadata      Json?
   createdAt     DateTime @default(now())
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([transactionId])
+  @@index([createdAt(sort: Desc)])
   @@map("subscription_transactions")
 }
 
@@ -172,17 +186,108 @@ model WebhookLog {
   provider  String
   eventType String?
   payload   Json
-  status    String   // success, error
+  status    String
   error     String?
   createdAt DateTime @default(now())
 
   @@index([provider, eventType])
+  @@index([createdAt(sort: Desc)])
   @@map("webhook_logs")
+}
+
+// Webhooks recebidos de provedores de pagamento (Cakto, Stripe, Hotmart, Kiwify, etc).
+// Armazena payload cru + dados parseados + status do processamento.
+model WebhookEvent {
+  id              String   @id @default(cuid())
+  provider        String   // 'cakto' | 'stripe' | 'hotmart' | 'kiwify' | 'unknown'
+  eventType       String?  // 'purchase.approved', 'invoice.paid', etc.
+  externalId      String?  // ID único do evento no provedor (idempotência)
+  source          String   @default("api") // 'api' | 'manual' (colar manualmente)
+  // Payload cru (raw)
+  rawPayload      Json
+  headers         Json?
+  // Dados parseados (best-effort)
+  parsedData      Json?
+  // Identificação do comprador
+  customerEmail   String?
+  customerName    String?
+  customerPhone   String?
+  // Identificação do produto
+  productId       String?
+  productName     String?
+  // Valor e moeda
+  amount          Float?
+  currency        String?  @default("BRL")
+  // Plano Kuiz inferido
+  kuizPlan        String?  // 'starter' | 'pro' | 'enterprise'
+  // Período (em dias) inferido
+  periodDays      Int?     @default(30)
+  // Processamento
+  status          String   @default("pending") // 'pending' | 'processed' | 'failed' | 'ignored' | 'duplicate'
+  processedAt     DateTime?
+  error           String?
+  // Usuário afetado
+  affectedUserId  String?
+  // Source IP / User Agent (segurança)
+  ipAddress       String?
+  userAgent       String?
+  // Timestamps
+  receivedAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  affectedUser    User?    @relation(fields: [affectedUserId], references: [id], onDelete: SetNull)
+
+  @@index([provider, eventType])
+  @@index([customerEmail])
+  @@index([externalId])
+  @@index([status])
+  @@index([receivedAt(sort: Desc)])
+  @@map("webhook_events")
+}
+
+// Mapeamento de product_id (provedor) → plano Kuiz + periodicidade.
+// Admin configura via UI para identificar qual produto é qual plano.
+model PlanMapping {
+  id              String   @id @default(cuid())
+  provider        String   // 'cakto' | 'stripe' | 'hotmart' | 'kiwify' | etc.
+  externalProductId String  // product_id que vem do webhook
+  externalProductName String?
+  kuizPlan        String   // 'starter' | 'pro' | 'enterprise'
+  periodDays      Int      @default(30)
+  amount          Float?
+  currency        String?  @default("BRL")
+  isActive        Boolean  @default(true)
+  notes           String?
+  createdBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // createdBy relation optional (not enforced)
+
+  @@unique([provider, externalProductId])
+  @@index([kuizPlan])
+  @@map("plan_mappings")
+}
+
+// Config do webhook (secret, etc)
+model WebhookConfig {
+  id              String   @id @default(cuid())
+  provider        String   @unique // 'cakto' | 'stripe' | 'hotmart' | 'kiwify'
+  secret          String?  // HMAC secret compartilhado
+  isActive        Boolean  @default(true)
+  description     String?
+  // Eventos aceitos (vazio = todos)
+  acceptedEvents  String[] @default([])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("webhook_configs")
 }
 
 model SystemLog {
   id        String   @id @default(cuid())
-  level     String   // info, warn, error
+  level     String
   message   String
   context   Json?
   stack     String?
@@ -191,4 +296,118 @@ model SystemLog {
   @@index([level])
   @@index([createdAt])
   @@map("system_logs")
+}
+
+model AdminAction {
+  id            String   @id @default(cuid())
+  adminId       String
+  targetUserId  String?
+  targetFunnelId String?
+  action        String
+  details       Json?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+
+  admin       User  @relation("AdminActions", fields: [adminId], references: [id], onDelete: Cascade)
+  targetUser  User? @relation("TargetUser", fields: [targetUserId], references: [id], onDelete: SetNull)
+
+  @@index([adminId])
+  @@index([action])
+  @@index([createdAt(sort: Desc)])
+  @@map("admin_actions")
+}
+
+// Notas internas do admin em usuários (visíveis para outros admins)
+model AdminNote {
+  id          String   @id @default(cuid())
+  authorId    String
+  targetUserId String
+  content     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author     User @relation("AuthorNotes", fields: [authorId], references: [id], onDelete: Cascade)
+  targetUser User @relation("TargetUserNotes", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@index([targetUserId, createdAt(sort: Desc)])
+  @@index([authorId])
+  @@map("admin_notes")
+}
+
+// Notas internas do admin em funis
+model FunnelNote {
+  id        String   @id @default(cuid())
+  authorId  String
+  funnelId  String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  funnel Funnel @relation(fields: [funnelId], references: [id], onDelete: Cascade)
+
+  @@index([funnelId, createdAt(sort: Desc)])
+  @@map("funnel_notes")
+}
+
+// Cupons de desconto para assinatura
+model Coupon {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  description     String?
+  discountType    String   // percent, fixed
+  discountValue   Float
+  maxUses         Int?
+  usedCount       Int      @default(0)
+  validFrom       DateTime @default(now())
+  validUntil      DateTime?
+  applicablePlans String?  // CSV: "starter,pro,enterprise" ou null = todos
+  isActive        Boolean  @default(true)
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  redemptions CouponRedemption[]
+
+  @@index([code])
+  @@index([isActive, validUntil])
+  @@map("coupons")
+}
+
+model CouponRedemption {
+  id         String   @id @default(cuid())
+  couponId   String
+  userId     String
+  redeemedAt DateTime @default(now())
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([couponId, userId])
+  @@index([userId])
+  @@map("coupon_redemptions")
+}
+
+// Broadcasts (mensagens em massa)
+model Broadcast {
+  id            String    @id @default(cuid())
+  authorId      String
+  subject       String
+  message       String
+  // Segmentação: filtros aplicados
+  segmentRole       String?  // 'all' | 'user' | 'admin'
+  segmentPlan       String?  // 'all' | 'free' | 'starter' | 'pro' | 'enterprise'
+  segmentStatus     String?  // 'all' | 'active' | 'expired' | 'canceled' | 'free'
+  // Resultados
+  totalTargeted  Int       @default(0)
+  totalSent      Int       @default(0)
+  status         String    @default("draft") // draft, sending, sent, failed
+  sentAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  author User @relation("BroadcastAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([createdAt(sort: Desc)])
+  @@map("broadcasts")
 }

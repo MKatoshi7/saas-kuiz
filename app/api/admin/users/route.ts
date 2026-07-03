@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { getSession } from '@/lib/auth';
+import { logAdminAction } from '@/lib/audit';
 
 export async function GET(req: Request) {
     try {
@@ -49,25 +51,56 @@ export async function GET(req: Request) {
 
 export async function PUT(req: Request) {
     try {
+        const session = await getSession();
         await requireAdmin();
         const body = await req.json();
         const { id, password, subscriptionStatus, subscriptionEndsAt, role, subscriptionPlan } = body;
 
         if (!id) return NextResponse.json({ error: 'User ID required' }, { status: 400 });
 
+        const before = await prisma.user.findUnique({ where: { id } });
+        if (!before) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+
         const data: any = {};
+        const changes: Record<string, { from: any; to: any }> = {}
+
         if (password) {
             data.password = await bcrypt.hash(password, 10);
+            changes.password = { from: '***', to: '*** (changed)' };
         }
-        if (subscriptionStatus) data.subscriptionStatus = subscriptionStatus;
-        if (subscriptionPlan) data.subscriptionPlan = subscriptionPlan;
-        if (subscriptionEndsAt) data.subscriptionEndsAt = new Date(subscriptionEndsAt);
-        if (role) data.role = role;
+        if (subscriptionStatus && subscriptionStatus !== before.subscriptionStatus) {
+            data.subscriptionStatus = subscriptionStatus;
+            changes.subscriptionStatus = { from: before.subscriptionStatus, to: subscriptionStatus };
+        }
+        if (subscriptionPlan && subscriptionPlan !== before.subscriptionPlan) {
+            data.subscriptionPlan = subscriptionPlan;
+            changes.subscriptionPlan = { from: before.subscriptionPlan, to: subscriptionPlan };
+        }
+        if (subscriptionEndsAt) {
+            const newDate = new Date(subscriptionEndsAt);
+            if (!before.subscriptionEndsAt || newDate.getTime() !== before.subscriptionEndsAt.getTime()) {
+                data.subscriptionEndsAt = newDate;
+                changes.subscriptionEndsAt = { from: before.subscriptionEndsAt, to: newDate };
+            }
+        }
+        if (role && role !== before.role) {
+            data.role = role;
+            changes.role = { from: before.role, to: role };
+        }
 
         const user = await prisma.user.update({
             where: { id },
             data,
         });
+
+        if (Object.keys(changes).length > 0 && session) {
+            await logAdminAction({
+                adminId: session.userId,
+                action: 'edit_user',
+                targetUserId: id,
+                details: { changes, email: before.email },
+            })
+        }
 
         return NextResponse.json({ success: true });
     } catch (error) {

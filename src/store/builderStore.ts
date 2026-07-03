@@ -26,8 +26,26 @@ interface BuilderStore {
     isDragging: boolean;
 
     // History for undo/redo
-    history: { steps: Step[]; componentsByStep: Record<string, FunnelComponentData[]> }[];
+    history: {
+        steps: Step[]
+        componentsByStep: Record<string, FunnelComponentData[]>
+        action: string
+        timestamp: number
+    }[];
     historyIndex: number;
+
+    // Snapshots nomeados (versões)
+    snapshots: Array<{
+        id: string
+        name: string
+        createdAt: number
+        steps: Step[]
+        componentsByStep: Record<string, FunnelComponentData[]>
+        theme: FunnelTheme
+    }>;
+
+    // Selection context for undo descriptions
+    lastActionDescription: string | null;
 
     // Funnel Actions
     setCurrentFunnel: (funnelId: string) => void;
@@ -53,6 +71,11 @@ interface BuilderStore {
     // History Actions
     undo: () => void;
     redo: () => void;
+
+    // Snapshots
+    createSnapshot: (name: string) => void;
+    restoreSnapshot: (id: string) => void;
+    deleteSnapshot: (id: string) => void;
 
     // Utility
     getCurrentComponents: () => FunnelComponentData[];
@@ -97,6 +120,8 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
     isDragging: false,
     history: [],
     historyIndex: -1,
+    snapshots: [],
+    lastActionDescription: null,
     isLoading: true,
     isInitialized: false,
     error: null,
@@ -114,13 +139,19 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
             };
             // Add to history
             const history = state.history.slice(0, state.historyIndex + 1);
-            history.push({ steps: state.steps, componentsByStep: state.componentsByStep });
+            history.push({
+                steps: state.steps,
+                componentsByStep: state.componentsByStep,
+                action: 'Atualizar tema',
+                timestamp: Date.now(),
+            });
             if (history.length > 50) history.shift();
 
             return {
                 ...newState,
                 history,
-                historyIndex: history.length - 1
+                historyIndex: history.length - 1,
+                lastActionDescription: 'Atualizar tema',
             };
         });
     },
@@ -142,14 +173,20 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
         const newComponentsByStep = { ...componentsByStep, [newStep.id]: [] };
 
         const newHistory = history.slice(0, historyIndex + 1);
-        newHistory.push({ steps, componentsByStep });
+        newHistory.push({
+            steps,
+            componentsByStep,
+            action: 'Adicionar etapa',
+            timestamp: Date.now(),
+        });
         if (newHistory.length > 50) newHistory.shift();
 
         set({
             steps: newSteps,
             componentsByStep: newComponentsByStep,
             history: newHistory,
-            historyIndex: newHistory.length - 1
+            historyIndex: newHistory.length - 1,
+            lastActionDescription: 'Adicionar etapa',
         });
     },
 
@@ -181,29 +218,47 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
         const newComponentsByStep = { ...componentsByStep, [newStep.id]: duplicatedComponents };
 
         const newHistory = history.slice(0, historyIndex + 1);
-        newHistory.push({ steps, componentsByStep });
+        newHistory.push({
+            steps,
+            componentsByStep,
+            action: 'Duplicar etapa',
+            timestamp: Date.now(),
+        });
         if (newHistory.length > 50) newHistory.shift();
 
         set({
             steps: newSteps,
             componentsByStep: newComponentsByStep,
             history: newHistory,
-            historyIndex: newHistory.length - 1
+            historyIndex: newHistory.length - 1,
+            lastActionDescription: 'Duplicar etapa',
         });
     },
 
     deleteStep: (stepId) => {
-        const { steps, componentsByStep, currentStepId } = get();
+        const { steps, componentsByStep, currentStepId, history, historyIndex } = get();
         if (steps.length <= 1) return;
 
         const newSteps = steps.filter(s => s.id !== stepId);
         const newComponentsByStep = { ...componentsByStep };
         delete newComponentsByStep[stepId];
 
+        const newHistory = history.slice(0, historyIndex + 1);
+        newHistory.push({
+            steps,
+            componentsByStep,
+            action: 'Excluir etapa',
+            timestamp: Date.now(),
+        });
+        if (newHistory.length > 50) newHistory.shift();
+
         set({
             steps: newSteps,
             componentsByStep: newComponentsByStep,
-            currentStepId: currentStepId === stepId ? newSteps[0]?.id : currentStepId
+            currentStepId: currentStepId === stepId ? newSteps[0]?.id : currentStepId,
+            history: newHistory,
+            historyIndex: newHistory.length - 1,
+            lastActionDescription: 'Excluir etapa',
         });
     },
 
@@ -262,14 +317,20 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
         };
 
         const newHistory = history.slice(0, historyIndex + 1);
-        newHistory.push({ steps, componentsByStep });
+        newHistory.push({
+            steps,
+            componentsByStep,
+            action: `Adicionar ${type}`,
+            timestamp: Date.now(),
+        });
         if (newHistory.length > 50) newHistory.shift();
 
         set({
             componentsByStep: newComponentsByStep,
             selectedComponentId: newComponent.id,
             history: newHistory,
-            historyIndex: newHistory.length - 1
+            historyIndex: newHistory.length - 1,
+            lastActionDescription: `Adicionar ${type}`,
         });
     },
 
@@ -287,7 +348,12 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
         // Only add to history if it's not a "frequent" update (like typing)
         // For now, we add everything, but we could debounce this
         const newHistory = history.slice(0, historyIndex + 1);
-        newHistory.push({ steps, componentsByStep });
+        newHistory.push({
+            steps,
+            componentsByStep,
+            action: 'Editar componente',
+            timestamp: Date.now(),
+        });
         if (newHistory.length > 50) newHistory.shift();
 
         set({
@@ -321,13 +387,19 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
         };
 
         const newHistory = history.slice(0, historyIndex + 1);
-        newHistory.push({ steps, componentsByStep });
+        newHistory.push({
+            steps,
+            componentsByStep,
+            action: 'Duplicar componente',
+            timestamp: Date.now(),
+        });
         if (newHistory.length > 50) newHistory.shift();
 
         set({
             componentsByStep: newComponentsByStep,
             history: newHistory,
-            historyIndex: newHistory.length - 1
+            historyIndex: newHistory.length - 1,
+            lastActionDescription: 'Duplicar componente',
         });
     },
 
@@ -343,14 +415,20 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
         };
 
         const newHistory = history.slice(0, historyIndex + 1);
-        newHistory.push({ steps, componentsByStep });
+        newHistory.push({
+            steps,
+            componentsByStep,
+            action: 'Excluir componente',
+            timestamp: Date.now(),
+        });
         if (newHistory.length > 50) newHistory.shift();
 
         set({
             componentsByStep: newComponentsByStep,
             selectedComponentId: selectedComponentId === id ? null : selectedComponentId,
             history: newHistory,
-            historyIndex: newHistory.length - 1
+            historyIndex: newHistory.length - 1,
+            lastActionDescription: 'Excluir componente',
         });
     },
 
@@ -377,11 +455,14 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
 
         const newIndex = historyIndex - 1;
         const snapshot = history[newIndex];
+        // Próxima ação (a que estamos desfazendo) está em history[historyIndex]
+        const undoing = history[historyIndex]?.action || 'Ação anterior';
 
         set({
             steps: snapshot.steps,
             componentsByStep: snapshot.componentsByStep,
-            historyIndex: newIndex
+            historyIndex: newIndex,
+            lastActionDescription: `Desfez: ${undoing}`,
         });
     },
 
@@ -395,8 +476,40 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
         set({
             steps: snapshot.steps,
             componentsByStep: snapshot.componentsByStep,
-            historyIndex: newIndex
+            historyIndex: newIndex,
+            lastActionDescription: `Refeita: ${snapshot.action || 'ação'}`,
         });
+    },
+
+    // Snapshots (versões nomeadas)
+    createSnapshot: (name) => {
+        const { steps, componentsByStep, theme, snapshots } = get()
+        const snapshot = {
+            id: `snap_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+            name: name || `Versão ${new Date().toLocaleString('pt-BR')}`,
+            createdAt: Date.now(),
+            steps: JSON.parse(JSON.stringify(steps)),
+            componentsByStep: JSON.parse(JSON.stringify(componentsByStep)),
+            theme: JSON.parse(JSON.stringify(theme)),
+        }
+        set({ snapshots: [snapshot, ...snapshots].slice(0, 20) })
+    },
+
+    restoreSnapshot: (id) => {
+        const { snapshots } = get()
+        const snap = snapshots.find((s) => s.id === id)
+        if (!snap) return
+        set({
+            steps: snap.steps,
+            componentsByStep: snap.componentsByStep,
+            theme: snap.theme,
+            lastActionDescription: `Restaurado: ${snap.name}`,
+        })
+    },
+
+    deleteSnapshot: (id) => {
+        const { snapshots } = get()
+        set({ snapshots: snapshots.filter((s) => s.id !== id) })
     },
 
     // Utility
@@ -459,8 +572,14 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
                         currentStepId: 'step_1',
                         isLoading: false,
                         isInitialized: true,
-                        history: [{ steps: defaultSteps, componentsByStep: defaultComponents }],
+                        history: [{
+                            steps: defaultSteps,
+                            componentsByStep: defaultComponents,
+                            action: 'Inicial',
+                            timestamp: Date.now(),
+                        }],
                         historyIndex: 0,
+                        snapshots: [],
                         error: null
                     });
                 } else {
@@ -470,8 +589,14 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
                         currentStepId: null,
                         isLoading: false,
                         isInitialized: true,
-                        history: [{ steps: [], componentsByStep: {} }],
+                        history: [{
+                            steps: [],
+                            componentsByStep: {},
+                            action: 'Inicial',
+                            timestamp: Date.now(),
+                        }],
                         historyIndex: 0,
+                        snapshots: [],
                         error: null
                     });
                 }
@@ -519,7 +644,14 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
             }
 
             // Preserve history if requested, otherwise reset
-            const history = options?.preserveState ? get().history : [{ steps: storeSteps, componentsByStep: storeComponentsByStep }];
+            const history = options?.preserveState
+                ? get().history
+                : [{
+                    steps: storeSteps,
+                    componentsByStep: storeComponentsByStep,
+                    action: 'Inicial',
+                    timestamp: Date.now(),
+                }];
             const historyIndex = options?.preserveState ? get().historyIndex : 0;
 
             set({
@@ -530,6 +662,7 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
                 isInitialized: true,
                 history,
                 historyIndex,
+                snapshots: options?.preserveState ? get().snapshots : [],
                 error: null
             });
 

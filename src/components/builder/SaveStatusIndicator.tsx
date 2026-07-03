@@ -1,9 +1,10 @@
 'use client';
 
-import { Loader2, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle, Circle, Cloud } from 'lucide-react';
 import { SaveStatus } from '@/hooks/useAutoSave';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface SaveStatusIndicatorProps {
     status: SaveStatus;
@@ -12,50 +13,52 @@ interface SaveStatusIndicatorProps {
     className?: string;
 }
 
+const statusMap: Record<SaveStatus, { label: (d?: Date | null) => string; className: string; icon: (d?: Date | null) => React.ReactNode }> = {
+    idle: {
+        label: (d) => d ? `Salvo ${formatDistanceToNow(d, { addSuffix: true, locale: ptBR })}` : 'Sem alterações',
+        className: 'text-muted-foreground',
+        icon: () => <Cloud className="w-3.5 h-3.5" />,
+    },
+    dirty: {
+        label: () => 'Alterações não salvas...',
+        className: 'text-amber-600',
+        icon: () => <Circle className="w-3.5 h-3.5 fill-amber-500 text-amber-500 animate-pulse-soft" />,
+    },
+    saving: {
+        label: () => 'Salvando...',
+        className: 'text-blue-600',
+        icon: () => <Loader2 className="w-3.5 h-3.5 animate-spin" />,
+    },
+    saved: {
+        label: (d) => d ? `Salvo ${formatDistanceToNow(d, { addSuffix: true, locale: ptBR })}` : 'Salvo',
+        className: 'text-emerald-600',
+        icon: () => <CheckCircle2 className="w-3.5 h-3.5" />,
+    },
+    error: {
+        label: () => 'Erro ao salvar',
+        className: 'text-red-600',
+        icon: () => <AlertCircle className="w-3.5 h-3.5" />,
+    },
+}
+
 export function SaveStatusIndicator({
     status,
     lastSaved,
     error,
     className = ''
 }: SaveStatusIndicatorProps) {
+    const cfg = statusMap[status]
     return (
-        <div className={`flex items-center gap-2 text-sm ${className}`}>
-            {status === 'saving' && (
-                <>
-                    <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-                    <span className="text-gray-600">Salvando...</span>
-                </>
+        <div
+            className={cn(
+                'inline-flex items-center gap-1.5 text-xs font-medium transition-colors',
+                cfg.className,
+                className
             )}
-
-            {status === 'saved' && (
-                <>
-                    <CheckCircle2 className="w-4 h-4 text-green-500" />
-                    <span className="text-gray-600">
-                        {lastSaved
-                            ? `Salvo ${formatDistanceToNow(lastSaved, { addSuffix: true, locale: ptBR })}`
-                            : 'Salvo automaticamente'
-                        }
-                    </span>
-                </>
-            )}
-
-            {status === 'error' && (
-                <>
-                    <AlertCircle className="w-4 h-4 text-red-500" />
-                    <span className="text-red-600" title={error || undefined}>
-                        Erro ao salvar
-                    </span>
-                </>
-            )}
-
-            {status === 'idle' && lastSaved && (
-                <>
-                    <Clock className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-500">
-                        Salvo {formatDistanceToNow(lastSaved, { addSuffix: true, locale: ptBR })}
-                    </span>
-                </>
-            )}
+            title={error || undefined}
+        >
+            {cfg.icon(lastSaved)}
+            <span>{cfg.label(lastSaved)}</span>
         </div>
-    );
+    )
 }

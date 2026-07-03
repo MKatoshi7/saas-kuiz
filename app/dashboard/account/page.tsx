@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { PlanSelectionDialog } from '@/components/account/PlanSelectionDialog';
-import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 
 interface UserData {
     id: string;
@@ -141,21 +140,31 @@ export default function AccountPage() {
     };
 
     const getDaysRemaining = () => {
-        if (!user?.subscriptionEndsAt) return null;
+        if (user?.subscriptionStatus === 'active' && user.subscriptionEndsAt) {
+            const endDate = new Date(user.subscriptionEndsAt);
+            const today = new Date();
+            const diffTime = endDate.getTime() - today.getTime();
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
 
-        const endDate = new Date(user.subscriptionEndsAt);
-        const today = new Date();
-        const diffTime = endDate.getTime() - today.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        // Free trial: 7 days from registration
+        if (!user?.subscriptionStatus || user.subscriptionStatus === 'free') {
+            const createdAt = new Date((user as any)?.createdAt || Date.now());
+            const trialEnd = new Date(createdAt);
+            trialEnd.setDate(trialEnd.getDate() + 7);
+            const today = new Date();
+            const diffTime = trialEnd.getTime() - today.getTime();
+            return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+        }
 
-        return diffDays;
+        return null;
     };
 
     const getSubscriptionStatusBadge = () => {
         const status = user?.subscriptionStatus || 'free';
 
         const badges = {
-            free: { label: 'Gratuito', color: 'bg-slate-100 text-slate-700' },
+            free: { label: 'Trial Gratuito', color: 'bg-amber-100 text-amber-700' },
             active: { label: 'Ativo', color: 'bg-green-100 text-green-700' },
             canceled: { label: 'Cancelado', color: 'bg-yellow-100 text-yellow-700' },
             expired: { label: 'Expirado', color: 'bg-red-100 text-red-700' },
@@ -192,7 +201,6 @@ export default function AccountPage() {
 
     return (
         <>
-            <DashboardHeader />
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header */}
                 <div className="mb-8">
@@ -359,18 +367,21 @@ export default function AccountPage() {
                             </div>
 
                             {/* Days Remaining */}
-                            {daysRemaining !== null && user?.subscriptionStatus === 'active' && (
-                                <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                                    <Calendar className="w-5 h-5 text-blue-600" />
+                            {daysRemaining !== null && (user?.subscriptionStatus === 'active' || !user?.subscriptionStatus || user?.subscriptionStatus === 'free') && (
+                                <div className={`flex items-center gap-3 p-4 rounded-lg ${user?.subscriptionStatus === 'active' ? 'bg-blue-50 border border-blue-200' : 'bg-amber-50 border border-amber-200'}`}>
+                                    <Calendar className={`w-5 h-5 ${user?.subscriptionStatus === 'active' ? 'text-blue-600' : 'text-amber-600'}`} />
                                     <div className="flex-1">
-                                        <p className="text-sm font-medium text-blue-900">
+                                        <p className={`text-sm font-medium ${user?.subscriptionStatus === 'active' ? 'text-blue-900' : 'text-amber-900'}`}>
                                             {daysRemaining > 0
                                                 ? `${daysRemaining} ${daysRemaining === 1 ? 'dia restante' : 'dias restantes'}`
-                                                : 'Sua assinatura expira hoje'
+                                                : 'Seu trial expira hoje'
                                             }
                                         </p>
-                                        <p className="text-xs text-blue-700">
-                                            Expira em {new Date(user.subscriptionEndsAt!).toLocaleDateString('pt-BR')}
+                                        <p className={`text-xs ${user?.subscriptionStatus === 'active' ? 'text-blue-700' : 'text-amber-700'}`}>
+                                            {user?.subscriptionStatus === 'active' && user.subscriptionEndsAt
+                                                ? `Expira em ${new Date(user.subscriptionEndsAt).toLocaleDateString('pt-BR')}`
+                                                : 'Assine para manter o acesso após o trial'
+                                            }
                                         </p>
                                     </div>
                                 </div>
@@ -425,19 +436,16 @@ export default function AccountPage() {
                             {/* Free Plan Info */}
                             {(!user?.subscriptionStatus || user?.subscriptionStatus === 'free') && (
                                 <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
-                                    <h4 className="font-semibold text-slate-900 mb-2">Desbloqueie Recursos Premium</h4>
+                                    <h4 className="font-semibold text-slate-900 mb-2">Plano Gratuito - Trial 7 Dias</h4>
+                                    <p className="text-xs text-slate-600 mb-3">Você está usando o plano gratuito com 7 dias de trial. Após esse período, será necessário assinar um plano.</p>
                                     <ul className="space-y-1 text-sm text-slate-700 mb-4">
                                         <li className="flex items-center gap-2">
                                             <CheckCircle2 className="w-4 h-4 text-green-600" />
-                                            Quizzes ilimitados
+                                            1 funil ativo
                                         </li>
                                         <li className="flex items-center gap-2">
                                             <CheckCircle2 className="w-4 h-4 text-green-600" />
-                                            Domínio personalizado
-                                        </li>
-                                        <li className="flex items-center gap-2">
-                                            <CheckCircle2 className="w-4 h-4 text-green-600" />
-                                            Analytics avançado
+                                            Até 50 leads
                                         </li>
                                         <li className="flex items-center gap-2">
                                             <CheckCircle2 className="w-4 h-4 text-green-600" />

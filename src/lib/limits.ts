@@ -1,10 +1,11 @@
 
 export const PLAN_LIMITS = {
     free: {
-        funnels: 3,
+        funnels: 1,
         leads: 50,
         customDomain: false,
         removeBranding: false,
+        trialDays: 7,
     },
     starter: {
         funnels: 10,

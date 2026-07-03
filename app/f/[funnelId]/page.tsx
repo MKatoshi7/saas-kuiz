@@ -3,132 +3,135 @@ import FunnelPageClient from './FunnelPageClient';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import Script from 'next/script';
+import { sanitizeHeadScript, extractScriptContent } from '@/lib/sanitize';
+import { FunnelBlockedScreen } from '@/components/renderer/FunnelBlockedScreen';
+import { unstable_cache } from 'next/cache';
+
+// ISR: revalida a cada 60s. Mutations devem chamar `revalidateTag('funnels')`.
+export const revalidate = 60
+export const dynamicParams = true
+
+// Nota: NÃO exportamos `metadata` static aqui — geramos tudo dinamicamente
+// via `generateMetadata` abaixo. O `theme-color` é injetado via <meta> no
+// FunnelShell/FunnelPageClient quando relevante.
+
+const getFunnelMetadata = unstable_cache(
+    async (funnelId: string) => {
+        return prisma.funnel.findFirst({
+            where: { OR: [{ id: funnelId }, { slug: funnelId }] },
+            select: {
+                id: true,
+                title: true,
+                description: true,
+                customDomain: true,
+                isBanned: true,
+                themeConfig: true,
+                marketingConfig: true,
+            },
+        })
+    },
+    ['funnel-metadata'],
+    { revalidate: 60, tags: ['funnels'] }
+)
+
+const getFunnelFull = unstable_cache(
+    async (funnelId: string) => {
+        return prisma.funnel.findFirst({
+            where: { OR: [{ id: funnelId }, { slug: funnelId }] },
+            include: {
+                user: {
+                    select: {
+                        subscriptionEndsAt: true,
+                        subscriptionStatus: true,
+                    },
+                },
+                steps: {
+                    include: {
+                        components: {
+                            orderBy: { order: 'asc' },
+                        },
+                    },
+                    orderBy: { order: 'asc' },
+                },
+            },
+        })
+    },
+    ['funnel-full'],
+    { revalidate: 60, tags: ['funnels'] }
+)
 
 export async function generateMetadata({ params }: { params: Promise<{ funnelId: string }> }): Promise<Metadata> {
     const { funnelId } = await params;
-    const funnel = await prisma.funnel.findFirst({
-        where: {
-            OR: [
-                { id: funnelId },
-                { slug: funnelId }
-            ]
-        }
-    });
+    const funnel = await getFunnelMetadata(funnelId);
 
     if (!funnel) {
         return {
-            title: 'Funnel Not Found'
+            title: 'Funil não encontrado',
+            robots: { index: false, follow: false },
         };
     }
 
     const themeConfig = funnel.themeConfig as any;
+    const marketingConfig = funnel.marketingConfig as any;
     const favicon = themeConfig?.favicon || '/favicon.ico';
 
     return {
-        title: funnel.title,
-        description: funnel.description || 'Participate in this interactive quiz!',
-        icons: {
-            icon: favicon,
-        },
+        title: marketingConfig?.seoTitle || funnel.title,
+        description: marketingConfig?.seoDescription || funnel.description || 'Participe deste quiz interativo!',
+        icons: { icon: favicon },
         openGraph: {
-            title: funnel.title,
-            description: funnel.description || 'Participate in this interactive quiz!',
+            title: marketingConfig?.seoTitle || funnel.title,
+            description: marketingConfig?.seoDescription || funnel.description || 'Participe deste quiz interativo!',
             type: 'website',
-        }
-    };
-}
-
-import { unstable_cache } from 'next/cache';
-
-const getFunnel = async (funnelId: string) => {
-    return await prisma.funnel.findFirst({
-        where: {
-            OR: [
-                { id: funnelId },
-                { slug: funnelId }
-            ]
+            images: marketingConfig?.seoImage ? [marketingConfig.seoImage] : [],
         },
-        include: {
-            user: {
-                select: {
-                    subscriptionEndsAt: true,
-                    subscriptionStatus: true
-                }
-            },
-            steps: {
-                include: {
-                    components: {
-                        orderBy: { order: 'asc' }
-                    }
-                },
-                orderBy: { order: 'asc' }
-            }
-        }
-    });
-};
+        twitter: {
+            card: 'summary_large_image',
+            title: marketingConfig?.seoTitle || funnel.title,
+            description: marketingConfig?.seoDescription || funnel.description,
+            images: marketingConfig?.seoImage ? [marketingConfig.seoImage] : [],
+        },
+        alternates: funnel.customDomain ? { canonical: `https://${funnel.customDomain}` } : undefined,
+        robots: funnel.isBanned ? { index: false, follow: false } : undefined,
+    }
+}
 
 export default async function FunnelPage({ params }: { params: Promise<{ funnelId: string }> }) {
     const { funnelId } = await params;
 
-    const funnel = await getFunnel(funnelId);
+    const funnel = await getFunnelFull(funnelId);
 
     if (!funnel) {
         notFound();
     }
 
-    // Check for subscription expiration
+    // Verificar assinatura
     const isSubscriptionExpired = funnel.user.subscriptionEndsAt && new Date(funnel.user.subscriptionEndsAt) < new Date();
-    // Also check if status is explicitly 'expired' or 'canceled' if that's how logic should work, 
-    // but user specifically mentioned "quando passar o dia de renovação".
 
     if (isSubscriptionExpired) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 font-sans">
-                <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center border border-orange-100">
-                    <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <svg className="w-8 h-8 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Serviço Suspenso</h1>
-                    <p className="text-gray-600 mb-6">
-                        Este conteúdo está temporariamente indisponível devido a pendências na assinatura do proprietário.
-                    </p>
-                    <div className="text-xs text-gray-400 border-t pt-4">
-                        Entre em contato com o administrador do site.
-                    </div>
-                </div>
-            </div>
+            <FunnelBlockedScreen
+                variant="warning"
+                title="Serviço Suspenso"
+                message="Este conteúdo está temporariamente indisponível devido a pendências na assinatura do proprietário."
+                footer="Entre em contato com o administrador do site."
+            />
         );
     }
 
     if (funnel.isBanned) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 font-sans">
-                <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center border border-red-100">
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                    </div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">Acesso Indisponível</h1>
-                    <p className="text-gray-600 mb-6">
-                        Este conteúdo foi suspenso temporariamente pela plataforma.
-                        {funnel.banReason && (
-                            <span className="block mt-4 text-sm bg-red-50 text-red-800 p-3 rounded-lg border border-red-100 font-medium">
-                                Motivo: {funnel.banReason}
-                            </span>
-                        )}
-                    </p>
-                    <div className="text-xs text-gray-400 border-t pt-4">
-                        Dúvidas? Entre em contato com o suporte.
-                    </div>
-                </div>
-            </div>
+            <FunnelBlockedScreen
+                variant="danger"
+                title="Acesso Indisponível"
+                message="Este conteúdo foi suspenso temporariamente pela plataforma."
+                reason={funnel.banReason || undefined}
+                footer="Dúvidas? Entre em contato com o suporte."
+            />
         );
     }
 
-    // Transform data for the client
+    // Transformar dados para o client
     const componentsByStep: Record<string, any[]> = {};
     funnel.steps.forEach((step: any) => {
         componentsByStep[step.id] = step.components.map((c: any) => ({
@@ -147,9 +150,17 @@ export default async function FunnelPage({ params }: { params: Promise<{ funnelI
 
     const marketingConfig = funnel.marketingConfig as any;
     const fbPixelId = marketingConfig?.fbPixelId;
+    const safeCustomScript = sanitizeHeadScript(marketingConfig?.customHeadScript);
+    const customScriptContent = extractScriptContent(safeCustomScript);
 
     return (
         <>
+            {/* Preconnect para origens externas críticas */}
+            <>
+                <link rel="preconnect" href="https://res.cloudinary.com" />
+                <link rel="dns-prefetch" href="https://connect.facebook.net" />
+            </>
+
             {fbPixelId && (
                 <Script id="facebook-pixel" strategy="afterInteractive">
                     {`
@@ -167,7 +178,6 @@ export default async function FunnelPage({ params }: { params: Promise<{ funnelI
                 </Script>
             )}
 
-            {/* Google Tag Manager */}
             {marketingConfig?.gtmId && (
                 <Script id="google-tag-manager" strategy="afterInteractive">
                     {`
@@ -180,10 +190,14 @@ export default async function FunnelPage({ params }: { params: Promise<{ funnelI
                 </Script>
             )}
 
-            {/* Custom Head Scripts (UTMify, Hotjar, etc) */}
-            {marketingConfig?.customHeadScript && (
-                <div dangerouslySetInnerHTML={{ __html: marketingConfig.customHeadScript }} />
-            )}
+            {customScriptContent ? (
+                <Script id="kuiz-custom-head" strategy="afterInteractive">
+                    {customScriptContent}
+                </Script>
+            ) : safeCustomScript ? (
+                <div dangerouslySetInnerHTML={{ __html: safeCustomScript }} />
+            ) : null}
+
             <FunnelPageClient
                 funnelId={funnel.id}
                 initialSteps={steps}

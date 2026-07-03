@@ -9,7 +9,7 @@ interface UnifiedTextRendererProps {
     color?: string;
     className?: string;
     fontWeight?: string;
-    // Phase 1 Enhancements
+    fontFamily?: string;
     letterSpacing?: 'tighter' | 'tight' | 'normal' | 'wide' | 'wider' | 'widest';
     lineHeight?: 'tight' | 'snug' | 'normal' | 'relaxed' | 'loose';
     textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
@@ -28,6 +28,7 @@ export function UnifiedTextRenderer({
     color,
     className = '',
     fontWeight,
+    fontFamily,
     letterSpacing,
     lineHeight,
     textTransform,
@@ -137,6 +138,10 @@ export function UnifiedTextRenderer({
 
         if (fontWeight) {
             styles.fontWeight = fontWeight;
+        }
+
+        if (fontFamily) {
+            styles.fontFamily = fontFamily;
         }
 
         // Drop shadow (hard 3D style)

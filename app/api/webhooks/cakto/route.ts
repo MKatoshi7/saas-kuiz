@@ -1,85 +1,97 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { logger } from '@/lib/logger';
+import { NextRequest, NextResponse } from 'next/server'
+import prisma from '@/lib/prisma'
+import { processWebhook } from '@/lib/webhook-processor'
+import { verifyHmacSignature } from '@/lib/webhook-signature'
 
-export async function POST(req: Request) {
-    const payload = await req.json();
-    const provider = 'cakto';
+export const dynamic = 'force-dynamic'
 
-    // Log the webhook
-    const webhookLog = await prisma.webhookLog.create({
-        data: {
-            provider,
-            eventType: payload.status || 'unknown',
-            payload,
-            status: 'processing'
-        }
-    });
-
+/**
+ * Webhook público para provedores de pagamento.
+ *
+ * Aceita QUALQUER provedor (Cakto, Stripe, Hotmart, Kiwify, Eduzz, Braip, etc).
+ * O provedor pode ser:
+ * - Fornecido via query string: `?provider=cakto`
+ * - Detectado automaticamente via headers + payload
+ *
+ * Segurança:
+ * - HMAC SHA-256 opcional (configurável em /admin/webhooks → Configs)
+ * - Se não houver secret configurado, aceita e loga (modo dev)
+ */
+export async function POST(req: NextRequest) {
     try {
-        // Basic validation (Adjust based on real Cakto docs)
-        // Assuming payload structure: { status: 'paid', customer: { email: '...' }, amount: 2990, id: '...' }
+        const rawBody = await req.text()
+        const payload = JSON.parse(rawBody || '{}')
 
-        const status = payload.status;
-        const email = payload.customer?.email || payload.email;
-        const amount = payload.amount; // Assuming amount is in cents or full value, need to verify. Assuming full value for now.
-        const transactionId = payload.id || payload.transaction_id;
+        // Detectar provedor
+        const url = new URL(req.url)
+        const providerHint = url.searchParams.get('provider')?.toLowerCase() || undefined
 
-        if (status === 'paid' || status === 'approved') {
-            if (!email) {
-                throw new Error('Email not found in payload');
-            }
+        // Capturar headers
+        const headers: Record<string, string> = {}
+        req.headers.forEach((v, k) => {
+            headers[k] = v
+        })
 
-            const user = await prisma.user.findUnique({ where: { email } });
+        // IP / User-Agent
+        const ipAddress = req.headers.get('x-forwarded-for')?.split(',')[0] || req.headers.get('x-real-ip') || null
+        const userAgent = req.headers.get('user-agent') || null
 
-            if (user) {
-                // Add 30 days to current subscription end or now
-                const currentEnd = user.subscriptionEndsAt && user.subscriptionEndsAt > new Date()
-                    ? user.subscriptionEndsAt
-                    : new Date();
-
-                const newEnd = new Date(currentEnd);
-                newEnd.setDate(newEnd.getDate() + 30);
-
-                // Update User
-                await prisma.user.update({
-                    where: { id: user.id },
-                    data: {
-                        subscriptionStatus: 'active',
-                        subscriptionEndsAt: newEnd,
-                        subscriptionPlan: 'pro' // Default to pro on payment
-                    }
-                });
-
-                // Create Transaction Record
-                await prisma.subscriptionTransaction.create({
-                    data: {
-                        userId: user.id,
-                        amount: Number(amount),
-                        status: 'paid',
-                        provider,
-                        transactionId: String(transactionId),
-                        metadata: payload
-                    }
-                });
-
-                logger.info(`Subscription renewed for ${email}`, { transactionId });
-            } else {
-                logger.warn(`Webhook received for unknown user: ${email}`);
+        // Validar assinatura HMAC se houver config para o provider
+        const guessedProvider = providerHint || guessFromHeaders(headers)
+        if (guessedProvider) {
+            const config = await prisma.webhookConfig.findUnique({
+                where: { provider: guessedProvider },
+            })
+            if (config?.secret) {
+                const sig =
+                    req.headers.get('x-webhook-signature') ||
+                    req.headers.get('x-cakto-signature') ||
+                    req.headers.get('x-stripe-signature') ||
+                    null
+                const valid = verifyHmacSignature(rawBody, sig, config.secret)
+                if (!valid) {
+                    return NextResponse.json(
+                        { error: 'Invalid signature', provider: guessedProvider },
+                        { status: 401 }
+                    )
+                }
             }
         }
 
-        // Update log status
-        await prisma.webhookLog.update({
-            where: {
-                id: webhookLog.id
-            },
-            data: { status: 'success' }
-        });
+        const result = await processWebhook({
+            rawPayload: payload,
+            headers,
+            provider: providerHint,
+            source: 'api',
+            ipAddress,
+            userAgent,
+        })
 
-        return NextResponse.json({ received: true });
-    } catch (error) {
-        logger.error('Error processing Cakto webhook', error, { payload });
-        return NextResponse.json({ error: 'Processing failed' }, { status: 500 });
+        // Sempre 200 OK (mesmo em duplicate/ignored) — webhook não deve retentar
+        return NextResponse.json({
+            ok: result.ok,
+            status: result.status,
+            message: result.message,
+            webhookEventId: result.webhookEventId,
+            parsed: result.parsed,
+        })
+    } catch (error: any) {
+        console.error('Webhook processing error:', error)
+        // Retorna 200 pra evitar retentativas em loop infinito do provedor
+        return NextResponse.json(
+            { ok: false, error: error?.message || 'Processing failed' },
+            { status: 200 }
+        )
     }
+}
+
+function guessFromHeaders(headers: Record<string, string>): string | null {
+    const h = JSON.stringify(headers).toLowerCase()
+    if (h.includes('cakto')) return 'cakto'
+    if (h.includes('stripe')) return 'stripe'
+    if (h.includes('hotmart')) return 'hotmart'
+    if (h.includes('kiwify')) return 'kiwify'
+    if (h.includes('eduzz')) return 'eduzz'
+    if (h.includes('braip')) return 'braip'
+    return null
 }

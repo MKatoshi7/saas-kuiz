@@ -14,27 +14,39 @@ export default async function DashboardPage() {
 
     const userId = session.userId;
 
-    const projects = await prisma.funnel.findMany({
-        where: { userId },
-        include: {
-            _count: {
-                select: { sessions: true }
+    const [projects, user] = await Promise.all([
+        prisma.funnel.findMany({
+            where: { userId },
+            include: {
+                _count: {
+                    select: { sessions: true }
+                }
+            },
+            orderBy: { updatedAt: 'desc' }
+        }),
+        prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                name: true,
+                email: true,
+                subscriptionEndsAt: true,
+                subscriptionStatus: true,
+                subscriptionPlan: true,
             }
-        },
-        orderBy: { updatedAt: 'desc' }
-    });
-
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { subscriptionEndsAt: true, subscriptionStatus: true }
-    });
+        }),
+    ]);
 
     const isSubscriptionExpired = user?.subscriptionEndsAt && new Date(user.subscriptionEndsAt) < new Date();
 
     return (
         <>
             <DashboardHeader />
-            <DashboardClient projects={projects} isSubscriptionExpired={!!isSubscriptionExpired} />
+            <DashboardClient
+                projects={projects}
+                isSubscriptionExpired={!!isSubscriptionExpired}
+                userName={user?.name}
+                userPlan={user?.subscriptionPlan || 'free'}
+            />
         </>
     );
 }

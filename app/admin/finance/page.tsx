@@ -1,8 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Loader2, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, DollarSign, ChevronLeft, ChevronRight, TrendingUp, Webhook, ArrowUpRight } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { StatCard } from '@/components/ui/StatCard';
+import { format, formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import Link from 'next/link';
 
 interface Transaction {
     id: string;
@@ -18,14 +24,21 @@ export default function FinancePage() {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [stats, setStats] = useState({
+        totalRevenue: 0,
+        thisMonth: 0,
+        activeSubs: 0,
+        webhookCount: 0,
+    });
 
     const fetchTransactions = async () => {
         setLoading(true);
         try {
             const res = await fetch(`/api/admin/finance?page=${page}`);
             const data = await res.json();
-            setTransactions(data.transactions);
-            setTotalPages(data.pages);
+            setTransactions(data.transactions || []);
+            setTotalPages(data.pages || 1);
+            setStats((s) => ({ ...s, totalRevenue: data.totalRevenue || 0, thisMonth: data.thisMonth || 0 }));
         } catch (error) {
             console.error(error);
         } finally {
@@ -38,87 +51,133 @@ export default function FinancePage() {
     }, [page]);
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6 animate-fade-in-up">
             <div>
-                <h2 className="text-3xl font-bold tracking-tight text-gray-900">Histórico Financeiro</h2>
-                <p className="text-gray-500 mt-1">Acompanhe todas as transações e assinaturas.</p>
+                <h1 className="text-3xl font-bold tracking-tight">Financeiro</h1>
+                <p className="text-muted-foreground mt-1">
+                    Receitas, transações e assinaturas ativas.
+                </p>
             </div>
 
-            <div className="bg-white border border-black/5 rounded-3xl shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="bg-gray-50/50 border-b border-black/5 text-gray-500 font-medium">
-                            <tr>
-                                <th className="px-8 py-4">Data</th>
-                                <th className="px-6 py-4">Usuário</th>
-                                <th className="px-6 py-4">Valor</th>
-                                <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4">Provedor</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {loading ? (
-                                <tr><td colSpan={5} className="p-12 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto text-black" /></td></tr>
-                            ) : transactions.length === 0 ? (
-                                <tr><td colSpan={5} className="p-12 text-center text-gray-500">Nenhuma transação encontrada.</td></tr>
-                            ) : (
-                                transactions.map((tx) => (
-                                    <tr key={tx.id} className="hover:bg-gray-50/80 transition-colors group">
-                                        <td className="px-8 py-4 text-gray-500 whitespace-nowrap">
-                                            <div className="font-medium text-gray-900">{new Date(tx.createdAt).toLocaleDateString()}</div>
-                                            <div className="text-xs">{new Date(tx.createdAt).toLocaleTimeString()}</div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-500">
-                                                    {tx.user.name ? tx.user.name.charAt(0).toUpperCase() : '?'}
-                                                </div>
-                                                <div>
-                                                    <div className="font-medium text-gray-900">{tx.user.name || 'Sem nome'}</div>
-                                                    <div className="text-xs text-gray-500">{tx.user.email}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 font-medium text-gray-900">
-                                            R$ {tx.amount.toFixed(2)}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${tx.status === 'paid' ? 'bg-green-50 text-green-700 border-green-100' :
-                                                    tx.status === 'pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-100' :
-                                                        'bg-red-50 text-red-700 border-red-100'
-                                                }`}>
-                                                <span className={`w-1.5 h-1.5 rounded-full ${tx.status === 'paid' ? 'bg-green-500' :
-                                                        tx.status === 'pending' ? 'bg-yellow-500' :
-                                                            'bg-red-500'
-                                                    }`} />
-                                                {tx.status === 'paid' ? 'Pago' : tx.status === 'pending' ? 'Pendente' : 'Falhou'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-1 rounded uppercase tracking-wide">
-                                                {tx.provider}
-                                            </span>
+            {/* KPIs */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatCard
+                    label="Receita total"
+                    value={`R$ ${stats.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                    icon={DollarSign}
+                    variant="dark"
+                />
+                <StatCard
+                    label="Este mês"
+                    value={`R$ ${stats.thisMonth.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                    icon={TrendingUp}
+                    variant="primary"
+                />
+                <StatCard
+                    label="Assinaturas ativas"
+                    value={stats.activeSubs}
+                    icon={ArrowUpRight}
+                />
+                <Link href="/admin/webhooks" className="block">
+                    <StatCard
+                        label="Webhooks"
+                        value={stats.webhookCount}
+                        icon={Webhook}
+                    />
+                </Link>
+            </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Histórico de Transações</CardTitle>
+                    <CardDescription>
+                        Pagamentos confirmados (webhook processado com sucesso) ou pendentes.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left">
+                            <thead className="bg-secondary/30 border-y border-border/60 text-muted-foreground text-xs uppercase tracking-wider">
+                                <tr>
+                                    <th className="px-6 py-3">Data</th>
+                                    <th className="px-6 py-3">Usuário</th>
+                                    <th className="px-6 py-3">Valor</th>
+                                    <th className="px-6 py-3">Status</th>
+                                    <th className="px-6 py-3">Provedor</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border/40">
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={5} className="p-12 text-center">
+                                            <Loader2 className="w-6 h-6 animate-spin mx-auto" />
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Footer Pagination */}
-                <div className="px-8 py-4 border-t border-black/5 bg-gray-50/30 flex items-center justify-between">
-                    <span className="text-sm text-gray-500">Página {page} de {totalPages}</span>
-                    <div className="flex gap-2">
-                        <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)} className="rounded-full h-8 px-4 text-xs">
-                            <ChevronLeft className="w-3 h-3 mr-1" /> Anterior
-                        </Button>
-                        <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="rounded-full h-8 px-4 text-xs">
-                            Próxima <ChevronRight className="w-3 h-3 ml-1" />
-                        </Button>
+                                ) : transactions.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={5} className="p-12 text-center text-muted-foreground">
+                                            <DollarSign className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                                            Nenhuma transação registrada.
+                                            <p className="text-xs mt-1">
+                                                Configure webhooks em <Link href="/admin/webhooks" className="text-blue-500 underline">/admin/webhooks</Link> para começar.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    transactions.map((tx) => (
+                                        <tr key={tx.id} className="hover:bg-secondary/40 transition-colors">
+                                            <td className="px-6 py-3.5 whitespace-nowrap">
+                                                <div className="font-medium text-foreground">
+                                                    {format(new Date(tx.createdAt), "dd/MM/yyyy", { locale: ptBR })}
+                                                </div>
+                                                <div className="text-[10px] text-muted-foreground">
+                                                    {formatDistanceToNow(new Date(tx.createdAt), { addSuffix: true, locale: ptBR })}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-3.5">
+                                                <div className="font-medium text-foreground">{tx.user.name || '—'}</div>
+                                                <div className="text-[10px] text-muted-foreground font-mono">{tx.user.email}</div>
+                                            </td>
+                                            <td className="px-6 py-3.5 font-semibold tabular-nums">
+                                                R$ {tx.amount.toFixed(2)}
+                                            </td>
+                                            <td className="px-6 py-3.5">
+                                                <Badge
+                                                    variant={tx.status === 'paid' ? 'success' : tx.status === 'pending' ? 'warning' : 'destructive'}
+                                                    size="sm"
+                                                    dot
+                                                >
+                                                    {tx.status === 'paid' ? 'Pago' : tx.status === 'pending' ? 'Pendente' : 'Falhou'}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-6 py-3.5">
+                                                <Badge variant="outline" size="sm" className="uppercase font-mono">
+                                                    {tx.provider}
+                                                </Badge>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
                     </div>
-                </div>
-            </div>
+                    {totalPages > 1 && (
+                        <div className="px-4 py-3 border-t border-border/60 flex items-center justify-between bg-secondary/20">
+                            <span className="text-xs text-muted-foreground">
+                                Página <span className="font-semibold text-foreground">{page}</span> de {totalPages}
+                            </span>
+                            <div className="flex gap-2">
+                                <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
+                                    <ChevronLeft className="w-3.5 h-3.5 mr-1" /> Anterior
+                                </Button>
+                                <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>
+                                    Próxima <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     );
 }

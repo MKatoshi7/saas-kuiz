@@ -1,141 +1,277 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Users, CreditCard, Filter, DollarSign, Loader2, TrendingUp, ArrowUpRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+    Users,
+    CreditCard,
+    Filter,
+    DollarSign,
+    TrendingUp,
+    Loader2,
+    Activity,
+    ScrollText,
+    Shield,
+    ArrowUpRight,
+} from 'lucide-react';
+import { StatCard } from '@/components/ui/StatCard';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { Avatar } from '@/components/ui/Avatar';
+import { formatDistanceToNow } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-interface Stats {
+interface AdminStats {
     totalUsers: number;
     activeSubs: number;
     totalFunnels: number;
     totalRevenue: number;
+    bannedFunnels: number;
+    newUsersThisMonth: number;
+    leadsThisMonth: number;
+    totalLeads: number;
+    userGrowth: number;
+    monthlyData: { label: string; count: number }[];
+    recentActivity: any[];
+}
+
+const ACTION_LABELS: Record<string, { label: string; color: 'primary' | 'warning' | 'destructive' | 'info' | 'secondary' | 'success' | 'outline' | 'ghost' | 'default' }> = {
+    ban_funnel: { label: 'Baniu funil', color: 'destructive' },
+    unban_funnel: { label: 'Desbaniu funil', color: 'success' },
+    edit_user: { label: 'Editou usuário', color: 'info' },
+    impersonate_user: { label: 'Acessou conta', color: 'warning' },
+    change_role: { label: 'Alterou role', color: 'warning' },
+    change_subscription: { label: 'Alterou assinatura', color: 'primary' },
+    reset_password: { label: 'Resetou senha', color: 'warning' },
+    delete_funnel: { label: 'Deletou funil', color: 'destructive' },
+    delete_user: { label: 'Deletou usuário', color: 'destructive' },
+    create_user: { label: 'Criou usuário', color: 'success' },
+    system_message: { label: 'Mensagem do sistema', color: 'info' },
 }
 
 export default function AdminDashboard() {
-    const [stats, setStats] = useState<Stats | null>(null);
+    const [stats, setStats] = useState<AdminStats | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetch('/api/admin/stats')
-            .then(res => res.json())
-            .then(data => {
+            .then((res) => res.json())
+            .then((data) => {
                 setStats(data);
                 setLoading(false);
             })
-            .catch(err => {
+            .catch((err) => {
                 console.error(err);
                 setLoading(false);
             });
     }, []);
 
     if (loading) {
-        return <div className="flex items-center justify-center h-full min-h-[400px]"><Loader2 className="w-8 h-8 animate-spin text-black" /></div>;
+        return (
+            <div className="space-y-8">
+                <div className="space-y-2">
+                    <Skeleton className="h-9 w-48" />
+                    <Skeleton className="h-5 w-72" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <Skeleton key={i} className="h-32 rounded-2xl" />
+                    ))}
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <Skeleton className="h-80 rounded-2xl lg:col-span-2" />
+                    <Skeleton className="h-80 rounded-2xl" />
+                </div>
+            </div>
+        );
     }
 
     if (!stats) return <div>Erro ao carregar estatísticas.</div>;
 
+    const maxCount = Math.max(...stats.monthlyData.map((m) => m.count), 1);
+
     return (
-        <div className="space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-8 animate-fade-in-up">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-gray-900">Visão Geral</h2>
-                    <p className="text-gray-500 mt-1">Bem-vindo de volta ao painel de controle.</p>
+                    <h1 className="text-3xl font-bold tracking-tight">Visão Geral</h1>
+                    <p className="text-muted-foreground mt-1">
+                        Resumo executivo da plataforma em tempo real.
+                    </p>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-500 bg-white px-4 py-2 rounded-full border border-black/5 shadow-sm">
-                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-emerald-50 border border-emerald-200/60 px-3.5 py-2 rounded-full">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse-soft" />
                     Sistema Operacional
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
-                    title="Receita Total"
-                    value={`R$ ${stats.totalRevenue.toFixed(2)}`}
-                    icon={<DollarSign className="w-6 h-6 text-white" />}
-                    bg="bg-black text-white"
-                    trend="+12.5%"
+                    label="Receita Total"
+                    value={`R$ ${stats.totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                    icon={DollarSign}
+                    variant="dark"
                 />
                 <StatCard
-                    title="Usuários Totais"
+                    label="Usuários Totais"
                     value={stats.totalUsers}
-                    icon={<Users className="w-6 h-6 text-blue-600" />}
-                    bg="bg-white"
-                    iconBg="bg-blue-50"
+                    icon={Users}
+                    trend={{ value: stats.userGrowth, label: `${stats.newUsersThisMonth} este mês` }}
                 />
                 <StatCard
-                    title="Assinaturas Ativas"
+                    label="Assinaturas Ativas"
                     value={stats.activeSubs}
-                    icon={<CreditCard className="w-6 h-6 text-green-600" />}
-                    bg="bg-white"
-                    iconBg="bg-green-50"
+                    icon={CreditCard}
                 />
                 <StatCard
-                    title="Funis Criados"
+                    label="Funis Criados"
                     value={stats.totalFunnels}
-                    icon={<Filter className="w-6 h-6 text-purple-600" />}
-                    bg="bg-white"
-                    iconBg="bg-purple-50"
+                    icon={Filter}
                 />
             </div>
 
-            {/* Placeholder for Charts or Recent Activity */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-white rounded-3xl p-8 border border-black/5 shadow-sm">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="font-bold text-lg">Crescimento de Usuários</h3>
-                        <button className="text-sm text-gray-400 hover:text-black transition-colors">Ver Detalhes</button>
-                    </div>
-                    <div className="h-64 flex items-end justify-between gap-2">
-                        {[40, 65, 45, 80, 55, 90, 70, 85, 60, 75, 95, 100].map((h, i) => (
-                            <div key={i} className="w-full bg-gray-100 rounded-t-lg hover:bg-black transition-colors duration-300 relative group" style={{ height: `${h}%` }}>
-                                <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                    {h * 10}
-                                </div>
+                <Card className="lg:col-span-2">
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle>Crescimento de Usuários</CardTitle>
+                                <CardDescription>
+                                    Novos cadastros nos últimos 12 meses
+                                </CardDescription>
                             </div>
-                        ))}
-                    </div>
-                </div>
+                            <Badge variant="success" dot>
+                                +{stats.newUsersThisMonth} este mês
+                            </Badge>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="h-64 flex items-end justify-between gap-2">
+                            {stats.monthlyData.map((m, i) => {
+                                const heightPct = (m.count / maxCount) * 100
+                                const isCurrentMonth = i === stats.monthlyData.length - 1
+                                return (
+                                    <div
+                                        key={i}
+                                        className="flex-1 flex flex-col items-center gap-2 group"
+                                    >
+                                        <div className="relative w-full h-full flex items-end">
+                                            <div
+                                                className={`w-full rounded-t-lg transition-all duration-700 ease-out group-hover:opacity-90 ${
+                                                    isCurrentMonth
+                                                        ? 'bg-gradient-to-t from-[#007AFF] to-[#4DA3FF]'
+                                                        : 'bg-secondary group-hover:bg-foreground/30'
+                                                }`}
+                                                style={{ height: `${Math.max(heightPct, 4)}%` }}
+                                            />
+                                            <div className="absolute -top-9 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                                <div className="bg-foreground text-background text-xs font-semibold rounded-lg px-2 py-1 whitespace-nowrap shadow-lg">
+                                                    {m.count} {m.count === 1 ? 'usuário' : 'usuários'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                                            {m.label}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </CardContent>
+                </Card>
 
-                <div className="bg-white rounded-3xl p-8 border border-black/5 shadow-sm">
-                    <h3 className="font-bold text-lg mb-6">Atividade Recente</h3>
-                    <div className="space-y-6">
-                        {[1, 2, 3, 4].map((_, i) => (
-                            <div key={i} className="flex items-start gap-4">
-                                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100 shrink-0">
-                                    <TrendingUp className="w-4 h-4 text-gray-400" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-900">Novo usuário registrado</p>
-                                    <p className="text-xs text-gray-500 mt-0.5">Há 2 minutos</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Atividade Recente</CardTitle>
+                        <CardDescription>Últimas ações administrativas</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-4">
+                            {stats.recentActivity.length === 0 && (
+                                <p className="text-sm text-muted-foreground text-center py-8">
+                                    Nenhuma atividade recente
+                                </p>
+                            )}
+                            {stats.recentActivity.map((a) => {
+                                const meta = ACTION_LABELS[a.action] || { label: a.action, color: 'secondary' as const }
+                                return (
+                                    <div key={a.id} className="flex items-start gap-3">
+                                        <Avatar
+                                            name={a.admin?.name || a.admin?.email}
+                                            size="sm"
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm">
+                                                <span className="font-medium text-foreground">
+                                                    {a.admin?.name || a.admin?.email?.split('@')[0]}
+                                                </span>{' '}
+                                                <span className="text-muted-foreground">
+                                                    {meta.label.toLowerCase()}
+                                                </span>
+                                            </p>
+                                            {a.targetUser && (
+                                                <p className="text-xs text-muted-foreground truncate">
+                                                    → {a.targetUser.email}
+                                                </p>
+                                            )}
+                                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                                                {formatDistanceToNow(new Date(a.createdAt), {
+                                                    addSuffix: true,
+                                                    locale: ptBR,
+                                                })}
+                                            </p>
+                                        </div>
+                                        <Badge variant={meta.color} size="sm">
+                                            {meta.label.split(' ')[0]}
+                                        </Badge>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
-        </div>
-    );
-}
 
-function StatCard({ title, value, icon, bg, iconBg, trend }: { title: string; value: string | number; icon: React.ReactNode; bg: string; iconBg?: string; trend?: string }) {
-    return (
-        <div className={`${bg} p-6 rounded-3xl border border-black/5 shadow-sm hover:shadow-md transition-all duration-300 group`}>
-            <div className="flex justify-between items-start mb-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${iconBg || 'bg-white/20'}`}>
-                    {icon}
-                </div>
-                {trend && (
-                    <div className="flex items-center gap-1 text-xs font-medium bg-white/20 px-2 py-1 rounded-full">
-                        <TrendingUp className="w-3 h-3" />
-                        {trend}
-                    </div>
-                )}
-            </div>
-            <div>
-                <p className={`text-sm font-medium mb-1 ${bg.includes('black') ? 'text-gray-400' : 'text-gray-500'}`}>{title}</p>
-                <h3 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-                    {value}
-                    <ArrowUpRight className={`w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity ${bg.includes('black') ? 'text-gray-400' : 'text-gray-400'}`} />
-                </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card hover>
+                    <CardContent className="p-6 flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center">
+                            <TrendingUp className="h-6 w-6 text-emerald-600" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                Leads do Mês
+                            </p>
+                            <p className="text-2xl font-bold">{stats.leadsThisMonth.toLocaleString('pt-BR')}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card hover>
+                    <CardContent className="p-6 flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-amber-50 flex items-center justify-center">
+                            <Activity className="h-6 w-6 text-amber-600" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                Leads Totais
+                            </p>
+                            <p className="text-2xl font-bold">{stats.totalLeads.toLocaleString('pt-BR')}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card hover>
+                    <CardContent className="p-6 flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-red-50 flex items-center justify-center">
+                            <Shield className="h-6 w-6 text-red-600" />
+                        </div>
+                        <div>
+                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                Funis Banidos
+                            </p>
+                            <p className="text-2xl font-bold">{stats.bannedFunnels}</p>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );
