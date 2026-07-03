@@ -32,7 +32,10 @@ export type ComponentType =
   | 'notification'
   | 'animated-counter'
   | 'confetti'
-  | 'vsl-video';
+  | 'vsl-video'
+  // NEW: Chart Components
+  | 'pie-chart'
+  | 'bar-chart';
 
 export type ActionType = 'next_step' | 'jump_to_step' | 'submit_funnel' | 'open_url';
 
@@ -70,7 +73,7 @@ export interface HeadlineComponent extends BaseComponent {
     color?: string;
     backgroundColor?: string;
     variableName?: string;
-    // NEW: Phase 1 Enhancements
+    fontFamily?: string;
     letterSpacing?: 'tighter' | 'tight' | 'normal' | 'wide' | 'wider' | 'widest';
     lineHeight?: 'tight' | 'snug' | 'normal' | 'relaxed' | 'loose';
     textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
@@ -97,7 +100,7 @@ export interface ParagraphComponent extends BaseComponent {
     color?: string;
     backgroundColor?: string;
     variableName?: string;
-    // NEW: Phase 1 Enhancements
+    fontFamily?: string;
     letterSpacing?: 'tighter' | 'tight' | 'normal' | 'wide' | 'wider' | 'widest';
     lineHeight?: 'tight' | 'snug' | 'normal' | 'relaxed' | 'loose';
     textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
@@ -172,10 +175,11 @@ export interface VSLVideoComponent extends BaseComponent {
     playButtonColor?: string;
     restartOnClick?: boolean;
     unmuteOnClick?: boolean;
-    fakeProgress?: boolean; // If true, progress bar moves faster to give impression of speed
-    fakeProgressDuration?: number; // Duration in seconds for the fake progress
-    publicId?: string; // Cloudinary public ID
+    fakeProgress?: boolean;
+    fakeProgressDuration?: number;
+    publicId?: string;
     variableName?: string;
+    aspectRatio?: '16:9' | '9:16' | '4:3' | '1:1';
   };
 }
 
@@ -301,7 +305,8 @@ export interface AudioComponent extends BaseComponent {
     loop?: boolean;
     avatarUrl?: string;
     senderName?: string;
-    playerStyle?: 'whatsapp' | 'mp3' | 'modern' | 'simple'; // Estilo do player
+    audioName?: string;
+    playerStyle?: 'whatsapp' | 'mp3' | 'modern' | 'simple' | 'whatsapp2' | 'streaming' | 'simple2';
     variableName?: string;
   };
 }
@@ -336,6 +341,8 @@ export interface AlertComponent extends BaseComponent {
     iconPosition?: 'left' | 'top';
     animation?: 'none' | 'pulse' | 'shake' | 'bounce';
     style?: 'solid' | 'outline' | 'left-border' | 'subtle';
+    fontSize?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+    padding?: 'none' | 'sm' | 'md' | 'lg';
   };
 }
 
@@ -395,14 +402,63 @@ export interface CodeComponent extends BaseComponent {
 export interface ArgumentItem {
   id: string;
   title: string;
+  titleHtml?: string;
   description: string;
+  descriptionHtml?: string;
   imageSrc?: string;
+  titleStyle?: {
+    color?: string;
+    fontSize?: number;
+    fontFamily?: string;
+    bold?: boolean;
+    italic?: boolean;
+    underline?: boolean;
+    strikethrough?: boolean;
+    align?: 'left' | 'center' | 'right';
+    textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+    letterSpacing?: number;
+    lineHeight?: number;
+    textShadow?: string;
+    textStroke?: number;
+  };
+  descriptionStyle?: {
+    color?: string;
+    fontSize?: number;
+    fontFamily?: string;
+    bold?: boolean;
+    italic?: boolean;
+    underline?: boolean;
+    strikethrough?: boolean;
+    align?: 'left' | 'center' | 'right';
+    textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+    letterSpacing?: number;
+    lineHeight?: number;
+    textShadow?: string;
+    textStroke?: number;
+  };
+  cardStyle?: {
+    backgroundColor?: string;
+    borderColor?: string;
+    borderWidth?: number;
+    borderRadius?: number;
+    shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  };
 }
 
 export interface ArgumentComponent extends BaseComponent {
   type: 'argument';
   data: {
     headline?: string;
+    headlineHtml?: string;
+    headlineStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+    };
     items: ArgumentItem[];
     layout?: '2-columns' | '3-columns' | 'list';
     displayMode?: 'text-image' | 'text-only' | 'image-only';
@@ -410,6 +466,7 @@ export interface ArgumentComponent extends BaseComponent {
     imagePosition?: 'top' | 'bottom' | 'side' | 'side-right';
     headlineColor?: string;
     textColor?: string;
+    gap?: number;
   };
 }
 
@@ -428,6 +485,8 @@ export interface FAQComponent extends BaseComponent {
     layout?: 'accordion' | 'list';
     width?: string;
     variableName?: string;
+    backgroundColor?: string;
+    borderColor?: string;
   };
 }
 
@@ -568,7 +627,10 @@ export type FunnelComponentData =
   | NotificationComponent
   | AnimatedCounterComponent
   | ConfettiComponent
-  | VSLVideoComponent;
+  | VSLVideoComponent
+  // NEW: Chart Components
+  | PieChartComponent
+  | BarChartComponent;
 
 // ===========================
 // Funnel & Step Types
@@ -672,6 +734,47 @@ export interface BuilderState {
   isDragging: boolean;
   canUndo: boolean;
   canRedo: boolean;
+}
+
+// ===========================
+// Chart Components
+// ===========================
+
+export interface ChartDataItem {
+  id: string;
+  label: string;
+  value: number;
+  color?: string;
+}
+
+export interface PieChartComponent extends BaseComponent {
+  type: 'pie-chart';
+  data: {
+    title?: string;
+    items: ChartDataItem[];
+    showLegend?: boolean;
+    showPercentage?: boolean;
+    size?: 'sm' | 'md' | 'lg';
+    holeSize?: number;
+    color?: string;
+    titleColor?: string;
+  };
+}
+
+export interface BarChartComponent extends BaseComponent {
+  type: 'bar-chart';
+  data: {
+    title?: string;
+    items: ChartDataItem[];
+    orientation?: 'horizontal' | 'vertical';
+    showValues?: boolean;
+    showPercentage?: boolean;
+    barHeight?: number;
+    gap?: number;
+    color?: string;
+    titleColor?: string;
+    borderRadius?: number;
+  };
 }
 
 // ===========================

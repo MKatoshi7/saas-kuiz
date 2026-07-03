@@ -4,14 +4,16 @@ import React from 'react';
 import { useBuilderStore } from '@/store/builderStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { X, Trash2, Bold, Italic, Underline } from 'lucide-react';
+import { X, Trash2, Bold, Italic, Underline, Settings2, Sparkles, MousePointer2 } from 'lucide-react';
 import { QuizOptionProperties } from './QuizOptionProperties';
-import { QuizOptionComponent, ArgumentComponent, FAQComponent, CarouselComponent } from '@/types/funnel';
+import { QuizOptionComponent, ArgumentComponent, FAQComponent, CarouselComponent, PieChartComponent, BarChartComponent } from '@/types/funnel';
 import { ArgumentProperties } from './ArgumentProperties';
 import { FAQProperties } from './FAQProperties';
 import { CarouselProperties } from './CarouselProperties';
 import { FooterProperties } from './FooterProperties';
+import { PieChartProperties, BarChartProperties } from './ChartProperties';
 import { TextStyleToolbar } from './TextStyleToolbar';
 import { RichTextEditor } from './RichTextEditor';
 import { FullTextProperties } from './FullTextProperties';
@@ -34,29 +36,36 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
 
     if (!selectedComponent) {
         return (
-            <div className="w-80 border-l border-gray-200 bg-white flex flex-col h-full overflow-y-auto">
-                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
-                    <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center animate-pulse">
-                        <svg className="w-10 h-10 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
+            <div className="w-80 border-l border-border/60 bg-background flex flex-col h-full overflow-y-auto">
+                <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-5">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-blue-500/20 rounded-3xl blur-2xl" />
+                        <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                            <Settings2 className="w-7 h-7 text-white" />
+                        </div>
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold text-gray-900">Kuiz Maker</h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Selecione um componente no canvas para editar suas propriedades ou arraste novos itens da barra lateral.
+                        <h3 className="text-base font-semibold tracking-tight">Painel de Propriedades</h3>
+                        <p className="text-sm text-muted-foreground mt-1.5 text-balance">
+                            Selecione um componente no canvas para editar suas propriedades.
                         </p>
                     </div>
-                    <div className="pt-6 border-t border-gray-100 w-full">
-                        <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">Dicas Rápidas</p>
-                        <ul className="text-xs text-gray-600 space-y-2 text-left mx-auto max-w-[200px]">
+                    <div className="pt-4 border-t border-border/60 w-full">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                            Atalhos rápidos
+                        </p>
+                        <ul className="text-xs text-muted-foreground space-y-1.5 text-left mx-auto max-w-[200px]">
                             <li className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
-                                Clique para editar texto
+                                <kbd className="font-mono text-[10px] bg-secondary px-1.5 py-0.5 rounded">⌘K</kbd>
+                                Paleta de comandos
                             </li>
                             <li className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
-                                Arraste para reordenar
+                                <kbd className="font-mono text-[10px] bg-secondary px-1.5 py-0.5 rounded">⌘D</kbd>
+                                Duplicar selecionado
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <kbd className="font-mono text-[10px] bg-secondary px-1.5 py-0.5 rounded">⌫</kbd>
+                                Excluir selecionado
                             </li>
                             <li className="flex items-center gap-2">
                                 <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
@@ -77,22 +86,47 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
     };
 
     return (
-        <div className="w-80 bg-white/80 backdrop-blur-xl border-l border-black/5 overflow-y-auto h-full z-20">
+        <div className="w-80 bg-background/80 backdrop-blur-xl border-l border-border/60 overflow-y-auto h-full z-20">
             {/* Header */}
-            <div className="px-4 py-3 border-b border-black/5 flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-xl z-10">
-                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Propriedades</h3>
+            <div className="px-4 py-3 border-b border-border/60 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-xl z-10">
+                <div className="flex items-center gap-2 min-w-0">
+                    <div className="h-7 w-7 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                        <Settings2 className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Propriedades</p>
+                        <p className="text-sm font-semibold capitalize truncate">{selectedComponent.type.replace('-', ' ')}</p>
+                    </div>
+                </div>
                 <button
                     onClick={() => setSelectedComponent(null)}
-                    className="text-gray-400 hover:text-black transition-colors"
+                    className="h-7 w-7 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors flex items-center justify-center shrink-0"
+                    title="Fechar painel"
                 >
-                    <X className="w-4 h-4" />
+                    <X className="w-3.5 h-3.5" />
                 </button>
             </div>
 
             <div className="p-4">
-                <div className="mb-4 pb-4 border-b border-gray-200">
-                    <p className="text-xs text-gray-500 uppercase font-medium mb-1">Tipo</p>
-                    <p className="text-sm font-medium text-gray-900 capitalize">{selectedComponent.type}</p>
+                <div className="mb-4 pb-4 border-b border-border/60 flex items-center justify-between">
+                    <div>
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Componente</p>
+                        <p className="text-sm font-medium capitalize">{selectedComponent.type.replace('-', ' ')}</p>
+                    </div>
+                    <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        onClick={() => {
+                            if (selectedComponent) {
+                                deleteComponent(selectedComponent.id)
+                                setSelectedComponent(null)
+                            }
+                        }}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        title="Excluir"
+                    >
+                        <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
                 </div>
 
                 <Tabs defaultValue="content" className="w-full">
@@ -475,6 +509,14 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                             <ArgumentProperties component={selectedComponent as ArgumentComponent} />
                         )}
 
+                        {selectedComponent.type === 'pie-chart' && (
+                            <PieChartProperties component={selectedComponent as PieChartComponent} />
+                        )}
+
+                        {selectedComponent.type === 'bar-chart' && (
+                            <BarChartProperties component={selectedComponent as BarChartComponent} />
+                        )}
+
                         {selectedComponent.type === 'faq' && (
                             <FAQProperties component={selectedComponent as FAQComponent} />
                         )}
@@ -663,17 +705,29 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                         value={selectedComponent.data.playerStyle || 'modern'}
                                         onChange={(e) => handleUpdate('playerStyle', e.target.value)}
                                     >
-                                        <option value="whatsapp">🟢 Estilo WhatsApp</option>
-                                        <option value="mp3">💿 Estilo MP3 Player</option>
+                                        <option value="whatsapp">🟢 WhatsApp Clássico</option>
+                                        <option value="whatsapp2">💬 WhatsApp Moderno</option>
+                                        <option value="mp3">💿 MP3 Player</option>
+                                        <option value="streaming">🎵 Streaming (Spotify)</option>
                                         <option value="modern">✨ Estilo Moderno</option>
-                                        <option value="simple">📱 Estilo Simples</option>
+                                        <option value="simple">📱 Simples</option>
+                                        <option value="simple2">✈️ Telegram</option>
                                     </select>
                                     <p className="text-xs text-gray-400 mt-1">
                                         Escolha o visual do player de áudio
                                     </p>
                                 </div>
 
-                                {selectedComponent.data.playerStyle === 'whatsapp' && (
+                                <div>
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Nome do Áudio</label>
+                                    <Input
+                                        value={selectedComponent.data.audioName || ''}
+                                        onChange={(e) => handleUpdate('audioName', e.target.value)}
+                                        placeholder="Ex: Áudio de apresentação"
+                                    />
+                                </div>
+
+                                {(selectedComponent.data.playerStyle === 'whatsapp' || selectedComponent.data.playerStyle === 'whatsapp2') && (
                                     <>
                                         <div>
                                             <label className="text-xs font-medium text-gray-700 mb-2 block">Nome do Remetente</label>
@@ -1334,12 +1388,24 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                     onChange={(url) => handleUpdate('thumbnailUrl', url)}
                                     onUploadComplete={(data) => {
                                         handleUpdate('thumbnailUrl', data.url);
-                                        // We don't necessarily need the publicId for thumbnail here, but it's good practice
                                     }}
                                     funnelId={funnelId || undefined}
                                 />
 
                                 <div className="space-y-3 pt-2">
+                                    <div>
+                                        <label className="text-xs font-medium text-gray-700 mb-2 block">Proporção do Vídeo</label>
+                                        <select
+                                            value={selectedComponent.data.aspectRatio || '16:9'}
+                                            onChange={(e) => handleUpdate('aspectRatio', e.target.value)}
+                                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                        >
+                                            <option value="16:9">16:9 (Horizontal)</option>
+                                            <option value="9:16">9:16 (Vertical/Stories)</option>
+                                            <option value="4:3">4:3 (Clássico)</option>
+                                            <option value="1:1">1:1 (Quadrado)</option>
+                                        </select>
+                                    </div>
                                     <div className="flex items-center justify-between">
                                         <label className="text-xs font-medium text-gray-700">Autoplay Mudo</label>
                                         <Switch
@@ -1660,22 +1726,20 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                         variant="outline"
                         className="w-full text-red-600 border-red-300 hover:bg-red-50 gap-2"
                         onClick={async () => {
-                            if (confirm('Tem certeza que deseja excluir este componente?')) {
-                                // If component has a publicId (Cloudinary asset), delete it
-                                const componentData = selectedComponent.data as any;
-                                if (componentData.publicId) {
-                                    try {
-                                        await fetch('/api/upload/delete', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ publicId: componentData.publicId }),
-                                        });
-                                    } catch (error) {
-                                        console.error('Failed to delete asset from Cloudinary:', error);
-                                    }
+                            // If component has a publicId (Cloudinary asset), delete it
+                            const componentData = selectedComponent.data as any;
+                            if (componentData.publicId) {
+                                try {
+                                    await fetch('/api/upload/delete', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ publicId: componentData.publicId }),
+                                    });
+                                } catch (error) {
+                                    console.error('Failed to delete asset from Cloudinary:', error);
                                 }
-                                deleteComponent(selectedComponent.id);
                             }
+                            deleteComponent(selectedComponent.id);
                         }}
                     >
                         <Trash2 className="w-4 h-4" />

@@ -22,6 +22,8 @@ const QuizOptionsRenderer = lazy(() => import('./QuizOptionsRenderer').then(m =>
 const ArgumentRenderer = lazy(() => import('./FunnelArgumentRenderer').then(m => ({ default: m.ArgumentRenderer })));
 const PricingRenderer = lazy(() => import('./PricingRenderer').then(m => ({ default: m.PricingRenderer })));
 const CarouselRenderer = lazy(() => import('./CarouselRenderer').then(m => ({ default: m.CarouselRenderer })));
+const PieChartRenderer = lazy(() => import('./PieChartRenderer').then(m => ({ default: m.PieChartRenderer })));
+const BarChartRenderer = lazy(() => import('./BarChartRenderer').then(m => ({ default: m.BarChartRenderer })));
 
 // Skeleton loader for lazy components
 function ComponentSkeleton() {
@@ -48,13 +50,33 @@ interface FunnelEngineProps {
     onComplete?: () => void;
     theme?: any; // FunnelTheme from parent
     initialStepIndex?: number;
+    answers?: Record<string, any>; // Respostas para variáveis dinâmicas
 }
 
-export function FunnelEngine({ funnelId, steps, componentsByStep, onStepChange, onAnswer, onComplete, theme, initialStepIndex = 0 }: FunnelEngineProps) {
+export function FunnelEngine({ funnelId, steps, componentsByStep, onStepChange, onAnswer, onComplete, theme, initialStepIndex = 0, answers = {} }: FunnelEngineProps) {
     const [currentStepIndex, setCurrentStepIndex] = useState(initialStepIndex);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const currentStep = steps[currentStepIndex];
     const components = currentStep ? componentsByStep[currentStep.id] || [] : [];
+
+    // Interpola variáveis {variableName} no texto usando respostas anteriores
+    const interpolateText = (text: string): string => {
+        if (!text || !answers) return text;
+        return text.replace(/\{([^}]+)\}/g, (match, varName) => {
+            const trimmed = varName.trim();
+            // Busca direta pelo nome da variável
+            if (answers[trimmed] !== undefined) {
+                return String(answers[trimmed]);
+            }
+            // Busca por stepId (fallback)
+            const step = steps.find(s => s.id === trimmed || s.title.toLowerCase() === trimmed.toLowerCase());
+            if (step && answers[step.id] !== undefined) {
+                return String(answers[step.id]);
+            }
+            // Retorna o match original se não encontrar
+            return match;
+        });
+    };
 
     const handleNext = () => {
         if (currentStepIndex < steps.length - 1) {
@@ -147,10 +169,112 @@ export function FunnelEngine({ funnelId, steps, componentsByStep, onStepChange, 
                         onAnswer={(value) => handleAnswer(component.id, value)}
                         onComplete={onComplete}
                         theme={theme}
+                        interpolateText={interpolateText}
                     />
                 ))}
             </div>
         </QuizStepLayout>
+    );
+}
+
+function FaqAccordion({ items, headline, width, backgroundColor, borderColor }: { items: any[]; headline?: string; width?: string; backgroundColor?: string; borderColor?: string }) {
+    const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+    const toggle = (idx: number) => {
+        setOpenIndex(prev => (prev === idx ? null : idx));
+    };
+
+    return (
+        <div className="w-full flex flex-col items-center">
+            <div className="w-full" style={{ maxWidth: width || '100%' }}>
+                {headline && (
+                    <div className="mb-8 text-center">
+                        <h3
+                            className="text-2xl font-bold"
+                            style={{ color: '#1a1a2e' }}
+                        >
+                            {headline}
+                        </h3>
+                    </div>
+                )}
+                <div className="space-y-3">
+                    {items.map((item: any, idx: number) => {
+                        const isOpen = openIndex === idx;
+                        return (
+                            <div
+                                key={idx}
+                                className="rounded-xl overflow-hidden transition-all duration-200"
+                                style={{
+                                    background: backgroundColor || 'transparent',
+                                    border: `1px solid ${borderColor || '#e5e7eb'}`,
+                                }}
+                            >
+                                <button
+                                    onClick={() => toggle(idx)}
+                                    className="w-full px-6 py-4 flex items-center justify-between text-left transition-colors duration-200"
+                                    style={{
+                                        background: isOpen
+                                            ? (backgroundColor || 'rgba(249,250,251,0.6)')
+                                            : 'transparent',
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (!isOpen) e.currentTarget.style.background = 'rgba(249,250,251,0.5)';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (!isOpen) e.currentTarget.style.background = 'transparent';
+                                    }}
+                                >
+                                    <span className="font-semibold text-[15px] pr-4" style={{ color: '#1a1a2e' }}>
+                                        {item.question}
+                                    </span>
+                                    <span
+                                        className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full transition-all duration-300"
+                                        style={{
+                                            background: isOpen ? (borderColor || '#2563eb') : 'transparent',
+                                            border: `2px solid ${isOpen ? (borderColor || '#2563eb') : (borderColor || '#d1d5db')}`,
+                                            transform: isOpen ? 'rotate(45deg)' : 'rotate(0deg)',
+                                        }}
+                                    >
+                                        <svg
+                                            width="12"
+                                            height="12"
+                                            viewBox="0 0 12 12"
+                                            fill="none"
+                                            className="transition-colors duration-300"
+                                        >
+                                            <path
+                                                d="M6 1v10M1 6h10"
+                                                stroke={isOpen ? '#ffffff' : (borderColor || '#6b7280')}
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                            />
+                                        </svg>
+                                    </span>
+                                </button>
+                                <div
+                                    className="overflow-hidden transition-all duration-300 ease-in-out"
+                                    style={{
+                                        maxHeight: isOpen ? '500px' : '0px',
+                                        opacity: isOpen ? 1 : 0,
+                                    }}
+                                >
+                                    <div
+                                        className="px-6 pb-5 text-[15px] leading-relaxed"
+                                        style={{
+                                            color: '#4b5563',
+                                            borderTop: `1px solid ${borderColor || '#f3f4f6'}`,
+                                            paddingTop: '14px',
+                                        }}
+                                    >
+                                        {item.answer}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
     );
 }
 
@@ -162,7 +286,8 @@ function PublicComponentRenderer({
     onJump,
     onAnswer,
     onComplete,
-    theme
+    theme,
+    interpolateText
 }: {
     component: FunnelComponentData;
     funnelId?: string;
@@ -172,6 +297,7 @@ function PublicComponentRenderer({
     onAnswer: (value: any) => void;
     onComplete?: () => void;
     theme?: any;
+    interpolateText?: (text: string) => string;
 }) {
     const { type, data } = component;
     const themePrimaryColor = theme?.primaryColor || '#2563EB';
@@ -180,11 +306,12 @@ function PublicComponentRenderer({
         case 'headline':
             return (
                 <UnifiedTextRenderer
-                    text={data.text || ''}
+                    text={interpolateText ? interpolateText(data.text || '') : (data.text || '')}
                     tag="h1"
                     fontSize={data.fontSize}
                     align={data.align}
                     color={data.color}
+                    fontFamily={(data as any).fontFamily}
                     fontWeight={(data as any).fontWeight}
                     letterSpacing={(data as any).letterSpacing}
                     lineHeight={(data as any).lineHeight}
@@ -197,11 +324,12 @@ function PublicComponentRenderer({
         case 'paragraph':
             return (
                 <UnifiedTextRenderer
-                    text={data.text || ''}
+                    text={interpolateText ? interpolateText(data.text || '') : (data.text || '')}
                     tag="div"
                     fontSize={data.fontSize}
                     align={data.align}
                     color={data.color}
+                    fontFamily={(data as any).fontFamily}
                     fontWeight={(data as any).fontWeight}
                     letterSpacing={(data as any).letterSpacing}
                     lineHeight={(data as any).lineHeight}
@@ -212,36 +340,14 @@ function PublicComponentRenderer({
             );
 
         case 'faq':
-            const faqItems = data.items || [];
             return (
-                <div className="w-full flex flex-col items-center">
-                    <div className="w-full" style={{ maxWidth: data.width || '100%' }}>
-                        {data.headline && (
-                            <div className="mb-6 text-center">
-                                <h3 className="text-xl font-bold text-gray-900">
-                                    {data.headline}
-                                </h3>
-                            </div>
-                        )}
-                        <div className="space-y-3">
-                            {faqItems.map((item: any, idx: number) => (
-                                <details key={idx} className="bg-white border border-gray-200 rounded-lg overflow-hidden group">
-                                    <summary className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 list-none">
-                                        <span className="font-medium text-gray-900">{item.question}</span>
-                                        <div className="transition-transform duration-200 group-open:rotate-180">
-                                            <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </div>
-                                    </summary>
-                                    <div className="px-4 pb-4 text-gray-600 border-t border-gray-100 pt-3">
-                                        {item.answer}
-                                    </div>
-                                </details>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                <FaqAccordion
+                    items={data.items || []}
+                    headline={data.headline}
+                    width={data.width}
+                    backgroundColor={data.backgroundColor}
+                    borderColor={data.borderColor}
+                />
             );
 
 
@@ -374,7 +480,7 @@ function PublicComponentRenderer({
                         marginBottom: is3D ? '4px' : '0',
                     }}
                 >
-                    {data.text || 'Continuar'}
+                    {interpolateText ? interpolateText(data.text || 'Continuar') : (data.text || 'Continuar')}
                 </DelayedButton>
             );
 
@@ -529,6 +635,7 @@ function PublicComponentRenderer({
                         <textarea
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none min-h-[100px]"
                             placeholder={data.placeholder}
+                            onBlur={(e) => onAnswer(e.target.value)}
                             onChange={(e) => onAnswer(e.target.value)}
                         />
                     ) : (
@@ -537,6 +644,7 @@ function PublicComponentRenderer({
                                 type={data.inputType || 'text'}
                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                                 placeholder={data.placeholder}
+                                onBlur={(e) => onAnswer(e.target.value)}
                                 onChange={(e) => onAnswer(e.target.value)}
                             />
                         </div>
@@ -572,105 +680,197 @@ function PublicComponentRenderer({
         case 'audio':
             return (
                 <div className="relative">
-                    {/* Under Construction Badge */}
-                    <div className="absolute top-2 right-2 bg-yellow-400 text-black text-[10px] font-bold px-2 py-1 rounded shadow-sm z-50 pointer-events-none">
-                        EM CONSTRUÇÃO
-                    </div>
                     <AudioPlayer
                         audioSrc={(data as any).url || ''}
                         playerStyle={(data as any).playerStyle || 'modern'}
                         avatarSrc={(data as any).avatarUrl}
                         senderName={(data as any).senderName}
+                        audioName={(data as any).audioName}
                         autoplay={(data as any).autoplay}
                     />
                 </div>
             );
 
-        case 'alert':
+        case 'alert': {
             const alertType = data.type || data.variant || 'info';
             const alertStyle = data.style || 'subtle';
             const alertAnimation = data.animation || 'none';
+            const alertFontSize = data.fontSize || 'base';
+            const alertPadding = data.padding || 'normal';
 
-            const alertColors = {
-                info: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-900', icon: 'text-blue-500' },
-                success: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-900', icon: 'text-green-500' },
-                warning: { bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-900', icon: 'text-yellow-500' },
-                error: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-900', icon: 'text-red-500' },
-                danger: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-900', icon: 'text-red-500' },
+            const alertVariants = {
+                info: {
+                    bg: 'from-blue-50/80 to-blue-50/40',
+                    border: 'border-blue-100',
+                    text: 'text-blue-800',
+                    titleColor: '#1e40af',
+                    textColor: '#334155',
+                    iconBg: 'bg-blue-100/60',
+                    iconColor: '#2563eb',
+                    solidBg: '#2563eb',
+                    solidShadow: '0 4px 14px rgba(37, 99, 235, 0.25)',
+                    outlineBorder: '#3b82f6',
+                    outlineText: '#1e40af',
+                    leftBorder: '#3b82f6',
+                },
+                success: {
+                    bg: 'from-emerald-50/80 to-emerald-50/40',
+                    border: 'border-emerald-100',
+                    text: 'text-emerald-800',
+                    titleColor: '#166534',
+                    textColor: '#334155',
+                    iconBg: 'bg-emerald-100/60',
+                    iconColor: '#16a34a',
+                    solidBg: '#16a34a',
+                    solidShadow: '0 4px 14px rgba(22, 163, 74, 0.25)',
+                    outlineBorder: '#22c55e',
+                    outlineText: '#166534',
+                    leftBorder: '#22c55e',
+                },
+                warning: {
+                    bg: 'from-amber-50/80 to-amber-50/40',
+                    border: 'border-amber-100',
+                    text: 'text-amber-800',
+                    titleColor: '#92400e',
+                    textColor: '#334155',
+                    iconBg: 'bg-amber-100/60',
+                    iconColor: '#d97706',
+                    solidBg: '#d97706',
+                    solidShadow: '0 4px 14px rgba(217, 119, 6, 0.25)',
+                    outlineBorder: '#f59e0b',
+                    outlineText: '#92400e',
+                    leftBorder: '#f59e0b',
+                },
+                error: {
+                    bg: 'from-red-50/80 to-red-50/40',
+                    border: 'border-red-100',
+                    text: 'text-red-800',
+                    titleColor: '#991b1b',
+                    textColor: '#334155',
+                    iconBg: 'bg-red-100/60',
+                    iconColor: '#dc2626',
+                    solidBg: '#dc2626',
+                    solidShadow: '0 4px 14px rgba(220, 38, 38, 0.25)',
+                    outlineBorder: '#ef4444',
+                    outlineText: '#991b1b',
+                    leftBorder: '#ef4444',
+                },
+                danger: {
+                    bg: 'from-red-50/80 to-red-50/40',
+                    border: 'border-red-100',
+                    text: 'text-red-800',
+                    titleColor: '#991b1b',
+                    textColor: '#334155',
+                    iconBg: 'bg-red-100/60',
+                    iconColor: '#dc2626',
+                    solidBg: '#dc2626',
+                    solidShadow: '0 4px 14px rgba(220, 38, 38, 0.25)',
+                    outlineBorder: '#ef4444',
+                    outlineText: '#991b1b',
+                    leftBorder: '#ef4444',
+                },
             };
 
-            const colors = alertColors[alertType as keyof typeof alertColors] || alertColors.info;
+            const v = alertVariants[alertType as keyof typeof alertVariants] || alertVariants.info;
 
-            // Animation classes
             const animationClasses = {
                 none: '',
                 pulse: 'animate-pulse',
-                shake: 'animate-shake', // Requires custom keyframe or use standard if available
+                shake: 'animate-shake',
                 bounce: 'animate-bounce',
             };
 
-            // Style classes
-            let styleClasses = '';
-            let styleStyles: React.CSSProperties = {};
+            const fontSizeClasses = {
+                sm: 'text-xs',
+                base: 'text-sm',
+                lg: 'text-base',
+                xl: 'text-lg',
+            };
+
+            const paddingClasses = {
+                compact: 'p-3',
+                normal: 'p-4 md:p-5',
+                relaxed: 'p-5 md:p-6',
+            };
+
+            let containerClasses = '';
+            let containerStyles: React.CSSProperties = {};
 
             if (alertStyle === 'solid') {
-                styleClasses = `text-white rounded-lg p-4 shadow-md`;
-                styleStyles = {
-                    backgroundColor: data.backgroundColor || (alertType === 'info' ? '#3b82f6' : alertType === 'success' ? '#22c55e' : alertType === 'warning' ? '#eab308' : '#ef4444'),
-                    borderColor: 'transparent',
-                    color: '#ffffff'
+                containerClasses = `rounded-xl shadow-lg ${paddingClasses[alertPadding as keyof typeof paddingClasses]} ${animationClasses[alertAnimation as keyof typeof animationClasses] || ''}`;
+                containerStyles = {
+                    backgroundColor: data.backgroundColor || v.solidBg,
+                    color: '#ffffff',
+                    boxShadow: v.solidShadow,
                 };
             } else if (alertStyle === 'outline') {
-                styleClasses = `border-2 rounded-lg p-4 bg-transparent`;
-                styleStyles = {
-                    borderColor: data.borderColor || (alertType === 'info' ? '#3b82f6' : alertType === 'success' ? '#22c55e' : alertType === 'warning' ? '#eab308' : '#ef4444'),
-                    color: data.textColor || (alertType === 'info' ? '#1e40af' : alertType === 'success' ? '#166534' : alertType === 'warning' ? '#854d0e' : '#991b1b')
+                containerClasses = `rounded-xl border-[1.5px] bg-transparent backdrop-blur-sm ${paddingClasses[alertPadding as keyof typeof paddingClasses]} ${animationClasses[alertAnimation as keyof typeof animationClasses] || ''} transition-all duration-200 hover:shadow-md`;
+                containerStyles = {
+                    borderColor: data.borderColor || v.outlineBorder,
+                    color: data.textColor || v.outlineText,
                 };
             } else if (alertStyle === 'left-border') {
-                styleClasses = `border-l-4 rounded-r-lg p-4 ${colors.bg}`;
-                styleStyles = {
+                containerClasses = `rounded-xl border-l-[4px] bg-gradient-to-r ${v.bg} ${paddingClasses[alertPadding as keyof typeof paddingClasses]} ${animationClasses[alertAnimation as keyof typeof animationClasses] || ''} transition-all duration-200 hover:shadow-md`;
+                containerStyles = {
+                    borderLeftColor: data.borderColor || v.leftBorder,
                     backgroundColor: data.backgroundColor,
-                    borderLeftColor: data.borderColor || (alertType === 'info' ? '#3b82f6' : alertType === 'success' ? '#22c55e' : alertType === 'warning' ? '#eab308' : '#ef4444'),
-                    color: data.textColor
+                    color: data.textColor,
                 };
             } else {
-                // Subtle (Default)
-                styleClasses = `rounded-lg border ${colors.bg} ${colors.border} p-4`;
-                styleStyles = {
+                // Subtle (default) - premium gradient look
+                containerClasses = `rounded-xl border ${v.border} bg-gradient-to-br ${v.bg} backdrop-blur-sm ${paddingClasses[alertPadding as keyof typeof paddingClasses]} ${animationClasses[alertAnimation as keyof typeof animationClasses] || ''} transition-all duration-200 hover:shadow-lg hover:shadow-black/[0.03]`;
+                containerStyles = {
                     backgroundColor: data.backgroundColor,
                     borderColor: data.borderColor,
-                    color: data.textColor
+                    color: data.textColor,
                 };
             }
 
             const iconPosition = data.iconPosition || 'left';
             const isIconTop = iconPosition === 'top';
-            const sanitizedAlertText = DOMPurify.sanitize(data.text || 'Texto de destaque...', { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'br', 'span'], ALLOWED_ATTR: ['href', 'target', 'style', 'class'] });
+            const sanitizedAlertText = DOMPurify.sanitize(interpolateText ? interpolateText(data.text || 'Texto de destaque...') : (data.text || 'Texto de destaque...'), { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'br', 'span'], ALLOWED_ATTR: ['href', 'target', 'style', 'class'] });
+            const fontSizeClass = fontSizeClasses[alertFontSize as keyof typeof fontSizeClasses] || fontSizeClasses.base;
 
             return (
                 <div
-                    className={`w-full ${styleClasses} ${animationClasses[alertAnimation as keyof typeof animationClasses] || ''}`}
-                    style={styleStyles}
+                    className={`w-full group ${containerClasses}`}
+                    style={containerStyles}
                 >
-                    <div className={`flex ${isIconTop ? 'flex-col items-center text-center' : 'items-start text-left'} gap-3`}>
+                    <div className={`flex ${isIconTop ? 'flex-col items-center text-center' : 'items-start gap-4'}`}>
                         {data.icon && (
-                            <span className={`${isIconTop ? 'text-4xl mb-2' : 'text-xl mt-0.5'} flex-shrink-0`}>{data.icon}</span>
+                            <div
+                                className={`flex-shrink-0 flex items-center justify-center rounded-lg w-10 h-10 transition-transform duration-200 group-hover:scale-105 ${alertStyle === 'solid' ? 'bg-white/20' : v.iconBg}`}
+                            >
+                                <span className={`text-lg leading-none ${alertStyle === 'solid' ? 'text-white' : ''}`} style={alertStyle !== 'solid' ? { color: v.iconColor } : undefined}>
+                                    {data.icon}
+                                </span>
+                            </div>
                         )}
-                        <div className="w-full">
-                            {data.title && (
-                                <h4 className={`font-bold mb-1 ${isIconTop ? 'text-lg' : 'text-base'}`} style={{ color: 'inherit' }}>
-                                    {data.title}
+                        <div className={`w-full ${isIconTop ? 'mt-1' : ''}`}>
+                                    {data.title && (
+                                <h4
+                                    className={`font-semibold leading-snug tracking-tight mb-0.5 ${isIconTop ? 'text-base' : 'text-[0.925rem]'} ${alertStyle === 'solid' ? 'text-white' : ''}`}
+                                    style={alertStyle !== 'solid' ? { color: data.textColor || v.titleColor } : undefined}
+                                >
+                                    {interpolateText ? interpolateText(data.title) : data.title}
                                 </h4>
                             )}
                             <div
-                                className={`font-medium text-sm md:text-base ${alertStyle === 'solid' ? 'text-white' : colors.text}`}
-                                style={{ color: alertStyle === 'solid' ? '#ffffff' : data.textColor }}
+                                className={`${fontSizeClass} leading-relaxed ${alertStyle === 'solid' ? 'text-white/90' : ''} ${alertStyle === 'solid' || alertStyle === 'outline' ? '' : 'text-gray-600'}`}
+                                style={
+                                    alertStyle === 'solid'
+                                        ? { color: 'rgba(255,255,255,0.9)' }
+                                        : alertStyle === 'outline'
+                                        ? { color: data.textColor || v.outlineText }
+                                        : { color: data.textColor || v.textColor }
+                                }
                                 dangerouslySetInnerHTML={{ __html: sanitizedAlertText }}
                             />
                         </div>
                     </div>
                 </div>
             );
+        }
 
         case 'argument':
             return (
@@ -740,30 +940,114 @@ function PublicComponentRenderer({
         case 'footer':
             const footerBg = data.backgroundColor || '#111827';
             const footerText = data.textColor || '#ffffff';
+            const footerLinks = data.links || [];
+            const footerSocialLinks = data.socialLinks || [];
+            const footerBorderColor = footerText + '15';
+
+            const platformLabels: Record<string, string> = {
+                instagram: 'Instagram',
+                facebook: 'Facebook',
+                twitter: 'Twitter',
+                youtube: 'YouTube',
+                linkedin: 'LinkedIn',
+            };
 
             return (
                 <div
-                    className="p-4 text-center mt-8"
-                    style={{ backgroundColor: footerBg, color: footerText }}
+                    className="mt-8"
+                    style={{ backgroundColor: footerBg }}
                 >
-                    <p className="text-sm">{data.text || '© 2024 Todos os direitos reservados'}</p>
-                    {data.links && data.links.length > 0 && (
-                        <div className="flex flex-wrap justify-center gap-4 mt-2 text-xs">
-                            {data.links.map((link: any) => (
-                                <a
-                                    key={link.id}
-                                    href={link.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="hover:opacity-80 transition-opacity"
-                                    style={{ color: footerText }}
-                                >
-                                    {link.label}
-                                </a>
-                            ))}
+                    <div
+                        className="border-t"
+                        style={{ borderColor: footerBorderColor }}
+                    />
+                    <div className="px-6 py-8 text-center">
+                        {footerLinks.length > 0 && (
+                            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-4">
+                                {footerLinks.map((link: any) => (
+                                    <a
+                                        key={link.id}
+                                        href={link.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-sm transition-colors duration-200"
+                                        style={{ color: footerText }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.textDecoration = 'underline';
+                                            e.currentTarget.style.textUnderlineOffset = '3px';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.textDecoration = 'none';
+                                        }}
+                                    >
+                                        {link.label}
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+
+                        {footerSocialLinks.length > 0 && (
+                            <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 mb-5">
+                                {footerSocialLinks.map((social: any) => (
+                                    <a
+                                        key={social.id}
+                                        href={social.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs tracking-wide uppercase transition-colors duration-200"
+                                        style={{ color: footerText, opacity: 0.7 }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.opacity = '1';
+                                            e.currentTarget.style.textDecoration = 'underline';
+                                            e.currentTarget.style.textUnderlineOffset = '3px';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.opacity = '0.7';
+                                            e.currentTarget.style.textDecoration = 'none';
+                                        }}
+                                    >
+                                        {platformLabels[social.platform] || social.platform}
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+
+                        <p
+                            className="text-sm leading-relaxed"
+                            style={{ color: footerText }}
+                        >
+                            {data.text || '© 2024 Todos os direitos reservados'}
+                        </p>
+
+                        <div className="mt-6">
+                            <a
+                                href="https://kuiz.digital"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs transition-colors duration-200"
+                                style={{ color: footerText, opacity: 0.35 }}
+                                onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.6'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.35'; }}
+                            >
+                                Powered by Kuiz
+                            </a>
                         </div>
-                    )}
+                    </div>
                 </div>
+            );
+
+        case 'pie-chart':
+            return (
+                <Suspense fallback={<ComponentSkeleton />}>
+                    <PieChartRenderer component={component as any} />
+                </Suspense>
+            );
+
+        case 'bar-chart':
+            return (
+                <Suspense fallback={<ComponentSkeleton />}>
+                    <BarChartRenderer component={component as any} />
+                </Suspense>
             );
 
         default:

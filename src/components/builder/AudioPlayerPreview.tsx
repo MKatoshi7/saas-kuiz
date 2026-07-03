@@ -5,7 +5,7 @@ import { Play, Volume2 } from 'lucide-react';
 
 interface AudioPlayerPreviewProps {
     audioSrc: string;
-    playerStyle?: 'whatsapp' | 'mp3' | 'modern' | 'simple';
+    playerStyle?: 'whatsapp' | 'mp3' | 'modern' | 'simple' | 'whatsapp2' | 'streaming' | 'simple2';
     avatarSrc?: string;
     senderName?: string;
 }

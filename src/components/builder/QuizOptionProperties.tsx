@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useBuilderStore } from '@/store/builderStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { X, GripVertical, Image as ImageIcon } from 'lucide-react';
+import { X, GripVertical, Image as ImageIcon, Wand2, Search } from 'lucide-react';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -16,6 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ColorPicker } from './ColorPicker';
+import { suggestEmojiFromText, searchEmojiPT_BR, getPopularEmojiCategories } from '@/lib/emoji-suggest';
+import { cn } from '@/lib/utils';
 
 // Sortable Item Component
 function SortableOptionItem({
@@ -65,12 +67,21 @@ function SortableOptionItem({
                         </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-80 p-0" side="right">
-                        <Tabs defaultValue={option.imageSrc ? 'image' : option.emoji ? 'emoji' : 'none'} className="w-full">
-                            <TabsList className="grid w-full grid-cols-3">
+                        <Tabs defaultValue={option.imageSrc ? 'image' : option.emoji ? 'emoji' : 'suggest'} className="w-full">
+                            <TabsList className="grid w-full grid-cols-4">
+                                <TabsTrigger value="suggest" className="text-[10px]">🤖 Sugerir</TabsTrigger>
                                 <TabsTrigger value="emoji">🎨 Emoji</TabsTrigger>
-                                <TabsTrigger value="image">🖼️ Imagem</TabsTrigger>
-                                <TabsTrigger value="none">⭕ Nenhum</TabsTrigger>
+                                <TabsTrigger value="image">🖼️</TabsTrigger>
+                                <TabsTrigger value="none">⭕</TabsTrigger>
                             </TabsList>
+
+                            {/* Aba Sugerir - busca PT-BR + automática */}
+                            <TabsContent value="suggest" className="p-2">
+                                <EmojiSuggestTab
+                                    option={option}
+                                    onUpdate={onUpdate}
+                                />
+                            </TabsContent>
 
                             <TabsContent value="emoji" className="p-2">
                                 <EmojiPicker
@@ -81,6 +92,7 @@ function SortableOptionItem({
                                     height={300}
                                     skinTonesDisabled
                                     previewConfig={{ showPreview: false }}
+                                    searchPlaceholder="Buscar em inglês..."
                                 />
                             </TabsContent>
 
@@ -527,6 +539,121 @@ export function QuizOptionProperties({ component }: { component: QuizOptionCompo
                     className="h-8 text-sm"
                 />
             </div>
+        </div>
+    );
+}
+
+/**
+ * Aba de sugestão de emoji com busca PT-BR e emoji automático do texto.
+ */
+function EmojiSuggestTab({ option, onUpdate }: { option: QuizOptionItem; onUpdate: (opt: QuizOptionItem) => void }) {
+    const [searchQuery, setSearchQuery] = useState('');
+    const popularCategories = useMemo(() => getPopularEmojiCategories(), []);
+
+    const suggestedEmoji = useMemo(() => {
+        if (!option.label) return null;
+        return suggestEmojiFromText(option.label);
+    }, [option.label]);
+
+    const searchResults = useMemo(() => {
+        if (!searchQuery || searchQuery.length < 2) return [];
+        return searchEmojiPT_BR(searchQuery);
+    }, [searchQuery]);
+
+    const handleAutoSuggest = () => {
+        if (suggestedEmoji) {
+            onUpdate({ ...option, emoji: suggestedEmoji, imageSrc: undefined });
+        }
+    };
+
+    return (
+        <div className="space-y-3 max-h-[340px] overflow-y-auto">
+            {/* Sugestão automática baseada no texto */}
+            {option.label && (
+                <div className="p-2 rounded-lg bg-blue-50 border border-blue-200">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Wand2 className="w-3.5 h-3.5 text-blue-500" />
+                            <span className="text-xs text-blue-700 font-medium">
+                                {suggestedEmoji ? (
+                                    <>Sugerido: <span className="text-lg ml-1">{suggestedEmoji}</span></>
+                                ) : (
+                                    'Digite algo para sugerir um emoji'
+                                )}
+                            </span>
+                        </div>
+                        {suggestedEmoji && (
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-6 text-[10px] text-blue-600 hover:text-blue-700"
+                                onClick={handleAutoSuggest}
+                            >
+                                Aplicar
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Busca PT-BR */}
+            <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+                <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Buscar emoji em português..."
+                    className="h-8 text-xs pl-8"
+                    autoFocus
+                />
+            </div>
+
+            {/* Resultados da busca */}
+            {searchResults.length > 0 && (
+                <div>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 px-1">
+                        Resultados para &quot;{searchQuery}&quot;
+                    </p>
+                    <div className="grid grid-cols-8 gap-1">
+                        {searchResults.map(({ emoji, label }) => (
+                            <button
+                                key={emoji + label}
+                                onClick={() => onUpdate({ ...option, emoji, imageSrc: undefined })}
+                                className={cn(
+                                    'w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-lg transition-colors',
+                                    option.emoji === emoji && 'bg-blue-100 ring-2 ring-blue-400'
+                                )}
+                                title={label}
+                            >
+                                {emoji}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Emojis populares (quando não está buscando) */}
+            {(!searchQuery || searchQuery.length < 2) && popularCategories.map((category) => (
+                <div key={category.label}>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 px-1">
+                        {category.label}
+                    </p>
+                    <div className="grid grid-cols-8 gap-1">
+                        {category.emojis.map((emoji) => (
+                            <button
+                                key={emoji}
+                                onClick={() => onUpdate({ ...option, emoji, imageSrc: undefined })}
+                                className={cn(
+                                    'w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100 text-lg transition-colors',
+                                    option.emoji === emoji && 'bg-blue-100 ring-2 ring-blue-400'
+                                )}
+                            >
+                                {emoji}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            ))}
         </div>
     );
 }
