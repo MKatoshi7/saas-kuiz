@@ -66,33 +66,19 @@ function SortableOptionItem({
                             )}
                         </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-80 p-0" side="right">
-                        <Tabs defaultValue={option.imageSrc ? 'image' : option.emoji ? 'emoji' : 'suggest'} className="w-full">
-                            <TabsList className="grid w-full grid-cols-4">
-                                <TabsTrigger value="suggest" className="text-[10px]">🤖 Sugerir</TabsTrigger>
-                                <TabsTrigger value="emoji">🎨 Emoji</TabsTrigger>
-                                <TabsTrigger value="image">🖼️</TabsTrigger>
-                                <TabsTrigger value="none">⭕</TabsTrigger>
+                    <PopoverContent className="w-80 p-0" side="right" align="start" sideOffset={4}>
+                        <Tabs defaultValue={option.imageSrc ? 'image' : option.emoji ? 'recent' : 'emoji'} className="w-full">
+                            <TabsList className="grid w-full grid-cols-3">
+                                <TabsTrigger value="emoji" className="text-[10px]">😀 Emoji</TabsTrigger>
+                                <TabsTrigger value="image" className="text-[10px]">🖼️ Imagem</TabsTrigger>
+                                <TabsTrigger value="none" className="text-[10px]">⭕ Nenhum</TabsTrigger>
                             </TabsList>
 
-                            {/* Aba Sugerir - busca PT-BR + automática */}
-                            <TabsContent value="suggest" className="p-2">
+                            {/* Aba Emoji - busca PT-BR + populares + recentes */}
+                            <TabsContent value="emoji" className="p-2 overflow-hidden">
                                 <EmojiSuggestTab
                                     option={option}
                                     onUpdate={onUpdate}
-                                />
-                            </TabsContent>
-
-                            <TabsContent value="emoji" className="p-2">
-                                <EmojiPicker
-                                    onEmojiClick={(emojiData: EmojiClickData) => {
-                                        onUpdate({ ...option, emoji: emojiData.emoji, imageSrc: undefined });
-                                    }}
-                                    width="100%"
-                                    height={300}
-                                    skinTonesDisabled
-                                    previewConfig={{ showPreview: false }}
-                                    searchPlaceholder="Buscar em inglês..."
                                 />
                             </TabsContent>
 

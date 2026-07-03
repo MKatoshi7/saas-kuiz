@@ -815,18 +815,63 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
 
                                     <div className="grid grid-cols-2 gap-2">
                                         <div>
+                                            <label className="text-xs font-medium text-gray-700 mb-2 block">Tipo</label>
+                                            <select
+                                                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                                value={selectedComponent.data.variant || 'info'}
+                                                onChange={(e) => handleUpdate('variant', e.target.value)}
+                                            >
+                                                <option value="info">ℹ️ Info (Azul)</option>
+                                                <option value="success">✅ Sucesso (Verde)</option>
+                                                <option value="warning">⚠️ Aviso (Amarelo)</option>
+                                                <option value="danger">🚨 Perigo (Vermelho)</option>
+                                            </select>
+                                        </div>
+                                        <div>
                                             <label className="text-xs font-medium text-gray-700 mb-2 block">Estilo Visual</label>
                                             <select
                                                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                                                value={selectedComponent.data.style || 'subtle'}
+                                                value={selectedComponent.data.style || 'left-border'}
                                                 onChange={(e) => handleUpdate('style', e.target.value)}
                                             >
-                                                <option value="subtle">Sutil (Padrão)</option>
-                                                <option value="solid">Sólido</option>
-                                                <option value="outline">Borda</option>
                                                 <option value="left-border">Borda Esquerda</option>
+                                                <option value="subtle">Sutil</option>
+                                                <option value="solid">Sólido</option>
+                                                <option value="outline">Contorno</option>
                                             </select>
                                         </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label className="text-xs font-medium text-gray-700 mb-2 block">Tamanho</label>
+                                            <select
+                                                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                                value={selectedComponent.data.fontSize || 'sm'}
+                                                onChange={(e) => handleUpdate('fontSize', e.target.value)}
+                                            >
+                                                <option value="xs">Extra Pequeno</option>
+                                                <option value="sm">Pequeno</option>
+                                                <option value="md">Médio</option>
+                                                <option value="lg">Grande</option>
+                                                <option value="xl">Extra Grande</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-medium text-gray-700 mb-2 block">Espaçamento</label>
+                                            <select
+                                                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                                value={selectedComponent.data.padding || 'normal'}
+                                                onChange={(e) => handleUpdate('padding', e.target.value)}
+                                            >
+                                                <option value="sm">Compacto</option>
+                                                <option value="normal">Normal</option>
+                                                <option value="lg">Largo</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2">
                                         <div>
                                             <label className="text-xs font-medium text-gray-700 mb-2 block">Animação</label>
                                             <select
@@ -836,26 +881,10 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                             >
                                                 <option value="none">Nenhuma</option>
                                                 <option value="pulse">Pulsar</option>
-                                                <option value="shake">Tremer</option>
-                                                <option value="bounce">Saltar</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label className="text-xs font-medium text-gray-700 mb-2 block">Posição do Ícone</label>
-                                            <select
-                                                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                                                value={selectedComponent.data.iconPosition || 'left'}
-                                                onChange={(e) => handleUpdate('iconPosition', e.target.value)}
-                                            >
-                                                <option value="left">Esquerda</option>
-                                                <option value="top">Topo</option>
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="text-xs font-medium text-gray-700 mb-2 block">Ícone/Emoji</label>
+                                            <label className="text-xs font-medium text-gray-700 mb-2 block">Ícone</label>
                                             <div className="flex gap-2">
                                                 <Input
                                                     value={selectedComponent.data.icon || ''}

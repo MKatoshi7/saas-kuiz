@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useBuilderStore } from '@/store/builderStore';
 import { FunnelComponentData } from '@/types/funnel';
 import {
@@ -6,18 +6,22 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { SortableComponent } from './SortableComponent';
+import { EmptyCanvasState } from './EmptyCanvasState';
 import { useDroppable } from '@dnd-kit/core';
-import { Image as ImageIcon, Video, Clock, BarChart, FormInput, Loader2, Copy, Edit2, Trash2, GripHorizontal, UploadCloud } from 'lucide-react';
+import { Image as ImageIcon, Video, Clock, BarChart, FormInput, Loader2, Copy, Edit2, Trash2, GripHorizontal, UploadCloud, Eye } from 'lucide-react';
 import { useDropzone } from 'react-dropzone';
 import { DevicePreview } from './DevicePreview';
 import { ThemedCanvasPreview } from './ThemedCanvasPreview';
 import { TextBlock } from './TextBlock';
+import { FunnelLivePreview } from '@/components/renderer/FunnelLivePreview';
 import { TextToolbar } from './TextToolbar';
 import { InlineTextEditor } from './InlineTextEditor';
 import { PricingCard } from './PricingCard';
 import { AudioPlayerPreview } from './AudioPlayerPreview';
 import { UnifiedTextRenderer } from '@/components/renderer/UnifiedTextRenderer';
 import { ArgumentRenderer } from '@/components/renderer/FunnelArgumentRenderer';
+import { PieChartRenderer } from '@/components/renderer/PieChartRenderer';
+import { BarChartRenderer } from '@/components/renderer/BarChartRenderer';
 import { PricingRenderer } from '@/components/renderer/PricingRenderer';
 import { PricingComponent } from '@/types/funnel';
 import { QuizOptionsRenderer } from '@/components/renderer/QuizOptionsRenderer';
@@ -36,10 +40,15 @@ export function Canvas({ previewDevice }: { previewDevice: 'mobile' | 'desktop' 
     const duplicateComponent = useBuilderStore((state) => state.duplicateComponent);
     const deleteComponent = useBuilderStore((state) => state.deleteComponent);
     const updateComponent = useBuilderStore((state) => state.updateComponent);
+    const theme = useBuilderStore((state) => state.theme);
+
+    // Local: toggle entre modo edição e modo preview (live)
+    const [previewMode, setPreviewMode] = useState(false)
 
     // Make the canvas droppable
     const { setNodeRef } = useDroppable({
         id: 'canvas-droppable',
+        disabled: previewMode,
     });
 
 
@@ -57,32 +66,57 @@ export function Canvas({ previewDevice }: { previewDevice: 'mobile' | 'desktop' 
 
     return (
         <div className="flex-1 bg-transparent relative overflow-hidden flex flex-col h-full">
+            {/* Canvas Toolbar (Preview toggle) */}
+            <div className="flex items-center justify-between px-4 py-2 border-b border-border/40">
+                <div className="inline-flex h-7 items-center gap-0.5 rounded-md bg-secondary/50 p-0.5 text-xs">
+                    <button
+                        onClick={() => setPreviewMode(false)}
+                        className={`h-6 px-2.5 rounded text-[11px] font-medium transition-colors ${!previewMode ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                    >
+                        Editar
+                    </button>
+                    <button
+                        onClick={() => setPreviewMode(true)}
+                        className={`h-6 px-2.5 rounded text-[11px] font-medium transition-colors flex items-center gap-1 ${previewMode ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                    >
+                        <Eye className="w-3 h-3" /> Preview
+                    </button>
+                </div>
+                {previewMode && (
+                    <span className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                        Modo live — exatamente como vai aparecer publicado
+                    </span>
+                )}
+            </div>
+
             {/* Canvas Content */}
             <div className="flex-1 p-8 overflow-hidden flex justify-center items-center">
                 <div
                     ref={setNodeRef}
                     className="w-full h-full flex justify-center items-center"
                 >
-                    <DevicePreview device={previewDevice}>
-                        <ThemedCanvasPreview>
+                    {previewMode ? (
+                        <DevicePreview device={previewDevice}>
+                            <ThemedCanvasPreview>
+                                <FunnelLivePreview
+                                    components={components}
+                                    theme={theme}
+                                    mode="live"
+                                />
+                            </ThemedCanvasPreview>
+                        </DevicePreview>
+                    ) : (
+                        <DevicePreview device={previewDevice}>
+                            <ThemedCanvasPreview>
                             <SortableContext
                                 items={components.map(c => c.id)}
                                 strategy={verticalListSortingStrategy}
                             >
                                 {components.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center h-full text-center pt-20">
-                                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-black/5">
-                                            <UploadCloud className="w-8 h-8 text-gray-300" />
-                                        </div>
-                                        <p className="text-gray-900 font-medium text-sm">
-                                            Comece a construir
-                                        </p>
-                                        <p className="text-gray-400 text-xs mt-1">
-                                            Arraste componentes da barra lateral
-                                        </p>
-                                    </div>
+                                    <EmptyCanvasState />
                                 ) : (
-                                    <div className="space-y-4 min-h-[500px] pb-20">
+                                    <div className="space-y-1 min-h-[500px] pb-20">
                                         {components.map((component) => (
                                             <SortableComponent
                                                 key={component.id}
@@ -96,22 +130,20 @@ export function Canvas({ previewDevice }: { previewDevice: 'mobile' | 'desktop' 
                                                     onClick={() => setSelectedComponent(component.id)}
                                                     onDuplicate={() => duplicateComponent(component.id)}
                                                     onDelete={async () => {
-                                                        if (confirm('Tem certeza que deseja excluir este componente?')) {
-                                                            // If component has a publicId (Cloudinary asset), delete it
-                                                            const componentData = component.data as any;
-                                                            if (componentData.publicId) {
-                                                                try {
-                                                                    await fetch('/api/upload/delete', {
-                                                                        method: 'POST',
-                                                                        headers: { 'Content-Type': 'application/json' },
-                                                                        body: JSON.stringify({ publicId: componentData.publicId }),
-                                                                    });
-                                                                } catch (error) {
-                                                                    console.error('Failed to delete asset from Cloudinary:', error);
-                                                                }
+                                                        // If component has a publicId (Cloudinary asset), delete it
+                                                        const componentData = component.data as any;
+                                                        if (componentData.publicId) {
+                                                            try {
+                                                                await fetch('/api/upload/delete', {
+                                                                    method: 'POST',
+                                                                    headers: { 'Content-Type': 'application/json' },
+                                                                    body: JSON.stringify({ publicId: componentData.publicId }),
+                                                                })
+                                                            } catch (error) {
+                                                                console.error('Failed to delete asset from Cloudinary:', error)
                                                             }
-                                                            deleteComponent(component.id);
                                                         }
+                                                        deleteComponent(component.id)
                                                     }}
                                                     onUpdate={updateComponent}
                                                 />
@@ -122,6 +154,7 @@ export function Canvas({ previewDevice }: { previewDevice: 'mobile' | 'desktop' 
                             </SortableContext>
                         </ThemedCanvasPreview>
                     </DevicePreview>
+                    )}
                 </div>
             </div>
         </div>
@@ -915,6 +948,20 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
                             ))}
                         </div>
                     )}
+                </div>
+            );
+
+        case 'pie-chart':
+            return (
+                <div className="p-2">
+                    <PieChartRenderer component={component as any} />
+                </div>
+            );
+
+        case 'bar-chart':
+            return (
+                <div className="p-2">
+                    <BarChartRenderer component={component as any} />
                 </div>
             );
 

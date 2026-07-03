@@ -693,179 +693,171 @@ function PublicComponentRenderer({
 
         case 'alert': {
             const alertType = data.type || data.variant || 'info';
-            const alertStyle = data.style || 'subtle';
+            const alertStyle = data.style || 'left-border';
             const alertAnimation = data.animation || 'none';
-            const alertFontSize = data.fontSize || 'base';
+            const alertFontSize = data.fontSize || 'sm';
             const alertPadding = data.padding || 'normal';
 
-            const alertVariants = {
+            const v = {
                 info: {
-                    bg: 'from-blue-50/80 to-blue-50/40',
-                    border: 'border-blue-100',
-                    text: 'text-blue-800',
-                    titleColor: '#1e40af',
-                    textColor: '#334155',
-                    iconBg: 'bg-blue-100/60',
-                    iconColor: '#2563eb',
-                    solidBg: '#2563eb',
-                    solidShadow: '0 4px 14px rgba(37, 99, 235, 0.25)',
-                    outlineBorder: '#3b82f6',
-                    outlineText: '#1e40af',
-                    leftBorder: '#3b82f6',
+                    border: '#3B82F6', bg: '#EFF6FF', text: '#1E40AF', icon: 'ℹ️',
                 },
                 success: {
-                    bg: 'from-emerald-50/80 to-emerald-50/40',
-                    border: 'border-emerald-100',
-                    text: 'text-emerald-800',
-                    titleColor: '#166534',
-                    textColor: '#334155',
-                    iconBg: 'bg-emerald-100/60',
-                    iconColor: '#16a34a',
-                    solidBg: '#16a34a',
-                    solidShadow: '0 4px 14px rgba(22, 163, 74, 0.25)',
-                    outlineBorder: '#22c55e',
-                    outlineText: '#166534',
-                    leftBorder: '#22c55e',
+                    border: '#10B981', bg: '#ECFDF5', text: '#065F46', icon: '✅',
                 },
                 warning: {
-                    bg: 'from-amber-50/80 to-amber-50/40',
-                    border: 'border-amber-100',
-                    text: 'text-amber-800',
-                    titleColor: '#92400e',
-                    textColor: '#334155',
-                    iconBg: 'bg-amber-100/60',
-                    iconColor: '#d97706',
-                    solidBg: '#d97706',
-                    solidShadow: '0 4px 14px rgba(217, 119, 6, 0.25)',
-                    outlineBorder: '#f59e0b',
-                    outlineText: '#92400e',
-                    leftBorder: '#f59e0b',
-                },
-                error: {
-                    bg: 'from-red-50/80 to-red-50/40',
-                    border: 'border-red-100',
-                    text: 'text-red-800',
-                    titleColor: '#991b1b',
-                    textColor: '#334155',
-                    iconBg: 'bg-red-100/60',
-                    iconColor: '#dc2626',
-                    solidBg: '#dc2626',
-                    solidShadow: '0 4px 14px rgba(220, 38, 38, 0.25)',
-                    outlineBorder: '#ef4444',
-                    outlineText: '#991b1b',
-                    leftBorder: '#ef4444',
+                    border: '#F59E0B', bg: '#FFFBEB', text: '#92400E', icon: '⚠️',
                 },
                 danger: {
-                    bg: 'from-red-50/80 to-red-50/40',
-                    border: 'border-red-100',
-                    text: 'text-red-800',
-                    titleColor: '#991b1b',
-                    textColor: '#334155',
-                    iconBg: 'bg-red-100/60',
-                    iconColor: '#dc2626',
-                    solidBg: '#dc2626',
-                    solidShadow: '0 4px 14px rgba(220, 38, 38, 0.25)',
-                    outlineBorder: '#ef4444',
-                    outlineText: '#991b1b',
-                    leftBorder: '#ef4444',
+                    border: '#EF4444', bg: '#FEF2F2', text: '#991B1B', icon: '🚨',
                 },
+                error: {
+                    border: '#EF4444', bg: '#FEF2F2', text: '#991B1B', icon: '🚨',
+                },
+            }[alertType as string] || { border: '#3B82F6', bg: '#EFF6FF', text: '#1E40AF', icon: 'ℹ️' };
+
+            const icon = data.icon || v.icon;
+            const title = data.title || '';
+            const text = data.text || '';
+
+            const fontSizeMap: Record<string, string> = {
+                xs: 'text-xs', sm: 'text-sm', md: 'text-base', lg: 'text-lg', xl: 'text-xl',
+            };
+            const paddingMap: Record<string, string> = {
+                sm: 'px-3 py-2', normal: 'px-4 py-3', lg: 'px-5 py-4',
             };
 
-            const v = alertVariants[alertType as keyof typeof alertVariants] || alertVariants.info;
+            const bgColor = data.backgroundColor || v.bg;
+            const borderColor = data.borderColor || v.border;
+            const textColor = data.textColor || v.text;
 
-            const animationClasses = {
-                none: '',
-                pulse: 'animate-pulse',
-                shake: 'animate-shake',
-                bounce: 'animate-bounce',
-            };
+            const animationClass = alertAnimation === 'pulse' ? 'animate-pulse' : '';
 
-            const fontSizeClasses = {
-                sm: 'text-xs',
-                base: 'text-sm',
-                lg: 'text-base',
-                xl: 'text-lg',
-            };
-
-            const paddingClasses = {
-                compact: 'p-3',
-                normal: 'p-4 md:p-5',
-                relaxed: 'p-5 md:p-6',
-            };
-
-            let containerClasses = '';
-            let containerStyles: React.CSSProperties = {};
-
-            if (alertStyle === 'solid') {
-                containerClasses = `rounded-xl shadow-lg ${paddingClasses[alertPadding as keyof typeof paddingClasses]} ${animationClasses[alertAnimation as keyof typeof animationClasses] || ''}`;
-                containerStyles = {
-                    backgroundColor: data.backgroundColor || v.solidBg,
-                    color: '#ffffff',
-                    boxShadow: v.solidShadow,
-                };
-            } else if (alertStyle === 'outline') {
-                containerClasses = `rounded-xl border-[1.5px] bg-transparent backdrop-blur-sm ${paddingClasses[alertPadding as keyof typeof paddingClasses]} ${animationClasses[alertAnimation as keyof typeof animationClasses] || ''} transition-all duration-200 hover:shadow-md`;
-                containerStyles = {
-                    borderColor: data.borderColor || v.outlineBorder,
-                    color: data.textColor || v.outlineText,
-                };
-            } else if (alertStyle === 'left-border') {
-                containerClasses = `rounded-xl border-l-[4px] bg-gradient-to-r ${v.bg} ${paddingClasses[alertPadding as keyof typeof paddingClasses]} ${animationClasses[alertAnimation as keyof typeof animationClasses] || ''} transition-all duration-200 hover:shadow-md`;
-                containerStyles = {
-                    borderLeftColor: data.borderColor || v.leftBorder,
-                    backgroundColor: data.backgroundColor,
-                    color: data.textColor,
-                };
-            } else {
-                // Subtle (default) - premium gradient look
-                containerClasses = `rounded-xl border ${v.border} bg-gradient-to-br ${v.bg} backdrop-blur-sm ${paddingClasses[alertPadding as keyof typeof paddingClasses]} ${animationClasses[alertAnimation as keyof typeof animationClasses] || ''} transition-all duration-200 hover:shadow-lg hover:shadow-black/[0.03]`;
-                containerStyles = {
-                    backgroundColor: data.backgroundColor,
-                    borderColor: data.borderColor,
-                    color: data.textColor,
-                };
+            // Estilo: left-border (padrão minimalista)
+            if (alertStyle === 'left-border') {
+                return (
+                    <div
+                        className={`w-full rounded-lg ${paddingMap[alertPadding] || paddingMap.normal} ${animationClass}`}
+                        style={{
+                            backgroundColor: bgColor,
+                            borderLeft: `3px solid ${borderColor}`,
+                        }}
+                    >
+                        <div className="flex items-start gap-3">
+                            {icon && (
+                                <span className={`text-base leading-none mt-0.5 shrink-0`} style={{ color: textColor }}>
+                                    {icon}
+                                </span>
+                            )}
+                            <div className="flex-1 min-w-0">
+                                {title && (
+                                    <p className={`font-semibold leading-tight mb-0.5 ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`}
+                                       style={{ color: textColor }}>
+                                        {interpolateText ? interpolateText(title) : title}
+                                    </p>
+                                )}
+                                {text && (
+                                    <div className={`${fontSizeMap[alertFontSize] || fontSizeMap.sm} leading-relaxed opacity-80`}
+                                         style={{ color: textColor }}
+                                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(interpolateText ? interpolateText(text) : text, { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'br', 'span'], ALLOWED_ATTR: ['href', 'target', 'style', 'class'] }) }}
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
             }
 
-            const iconPosition = data.iconPosition || 'left';
-            const isIconTop = iconPosition === 'top';
-            const sanitizedAlertText = DOMPurify.sanitize(interpolateText ? interpolateText(data.text || 'Texto de destaque...') : (data.text || 'Texto de destaque...'), { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'br', 'span'], ALLOWED_ATTR: ['href', 'target', 'style', 'class'] });
-            const fontSizeClass = fontSizeClasses[alertFontSize as keyof typeof fontSizeClasses] || fontSizeClasses.base;
+            // Estilo: subtle
+            if (alertStyle === 'subtle') {
+                return (
+                    <div
+                        className={`w-full rounded-lg border ${paddingMap[alertPadding] || paddingMap.normal} ${animationClass}`}
+                        style={{
+                            backgroundColor: bgColor,
+                            borderColor: `${borderColor}30`,
+                        }}
+                    >
+                        <div className="flex items-start gap-3">
+                            {icon && (
+                                <span className="text-base leading-none mt-0.5 shrink-0" style={{ color: textColor }}>
+                                    {icon}
+                                </span>
+                            )}
+                            <div className="flex-1 min-w-0">
+                                {title && (
+                                    <p className={`font-semibold leading-tight mb-0.5 ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`}
+                                       style={{ color: textColor }}>
+                                        {interpolateText ? interpolateText(title) : title}
+                                    </p>
+                                )}
+                                {text && (
+                                    <div className={`${fontSizeMap[alertFontSize] || fontSizeMap.sm} leading-relaxed opacity-80`}
+                                         style={{ color: textColor }}
+                                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(interpolateText ? interpolateText(text) : text, { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'br', 'span'], ALLOWED_ATTR: ['href', 'target', 'style', 'class'] }) }}
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
 
+            // Estilo: solid
+            if (alertStyle === 'solid') {
+                return (
+                    <div
+                        className={`w-full rounded-lg ${paddingMap[alertPadding] || paddingMap.normal} ${animationClass}`}
+                        style={{ backgroundColor: borderColor }}
+                    >
+                        <div className="flex items-start gap-3">
+                            {icon && (
+                                <span className="text-base leading-none mt-0.5 shrink-0 text-white">
+                                    {icon}
+                                </span>
+                            )}
+                            <div className="flex-1 min-w-0">
+                                {title && (
+                                    <p className={`font-semibold leading-tight mb-0.5 text-white ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`}>
+                                        {interpolateText ? interpolateText(title) : title}
+                                    </p>
+                                )}
+                                {text && (
+                                    <div className={`${fontSizeMap[alertFontSize] || fontSizeMap.sm} leading-relaxed text-white/90`}
+                                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(interpolateText ? interpolateText(text) : text, { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'br', 'span'], ALLOWED_ATTR: ['href', 'target', 'style', 'class'] }) }}
+                                    />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Estilo: outline
             return (
                 <div
-                    className={`w-full group ${containerClasses}`}
-                    style={containerStyles}
+                    className={`w-full rounded-lg border-2 bg-transparent ${paddingMap[alertPadding] || paddingMap.normal} ${animationClass}`}
+                    style={{ borderColor: borderColor }}
                 >
-                    <div className={`flex ${isIconTop ? 'flex-col items-center text-center' : 'items-start gap-4'}`}>
-                        {data.icon && (
-                            <div
-                                className={`flex-shrink-0 flex items-center justify-center rounded-lg w-10 h-10 transition-transform duration-200 group-hover:scale-105 ${alertStyle === 'solid' ? 'bg-white/20' : v.iconBg}`}
-                            >
-                                <span className={`text-lg leading-none ${alertStyle === 'solid' ? 'text-white' : ''}`} style={alertStyle !== 'solid' ? { color: v.iconColor } : undefined}>
-                                    {data.icon}
-                                </span>
-                            </div>
+                    <div className="flex items-start gap-3">
+                        {icon && (
+                            <span className="text-base leading-none mt-0.5 shrink-0" style={{ color: borderColor }}>
+                                {icon}
+                            </span>
                         )}
-                        <div className={`w-full ${isIconTop ? 'mt-1' : ''}`}>
-                                    {data.title && (
-                                <h4
-                                    className={`font-semibold leading-snug tracking-tight mb-0.5 ${isIconTop ? 'text-base' : 'text-[0.925rem]'} ${alertStyle === 'solid' ? 'text-white' : ''}`}
-                                    style={alertStyle !== 'solid' ? { color: data.textColor || v.titleColor } : undefined}
-                                >
-                                    {interpolateText ? interpolateText(data.title) : data.title}
-                                </h4>
+                        <div className="flex-1 min-w-0">
+                            {title && (
+                                <p className={`font-semibold leading-tight mb-0.5 ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`}
+                                   style={{ color: textColor }}>
+                                    {interpolateText ? interpolateText(title) : title}
+                                </p>
                             )}
-                            <div
-                                className={`${fontSizeClass} leading-relaxed ${alertStyle === 'solid' ? 'text-white/90' : ''} ${alertStyle === 'solid' || alertStyle === 'outline' ? '' : 'text-gray-600'}`}
-                                style={
-                                    alertStyle === 'solid'
-                                        ? { color: 'rgba(255,255,255,0.9)' }
-                                        : alertStyle === 'outline'
-                                        ? { color: data.textColor || v.outlineText }
-                                        : { color: data.textColor || v.textColor }
-                                }
-                                dangerouslySetInnerHTML={{ __html: sanitizedAlertText }}
-                            />
+                            {text && (
+                                <div className={`${fontSizeMap[alertFontSize] || fontSizeMap.sm} leading-relaxed opacity-80`}
+                                     style={{ color: textColor }}
+                                     dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(interpolateText ? interpolateText(text) : text, { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'br', 'span'], ALLOWED_ATTR: ['href', 'target', 'style', 'class'] }) }}
+                                />
+                            )}
                         </div>
                     </div>
                 </div>

@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
-    Heading1, Heading2, Type, AlignLeft, AlignCenter, AlignRight, Palette, ChevronDown, Check, Highlighter, Smile,
-    Bold, Italic, Underline, Link as LinkIcon, Undo, Redo, Eraser
+    Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight,
+    Type, Palette, ChevronDown, Eraser, Hash, LetterText, CaseSensitive
 } from "lucide-react";
 import { useBuilderStore } from '@/store/builderStore';
-import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 
 interface ToolbarProps {
     currentData: any;
@@ -16,666 +15,321 @@ interface ToolbarProps {
 }
 
 const PRESET_COLORS = [
-    '#000000', '#FFFFFF', '#334155', '#94A3B8',
-    '#EF4444', '#F97316', '#F59E0B', '#84CC16',
-    '#10B981', '#06B6D4', '#3B82F6', '#6366F1',
-    '#8B5CF6', '#D946EF', '#F43F5E', '#881337'
+    '#000000', '#334155', '#EF4444', '#F97316', '#F59E0B', '#84CC16',
+    '#10B981', '#06B6D4', '#3B82F6', '#6366F1', '#8B5CF6', '#D946EF',
 ];
 
-const HIGHLIGHT_COLORS = [
-    '#FEF3C7', '#FED7AA', '#FBCFE8',
-    '#DBEAFE', '#D1FAE5', '#FDE68A',
-    'transparent'
+const FONT_SIZES = [
+    { value: 'micro', label: '8px' }, { value: 'minusculo', label: '12px' },
+    { value: 'small', label: '16px' }, { value: 'normal', label: '18px' },
+    { value: 'medium', label: '20px' }, { value: 'big', label: '24px' },
+    { value: 'bigger', label: '30px' }, { value: 'huge', label: '36px' },
 ];
 
-const STORAGE_KEY = 'quizk_recent_colors';
+const FONT_FAMILIES = [
+    'Inter', 'Arial', 'Helvetica', 'Times New Roman', 'Georgia',
+    'Courier New', 'Verdana', 'Roboto', 'Open Sans', 'Lato',
+    'Montserrat', 'Poppins', 'Oswald', 'Raleway', 'Nunito',
+];
+
+const FONT_WEIGHTS = [
+    { value: 300, label: 'Leve' }, { value: 400, label: 'Normal' },
+    { value: 500, label: 'Médio' }, { value: 600, label: 'Semi' },
+    { value: 700, label: 'Negrito' }, { value: 800, label: 'Extra' },
+];
+
+function Dropdown({ trigger, children, align = 'left' }: {
+    trigger: React.ReactNode; children: React.ReactNode; align?: 'left' | 'right'
+}) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+        };
+        if (open) document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [open]);
+
+    return (
+        <div className="relative" ref={ref}>
+            <div onClick={() => setOpen(!open)}>{trigger}</div>
+            {open && (
+                <>
+                    <div className="fixed inset-0 z-[100]" onClick={() => setOpen(false)} />
+                    <div className={`absolute top-full mt-1 z-[110] bg-white border border-gray-200 rounded-lg shadow-xl p-1 min-w-[160px] animate-in fade-in slide-in-from-top-1 duration-150 ${align === 'right' ? 'right-0' : 'left-0'}`}>
+                        {children}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
+function DropdownItem({ label, active, onClick, icon: Icon }: {
+    label: string; active?: boolean; onClick: () => void; icon?: any
+}) {
+    return (
+        <button
+            className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-xs rounded-md transition-colors text-left ${active ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700 hover:bg-gray-100'}`}
+            onClick={(e) => { e.stopPropagation(); onClick(); }}
+        >
+            {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
+            <span className="truncate">{label}</span>
+        </button>
+    );
+}
 
 export function TextToolbar({ currentData, onUpdate, isVisible, className, anchorRef }: ToolbarProps) {
-    const [showPalette, setShowPalette] = useState(false);
-    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-    const [showLinkDialog, setShowLinkDialog] = useState(false);
-    const [recentColors, setRecentColors] = useState<string[]>([]);
-    const paletteRef = useRef<HTMLDivElement>(null);
-    const emojiPickerRef = useRef<HTMLDivElement>(null);
-    const linkDialogRef = useRef<HTMLDivElement>(null);
-    const [coords, setCoords] = useState({ top: 0, left: 0 });
-
-    // Active formatting states
+    const [showColorPicker, setShowColorPicker] = useState(false);
     const [isBold, setIsBold] = useState(false);
     const [isItalic, setIsItalic] = useState(false);
     const [isUnderline, setIsUnderline] = useState(false);
+    const [isStrikethrough, setIsStrikethrough] = useState(false);
+    const colorRef = useRef<HTMLDivElement>(null);
+    const [coords, setCoords] = useState({ top: 0, left: 0 });
 
-    // Get theme primary color
     const theme = useBuilderStore((state) => state.theme);
     const primaryColor = theme?.primaryColor || '#2563EB';
 
-    // Check active formatting at cursor
     const checkActiveFormatting = () => {
-        const selection = window.getSelection();
-        if (!selection || selection.rangeCount === 0) return;
-
-        const parentElement = selection.anchorNode?.parentElement;
-        if (!parentElement) return;
-
         setIsBold(document.queryCommandState('bold'));
         setIsItalic(document.queryCommandState('italic'));
         setIsUnderline(document.queryCommandState('underline'));
+        setIsStrikethrough(document.queryCommandState('strikeThrough'));
     };
 
-    // Apply inline formatting
     const applyFormat = (command: string) => {
         document.execCommand(command, false);
         checkActiveFormatting();
-
-        // Trigger input event to save changes
         const selection = window.getSelection();
         const editor = selection?.anchorNode?.parentElement?.closest('[contenteditable="true"]') as HTMLElement;
-        if (editor) {
-            editor.dispatchEvent(new Event('input', { bubbles: true }));
-        }
+        if (editor) editor.dispatchEvent(new Event('input', { bubbles: true }));
     };
 
-    // Clear all formatting
     const clearFormatting = () => {
         document.execCommand('removeFormat', false);
         const selection = window.getSelection();
         const editor = selection?.anchorNode?.parentElement?.closest('[contenteditable="true"]') as HTMLElement;
-        if (editor) {
-            editor.dispatchEvent(new Event('input', { bubbles: true }));
-        }
+        if (editor) editor.dispatchEvent(new Event('input', { bubbles: true }));
     };
 
-    // Load recent colors and listen for storage changes
+    const applyColor = (color: string) => {
+        const selection = window.getSelection();
+        const hasSelection = selection && selection.rangeCount > 0 && !selection.isCollapsed;
+        if (hasSelection) {
+            const editor = selection.anchorNode?.parentElement?.closest('[contenteditable="true"]') as HTMLElement;
+            if (editor) editor.focus();
+            document.execCommand('foreColor', false, color);
+        } else {
+            onUpdate('color', color);
+        }
+        setShowColorPicker(false);
+    };
+
     useEffect(() => {
-        const loadColors = () => {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                try {
-                    setRecentColors(JSON.parse(saved));
-                } catch (e) {
-                    console.error("Failed to parse recent colors", e);
-                }
-            }
-        };
-
-        loadColors();
-
-        // Listen for storage changes from other components
-        const handleStorageChange = (e: StorageEvent) => {
-            if (e.key === STORAGE_KEY) {
-                loadColors();
-            }
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
-    }, []);
-
-    // Check formatting on selection change
-    useEffect(() => {
-        const handleSelectionChange = () => {
-            if (isVisible) {
-                checkActiveFormatting();
-            }
-        };
-
-        document.addEventListener('selectionchange', handleSelectionChange);
-        return () => document.removeEventListener('selectionchange', handleSelectionChange);
+        const handler = () => { if (isVisible) checkActiveFormatting(); };
+        document.addEventListener('selectionchange', handler);
+        return () => document.removeEventListener('selectionchange', handler);
     }, [isVisible]);
 
-    // Handle click outside to close palette, emoji picker, and link dialog
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (paletteRef.current && !paletteRef.current.contains(event.target as Node)) {
-                setShowPalette(false);
-            }
-            if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
-                setShowEmojiPicker(false);
-            }
-            if (linkDialogRef.current && !linkDialogRef.current.contains(event.target as Node)) {
-                setShowLinkDialog(false);
-            }
-        };
-
-        if (showPalette || showEmojiPicker || showLinkDialog) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [showPalette, showEmojiPicker, showLinkDialog]);
-
-    // Update position if anchorRef is provided
     useEffect(() => {
         if (!anchorRef?.current || !isVisible) return;
-
-        const updatePosition = () => {
+        const update = () => {
             if (anchorRef.current) {
                 const rect = anchorRef.current.getBoundingClientRect();
-                setCoords({
-                    top: rect.top - 8, // 8px padding above
-                    left: rect.left
-                });
+                setCoords({ top: rect.top - 8, left: rect.left });
             }
         };
-
-        updatePosition();
-        // Capture phase to handle all scrolling in parent containers
-        window.addEventListener('scroll', updatePosition, true);
-        window.addEventListener('resize', updatePosition);
-
-        return () => {
-            window.removeEventListener('scroll', updatePosition, true);
-            window.removeEventListener('resize', updatePosition);
-        };
+        update();
+        window.addEventListener('scroll', update, true);
+        window.addEventListener('resize', update);
+        return () => { window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update); };
     }, [anchorRef, isVisible]);
+
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (colorRef.current && !colorRef.current.contains(e.target as Node)) setShowColorPicker(false);
+        };
+        if (showColorPicker) document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [showColorPicker]);
 
     if (!isVisible) return null;
 
-    const handleColorChange = (color: string) => {
-        // Check if there is a text selection within the editor
-        const selection = window.getSelection();
-        const hasSelection = selection && selection.rangeCount > 0 && !selection.isCollapsed;
-
-        if (hasSelection) {
-            // Apply color to selected text
-            // Ensure we are focusing the editor before applying
-            const editor = selection.anchorNode?.parentElement?.closest('[contenteditable="true"]') as HTMLElement;
-            if (editor) {
-                editor.focus();
-                document.execCommand('foreColor', false, color);
-            } else {
-                document.execCommand('foreColor', false, color);
-            }
-        } else {
-            // No selection, apply to entire component
-            onUpdate('color', color);
-        }
-
-        // Add to recent colors if not already present
-        if (!recentColors.includes(color)) {
-            const newColors = [color, ...recentColors].slice(0, 6);
-            setRecentColors(newColors);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(newColors));
-        }
-        // Close palette after selection
-        setShowPalette(false);
-    };
-
-    const handleHighlightChange = (color: string) => {
-        const selection = window.getSelection();
-        const hasSelection = selection && selection.rangeCount > 0 && !selection.isCollapsed;
-
-        if (hasSelection) {
-            const editor = selection.anchorNode?.parentElement?.closest('[contenteditable="true"]') as HTMLElement;
-            if (editor) {
-                editor.focus();
-            }
-            document.execCommand('hiliteColor', false, color);
-        } else {
-            document.execCommand('hiliteColor', false, color);
-        }
-        setShowPalette(false);
-    };
-
+    const currentFontSize = currentData.fontSize || 'normal';
+    const currentFontFamily = currentData.fontFamily || 'Inter';
+    const currentFontWeight = currentData.fontWeight || 400;
+    const currentLetterSpacing = currentData.letterSpacing || 'normal';
+    const currentLineHeight = currentData.lineHeight || 'normal';
+    const currentTextTransform = currentData.textTransform || 'none';
+    const currentAlign = currentData.align || 'left';
     const currentColor = currentData.color || '#000000';
 
     const toolbarContent = (
         <div
-            className={`flex flex-col items-start gap-1.5 bg-slate-900 text-white p-2 rounded-lg shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-200 border border-slate-700 pointer-events-auto ${anchorRef ? 'fixed z-[9999]' : `absolute z-[9999] ${className || '-top-16 left-0'}`
-                }`}
-            style={anchorRef ? {
-                top: coords.top,
-                left: coords.left,
-                transform: 'translateY(-100%)'
-            } : undefined}
+            className={`flex items-center gap-1 bg-white border border-gray-200 rounded-lg shadow-lg px-2 py-1 animate-in fade-in slide-in-from-bottom-1 duration-150 ${anchorRef ? 'fixed z-[9999]' : `absolute z-[9999] ${className || '-top-12 left-0'}`}`}
+            style={anchorRef ? { top: coords.top, left: coords.left, transform: 'translateY(-100%)' } : undefined}
+            onClick={(e) => e.stopPropagation()}
         >
-            {/* ROW 1: Basic Formatting */}
-            <div className="flex items-center gap-2 w-full">
-                {/* Tag Selector */}
-                <div className="flex bg-slate-800 rounded overflow-hidden">
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onUpdate('tag', 'h1'); }}
-                        className={`p-1.5 hover:bg-slate-700 ${currentData.tag === 'h1' ? 'text-blue-400 bg-slate-700' : 'text-gray-400'}`}
-                        title="Título Principal (H1)"
-                    >
-                        <Heading1 size={16} />
+            {/* Font Family */}
+            <Dropdown
+                trigger={
+                    <button className="flex items-center gap-1 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded max-w-[120px]">
+                        <span className="truncate">{currentFontFamily}</span>
+                        <ChevronDown className="w-3 h-3 shrink-0 text-gray-400" />
                     </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onUpdate('tag', 'h2'); }}
-                        className={`p-1.5 hover:bg-slate-700 ${currentData.tag === 'h2' ? 'text-blue-400 bg-slate-700' : 'text-gray-400'}`}
-                        title="Subtítulo (H2)"
-                    >
-                        <Heading2 size={16} />
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onUpdate('tag', 'p'); }}
-                        className={`p-1.5 hover:bg-slate-700 ${currentData.tag === 'p' ? 'text-blue-400 bg-slate-700' : 'text-gray-400'}`}
-                        title="Parágrafo (P)"
-                    >
-                        <Type size={16} />
-                    </button>
+                }
+            >
+                <div className="max-h-[300px] overflow-y-auto">
+                    {FONT_FAMILIES.map(f => (
+                        <DropdownItem key={f} label={f} active={currentFontFamily === f} onClick={() => onUpdate('fontFamily', f)} />
+                    ))}
                 </div>
+            </Dropdown>
 
-                <div className="w-px h-5 bg-slate-700"></div>
+            <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
-                {/* Inline Formatting: Bold, Italic, Underline */}
-                <div className="flex bg-slate-800 rounded overflow-hidden">
-                    <button
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={(e) => { e.stopPropagation(); applyFormat('bold'); }}
-                        className={`p-1.5 hover:bg-slate-700 ${isBold ? 'text-blue-400 bg-slate-700' : 'text-gray-400'}`}
-                        title="Negrito (Ctrl+B)"
-                    >
-                        <Bold size={16} />
+            {/* Font Size */}
+            <Dropdown
+                trigger={
+                    <button className="flex items-center gap-1 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded">
+                        <Hash className="w-3 h-3 text-gray-400" />
+                        <span>{FONT_SIZES.find(s => s.value === currentFontSize)?.label || '18px'}</span>
+                        <ChevronDown className="w-3 h-3 text-gray-400" />
                     </button>
-                    <button
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={(e) => { e.stopPropagation(); applyFormat('italic'); }}
-                        className={`p-1.5 hover:bg-slate-700 ${isItalic ? 'text-blue-400 bg-slate-700' : 'text-gray-400'}`}
-                        title="Itálico (Ctrl+I)"
-                    >
-                        <Italic size={16} />
+                }
+            >
+                {FONT_SIZES.map(s => (
+                    <DropdownItem key={s.value} label={`${s.label} — ${s.value}`} active={currentFontSize === s.value} onClick={() => onUpdate('fontSize', s.value)} />
+                ))}
+            </Dropdown>
+
+            <div className="w-px h-5 bg-gray-200 mx-0.5" />
+
+            {/* Font Weight */}
+            <Dropdown
+                trigger={
+                    <button className="flex items-center gap-1 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded">
+                        <span style={{ fontWeight: currentFontWeight }}>{FONT_WEIGHTS.find(w => w.value === currentFontWeight)?.label || 'Normal'}</span>
+                        <ChevronDown className="w-3 h-3 text-gray-400" />
                     </button>
-                    <button
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={(e) => { e.stopPropagation(); applyFormat('underline'); }}
-                        className={`p-1.5 hover:bg-slate-700 ${isUnderline ? 'text-blue-400 bg-slate-700' : 'text-gray-400'}`}
-                        title="Sublinhado (Ctrl+U)"
-                    >
-                        <Underline size={16} />
-                    </button>
-                </div>
+                }
+            >
+                {FONT_WEIGHTS.map(w => (
+                    <DropdownItem key={w.value} label={w.label} active={currentFontWeight === w.value} onClick={() => onUpdate('fontWeight', w.value)} />
+                ))}
+            </Dropdown>
 
-                <div className="w-px h-5 bg-slate-700"></div>
+            <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
-                {/* Alignment */}
-                <div className="flex bg-slate-800 rounded overflow-hidden">
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onUpdate('align', 'left'); }}
-                        className={`p-1.5 hover:bg-slate-700 ${currentData.align === 'left' ? 'text-blue-400 bg-slate-700' : 'text-gray-400'}`}
-                        title="Alinhar à Esquerda"
-                    >
-                        <AlignLeft size={16} />
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onUpdate('align', 'center'); }}
-                        className={`p-1.5 hover:bg-slate-700 ${currentData.align === 'center' ? 'text-blue-400 bg-slate-700' : 'text-gray-400'}`}
-                        title="Centralizar"
-                    >
-                        <AlignCenter size={16} />
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onUpdate('align', 'right'); }}
-                        className={`p-1.5 hover:bg-slate-700 ${currentData.align === 'right' ? 'text-blue-400 bg-slate-700' : 'text-gray-400'}`}
-                        title="Alinhar à Direita"
-                    >
-                        <AlignRight size={16} />
-                    </button>
-                </div>
-
-                <div className="w-px h-5 bg-slate-700"></div>
-
-                {/* Emoji Picker */}
-                <div className="relative" ref={emojiPickerRef}>
-                    <button
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); }}
-                        className="p-1.5 hover:bg-slate-800 rounded text-gray-400 hover:text-blue-400"
-                        title="Inserir Emoji"
-                    >
-                        <Smile size={16} />
-                    </button>
-
-                    {showEmojiPicker && (
-                        <div className="absolute top-full left-0 mt-2 z-[110]">
-                            <EmojiPicker
-                                onEmojiClick={(emojiData: EmojiClickData) => {
-                                    const selection = window.getSelection();
-                                    if (selection && selection.rangeCount > 0) {
-                                        const range = selection.getRangeAt(0);
-                                        range.deleteContents();
-                                        const emojiNode = document.createTextNode(emojiData.emoji);
-                                        range.insertNode(emojiNode);
-                                        range.setStartAfter(emojiNode);
-                                        range.setEndAfter(emojiNode);
-                                        selection.removeAllRanges();
-                                        selection.addRange(range);
-
-                                        const editor = selection.anchorNode?.parentElement?.closest('[contenteditable="true"]') as HTMLElement;
-                                        if (editor) {
-                                            editor.dispatchEvent(new Event('input', { bubbles: true }));
-                                        }
-                                    }
-                                    setShowEmojiPicker(false);
-                                }}
-                                width={300}
-                                height={400}
-                                skinTonesDisabled
-                                previewConfig={{ showPreview: false }}
-                            />
-                        </div>
-                    )}
-                </div>
-
-                <div className="w-px h-5 bg-slate-700"></div>
-
-                {/* Color for Selected Text */}
-                <div className="relative" ref={paletteRef}>
-                    <button
-                        onMouseDown={(e) => e.preventDefault()}
-                        onClick={(e) => { e.stopPropagation(); setShowPalette(!showPalette); }}
-                        className="p-1 hover:bg-slate-800 rounded"
-                        title="Colorir Texto Selecionado"
-                    >
-                        <div
-                            className="w-5 h-5 rounded border-2 border-white/30"
-                            style={{ backgroundColor: currentColor }}
-                        ></div>
-                    </button>
-
-                    {/* Color Palette Popover */}
-                    {showPalette && (
-                        <div className="absolute top-full left-0 mt-2 p-3 bg-slate-800 rounded-lg shadow-xl border border-slate-700 w-56 z-[110]">
-                            {/* Theme Primary Color */}
-                            <div className="mb-3">
-                                <div className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2">
-                                    Cor Principal do Tema
-                                </div>
-                                <button
-                                    onMouseDown={(e) => e.preventDefault()}
-                                    onClick={(e) => { e.stopPropagation(); handleColorChange(primaryColor); }}
-                                    className={`w-full flex items-center gap-2 p-2 rounded-md transition-colors ${currentColor === primaryColor ? 'bg-slate-700' : 'hover:bg-slate-700/50'}`}
-                                >
-                                    <div className="w-6 h-6 rounded border border-white/20" style={{ backgroundColor: primaryColor }}></div>
-                                    <span className="text-xs font-mono text-gray-300">{primaryColor}</span>
-                                    {currentColor === primaryColor && <Check size={14} className="ml-auto text-green-400" />}
-                                </button>
-                            </div>
-
-                            {/* Recent Colors */}
-                            {recentColors.length > 0 && (
-                                <div className="mb-3">
-                                    <div className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2">
-                                        Cores Recentes
-                                    </div>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {recentColors.map((color, i) => (
-                                            <button
-                                                key={`recent-${i}`}
-                                                onMouseDown={(e) => e.preventDefault()}
-                                                onClick={(e) => { e.stopPropagation(); handleColorChange(color); }}
-                                                className={`w-7 h-7 rounded border-2 hover:scale-110 transition-transform flex items-center justify-center ${currentColor === color ? 'border-white ring-1 ring-blue-400' : 'border-white/10'}`}
-                                                style={{ backgroundColor: color }}
-                                                title={color}
-                                            >
-                                                {currentColor === color && (
-                                                    <Check size={12} className={color === '#FFFFFF' || color === '#ffffff' ? 'text-black' : 'text-white'} />
-                                                )}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Preset Colors */}
-                            <div className="mb-3">
-                                <div className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2">
-                                    Paleta Padrão
-                                </div>
-                                <div className="grid grid-cols-8 gap-1">
-                                    {PRESET_COLORS.map((color) => (
-                                        <button
-                                            key={color}
-                                            onMouseDown={(e) => e.preventDefault()}
-                                            onClick={(e) => { e.stopPropagation(); handleColorChange(color); }}
-                                            className={`w-6 h-6 rounded border-2 hover:scale-110 transition-transform flex items-center justify-center ${currentColor === color ? 'border-white ring-1 ring-blue-400' : 'border-white/10'}`}
-                                            style={{ backgroundColor: color }}
-                                            title={color}
-                                        >
-                                            {currentColor === color && (
-                                                <Check size={10} className={color === '#FFFFFF' || color === '#ffffff' ? 'text-black' : 'text-white'} />
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Highlight Colors */}
-                            <div className="mb-3">
-                                <div className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-2">
-                                    Realce (Grifar)
-                                </div>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {HIGHLIGHT_COLORS.map((color) => (
-                                        <button
-                                            key={color}
-                                            onMouseDown={(e) => e.preventDefault()}
-                                            onClick={(e) => { e.stopPropagation(); handleHighlightChange(color); }}
-                                            className={`w-6 h-6 rounded border-2 hover:scale-110 transition-transform flex items-center justify-center border-white/10`}
-                                            style={{ backgroundColor: color === 'transparent' ? 'transparent' : color }}
-                                            title={color === 'transparent' ? 'Remover Realce' : color}
-                                        >
-                                            {color === 'transparent' && (
-                                                <div className="w-full h-px bg-red-500 rotate-45 transform" />
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Custom Color Picker */}
-                            <div className="pt-2 border-t border-slate-700">
-                                <label className="flex items-center gap-2 cursor-pointer hover:text-blue-400 text-xs text-gray-300 group">
-                                    <Palette size={14} className="text-gray-400 group-hover:text-blue-400" />
-                                    <span>Escolher cor personalizada...</span>
-                                    <input
-                                        type="color"
-                                        value={currentColor}
-                                        onClick={(e) => e.stopPropagation()}
-                                        onChange={(e) => handleColorChange(e.target.value)}
-                                        className="ml-auto w-6 h-6 rounded border-0 cursor-pointer"
-                                    />
-                                </label>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                <div className="w-px h-5 bg-slate-700"></div>
-
-                {/* Clear Formatting */}
-                <button
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={(e) => { e.stopPropagation(); clearFormatting(); }}
-                    className="p-1.5 hover:bg-slate-800 rounded text-gray-400 hover:text-red-400"
-                    title="Limpar Formatação"
-                >
-                    <Eraser size={16} />
-                </button>
+            {/* Inline Formatting */}
+            <div className="flex items-center">
+                <button onClick={() => applyFormat('bold')} className={`p-1.5 rounded ${isBold ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`} title="Negrito"><Bold className="w-3.5 h-3.5" /></button>
+                <button onClick={() => applyFormat('italic')} className={`p-1.5 rounded ${isItalic ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`} title="Itálico"><Italic className="w-3.5 h-3.5" /></button>
+                <button onClick={() => applyFormat('underline')} className={`p-1.5 rounded ${isUnderline ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`} title="Sublinhado"><Underline className="w-3.5 h-3.5" /></button>
+                <button onClick={() => applyFormat('strikeThrough')} className={`p-1.5 rounded ${isStrikethrough ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`} title="Tachado"><Strikethrough className="w-3.5 h-3.5" /></button>
             </div>
 
-            {/* ROW 2: Font Size & Weight */}
-            <div className="w-full pt-1 border-t border-slate-800 flex items-center gap-3 px-1">
-                <div className="flex items-center gap-2 flex-1">
-                    <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider whitespace-nowrap">Tamanho</span>
-                    <select
-                        value={currentData.fontSize || 'normal'}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => onUpdate('fontSize', e.target.value)}
-                        className="flex-1 bg-slate-800 text-xs font-medium text-white border border-slate-700 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 cursor-pointer hover:bg-slate-700"
-                    >
-                        <option value="micro">Micro (8px)</option>
-                        <option value="minusculo">Minúsculo (12px)</option>
-                        <option value="small">Pequeno</option>
-                        <option value="normal">Normal</option>
-                        <option value="medium">Médio</option>
-                        <option value="big">Grande</option>
-                        <option value="bigger">Muito Grande</option>
-                        <option value="huge">Gigante</option>
-                    </select>
-                </div>
+            <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
-                <div className="w-px h-5 bg-slate-700"></div>
-
-                <div className="flex items-center gap-2 flex-1">
-                    <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider whitespace-nowrap">Peso</span>
-                    <select
-                        value={currentData.fontWeight || 400}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => onUpdate('fontWeight', Number(e.target.value))}
-                        className="flex-1 bg-slate-800 text-xs font-medium text-white border border-slate-700 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 cursor-pointer hover:bg-slate-700"
-                    >
-                        <option value="100">Fino (100)</option>
-                        <option value="300">Leve (300)</option>
-                        <option value="400">Normal (400)</option>
-                        <option value="500">Médio (500)</option>
-                        <option value="600">Semi-Negrito (600)</option>
-                        <option value="700">Negrito (700)</option>
-                        <option value="800">Extra-Negrito (800)</option>
-                        <option value="900">Black (900)</option>
-                    </select>
-                </div>
+            {/* Alignment */}
+            <div className="flex items-center">
+                {[
+                    { value: 'left', icon: AlignLeft },
+                    { value: 'center', icon: AlignCenter },
+                    { value: 'right', icon: AlignRight },
+                ].map(({ value, icon: Icon }) => (
+                    <button key={value} onClick={() => onUpdate('align', value)} className={`p-1.5 rounded ${currentAlign === value ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`} title={`Alinhar ${value}`}>
+                        <Icon className="w-3.5 h-3.5" />
+                    </button>
+                ))}
             </div>
 
-            {/* ROW 3: Letter Spacing & Line Height */}
-            <div className="w-full pt-1 border-t border-slate-800 flex items-center gap-3 px-1">
-                <div className="flex items-center gap-2 flex-1">
-                    <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider whitespace-nowrap">Espaçamento</span>
-                    <select
-                        value={currentData.letterSpacing || 'normal'}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => onUpdate('letterSpacing', e.target.value)}
-                        className="flex-1 bg-slate-800 text-xs font-medium text-white border border-slate-700 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 cursor-pointer hover:bg-slate-700"
-                    >
-                        <option value="tighter">Mais Apertado</option>
-                        <option value="tight">Apertado</option>
-                        <option value="normal">Normal</option>
-                        <option value="wide">Largo</option>
-                        <option value="wider">Mais Largo</option>
-                        <option value="widest">Muito Largo</option>
-                    </select>
-                </div>
+            <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
-                <div className="w-px h-5 bg-slate-700"></div>
-
-                <div className="flex items-center gap-2 flex-1">
-                    <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider whitespace-nowrap">Altura</span>
-                    <select
-                        value={currentData.lineHeight || 'normal'}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => onUpdate('lineHeight', e.target.value)}
-                        className="flex-1 bg-slate-800 text-xs font-medium text-white border border-slate-700 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 cursor-pointer hover:bg-slate-700"
-                    >
-                        <option value="tight">Compacto</option>
-                        <option value="snug">Ajustado</option>
-                        <option value="normal">Normal</option>
-                        <option value="relaxed">Relaxado</option>
-                        <option value="loose">Solto</option>
-                    </select>
-                </div>
-            </div>
-
-            {/* ROW 4: Text Transform & Drop Shadow */}
-            <div className="w-full pt-1 border-t border-slate-800 flex items-center gap-3 px-1">
-                <div className="flex items-center gap-2 flex-1">
-                    <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider whitespace-nowrap">Transformação</span>
-                    <select
-                        value={currentData.textTransform || 'none'}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => onUpdate('textTransform', e.target.value)}
-                        className="flex-1 bg-slate-800 text-xs font-medium text-white border border-slate-700 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 cursor-pointer hover:bg-slate-700"
-                    >
-                        <option value="none">Nenhuma</option>
-                        <option value="uppercase">MAIÚSCULAS</option>
-                        <option value="lowercase">minúsculas</option>
-                        <option value="capitalize">Capitalizar</option>
-                    </select>
-                </div>
-
-                <div className="w-px h-5 bg-slate-700"></div>
-
-                <div className="flex items-center gap-2 flex-1">
-                    <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider whitespace-nowrap">Sombra</span>
-                    <select
-                        value={currentData.dropShadow || 'none'}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => onUpdate('dropShadow', e.target.value)}
-                        className="flex-1 bg-slate-800 text-xs font-medium text-white border border-slate-700 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 cursor-pointer hover:bg-slate-700"
-                    >
-                        <option value="none">Nenhuma</option>
-                        <option value="sm">Pequena (3D)</option>
-                        <option value="md">Média (3D)</option>
-                        <option value="lg">Grande (3D)</option>
-                        <option value="xl">Extra Grande (3D)</option>
-                    </select>
-                </div>
-            </div>
-
-            {/* ROW 5: Text Stroke (Contorno) */}
-            <div className="w-full pt-1 border-t border-slate-800 px-1">
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 flex-1">
-                        <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider whitespace-nowrap">Contorno</span>
-                        <select
-                            value={currentData.textStroke?.width || 0}
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) => onUpdate('textStroke', {
-                                ...currentData.textStroke,
-                                width: Number(e.target.value)
-                            })}
-                            className="flex-1 bg-slate-800 text-xs font-medium text-white border border-slate-700 rounded px-2 py-1 focus:ring-1 focus:ring-blue-500 cursor-pointer hover:bg-slate-700"
-                        >
-                            <option value="0">Nenhum</option>
-                            <option value="1">1px</option>
-                            <option value="2">2px</option>
-                            <option value="3">3px</option>
-                            <option value="4">4px</option>
-                            <option value="5">5px</option>
-                        </select>
+            {/* Text Color */}
+            <div className="relative" ref={colorRef}>
+                <button onClick={() => setShowColorPicker(!showColorPicker)} className="p-1.5 rounded hover:bg-gray-100" title="Cor do Texto">
+                    <div className="w-4 h-4 rounded border border-gray-300 relative">
+                        <div className="absolute bottom-0 left-0 right-0 h-2 rounded-b" style={{ backgroundColor: currentColor }} />
                     </div>
-
-                    {(currentData.textStroke?.width || 0) > 0 && (
-                        <>
-                            <div className="w-px h-5 bg-slate-700"></div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[9px] text-gray-400 whitespace-nowrap">Cor</span>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        const input = document.createElement('input');
-                                        input.type = 'color';
-                                        input.value = currentData.textStroke?.color || '#000000';
-                                        input.onchange = (evt) => {
-                                            const target = evt.target as HTMLInputElement;
-                                            onUpdate('textStroke', {
-                                                ...currentData.textStroke,
-                                                color: target.value
-                                            });
-                                        };
-                                        input.click();
-                                    }}
-                                    className="flex items-center gap-1 px-2 py-1 hover:bg-slate-700 rounded"
-                                >
-                                    <div
-                                        className="w-4 h-4 rounded border border-white/30"
-                                        style={{ backgroundColor: currentData.textStroke?.color || '#000000' }}
-                                    />
-                                    <span className="text-[9px] font-mono text-gray-300">
-                                        {currentData.textStroke?.color || '#000000'}
-                                    </span>
-                                </button>
-                            </div>
-                        </>
-                    )}
-                </div>
+                </button>
+                {showColorPicker && (
+                    <div className="absolute top-full left-0 mt-1 p-2 bg-white border border-gray-200 rounded-lg shadow-xl w-48 z-[120]">
+                        <div className="grid grid-cols-6 gap-1 mb-2">
+                            {PRESET_COLORS.map(c => (
+                                <button key={c} onClick={() => applyColor(c)} className="w-6 h-6 rounded border hover:scale-110 transition-transform" style={{ backgroundColor: c, borderColor: currentColor === c ? '#3B82F6' : '#e5e7eb' }} />
+                            ))}
+                        </div>
+                        <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-500 hover:text-gray-700">
+                            <Palette className="w-3.5 h-3.5" />
+                            <span>Personalizada</span>
+                            <input type="color" value={currentColor} onChange={(e) => applyColor(e.target.value)} className="ml-auto w-5 h-5 rounded border-0 cursor-pointer" />
+                        </label>
+                    </div>
+                )}
             </div>
+
+            <div className="w-px h-5 bg-gray-200 mx-0.5" />
+
+            {/* Letter Spacing */}
+            <Dropdown
+                trigger={
+                    <button className="flex items-center gap-1 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded">
+                        <LetterText className="w-3 h-3 text-gray-400" />
+                        <ChevronDown className="w-3 h-3 text-gray-400" />
+                    </button>
+                }
+            >
+                <div className="text-[10px] text-gray-400 uppercase tracking-wider px-2.5 py-1">Espaçamento</div>
+                {['tighter', 'tight', 'normal', 'wide', 'wider', 'widest'].map(v => (
+                    <DropdownItem key={v} label={v} active={currentLetterSpacing === v} onClick={() => onUpdate('letterSpacing', v)} />
+                ))}
+            </Dropdown>
+
+            {/* Line Height */}
+            <Dropdown
+                trigger={
+                    <button className="flex items-center gap-1 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded">
+                        <CaseSensitive className="w-3 h-3 text-gray-400" />
+                        <ChevronDown className="w-3 h-3 text-gray-400" />
+                    </button>
+                }
+            >
+                <div className="text-[10px] text-gray-400 uppercase tracking-wider px-2.5 py-1">Altura da Linha</div>
+                {['tight', 'snug', 'normal', 'relaxed', 'loose'].map(v => (
+                    <DropdownItem key={v} label={v} active={currentLineHeight === v} onClick={() => onUpdate('lineHeight', v)} />
+                ))}
+            </Dropdown>
+
+            {/* Text Transform */}
+            <Dropdown
+                trigger={
+                    <button className="flex items-center gap-1 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded">
+                        <Type className="w-3 h-3 text-gray-400" />
+                        <ChevronDown className="w-3 h-3 text-gray-400" />
+                    </button>
+                }
+            >
+                <div className="text-[10px] text-gray-400 uppercase tracking-wider px-2.5 py-1">Transformação</div>
+                {[{ value: 'none', label: 'Nenhuma' }, { value: 'uppercase', label: 'MAIÚSCULAS' }, { value: 'lowercase', label: 'minúsculas' }, { value: 'capitalize', label: 'Capitalizar' }].map(t => (
+                    <DropdownItem key={t.value} label={t.label} active={currentTextTransform === t.value} onClick={() => onUpdate('textTransform', t.value)} />
+                ))}
+            </Dropdown>
+
+            <div className="w-px h-5 bg-gray-200 mx-0.5" />
+
+            {/* Clear */}
+            <button onClick={clearFormatting} className="p-1.5 rounded text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors" title="Limpar Formatação">
+                <Eraser className="w-3.5 h-3.5" />
+            </button>
         </div>
     );
 
     if (anchorRef && typeof document !== 'undefined') {
         return createPortal(toolbarContent, document.body);
     }
-
     return toolbarContent;
 }
