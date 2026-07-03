@@ -106,19 +106,11 @@ function SortableArgumentItem({
                             onBlur={handleTitleBlur}
                             className="mt-2 p-3 bg-white border border-gray-200 rounded-lg text-sm min-h-[40px] outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all"
                             style={{
-                                color: item.titleStyle?.color || '#111827',
                                 fontSize: item.titleStyle?.fontSize ? `${item.titleStyle.fontSize}px` : undefined,
                                 fontFamily: item.titleStyle?.fontFamily,
-                                fontWeight: item.titleStyle?.bold ? 'bold' : undefined,
-                                fontStyle: item.titleStyle?.italic ? 'italic' : undefined,
-                                textDecoration: [
-                                    item.titleStyle?.underline ? 'underline' : '',
-                                    item.titleStyle?.strikethrough ? 'line-through' : ''
-                                ].filter(Boolean).join(' ') || undefined,
-                                textAlign: item.titleStyle?.align,
-                                textTransform: item.titleStyle?.textTransform,
-                                letterSpacing: item.titleStyle?.letterSpacing ? `${item.titleStyle.letterSpacing}px` : undefined,
                                 lineHeight: item.titleStyle?.lineHeight,
+                                letterSpacing: item.titleStyle?.letterSpacing ? `${item.titleStyle.letterSpacing}px` : undefined,
+                                textTransform: item.titleStyle?.textTransform as any,
                             }}
                             dangerouslySetInnerHTML={{ __html: item.titleHtml || item.title || '' }}
                         />
@@ -139,19 +131,11 @@ function SortableArgumentItem({
                             onBlur={handleDescBlur}
                             className="mt-2 p-3 bg-white border border-gray-200 rounded-lg text-sm min-h-[80px] outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all whitespace-pre-wrap"
                             style={{
-                                color: item.descriptionStyle?.color || '#374151',
                                 fontSize: item.descriptionStyle?.fontSize ? `${item.descriptionStyle.fontSize}px` : undefined,
                                 fontFamily: item.descriptionStyle?.fontFamily,
-                                fontWeight: item.descriptionStyle?.bold ? 'bold' : undefined,
-                                fontStyle: item.descriptionStyle?.italic ? 'italic' : undefined,
-                                textDecoration: [
-                                    item.descriptionStyle?.underline ? 'underline' : '',
-                                    item.descriptionStyle?.strikethrough ? 'line-through' : ''
-                                ].filter(Boolean).join(' ') || undefined,
-                                textAlign: item.descriptionStyle?.align,
-                                textTransform: item.descriptionStyle?.textTransform,
-                                letterSpacing: item.descriptionStyle?.letterSpacing ? `${item.descriptionStyle.letterSpacing}px` : undefined,
                                 lineHeight: item.descriptionStyle?.lineHeight,
+                                letterSpacing: item.descriptionStyle?.letterSpacing ? `${item.descriptionStyle.letterSpacing}px` : undefined,
+                                textTransform: item.descriptionStyle?.textTransform as any,
                             }}
                             dangerouslySetInnerHTML={{ __html: item.descriptionHtml || item.description || '' }}
                         />

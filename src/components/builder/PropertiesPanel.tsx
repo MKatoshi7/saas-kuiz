@@ -155,19 +155,11 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                         }}
                                         className="p-3 bg-white border border-gray-200 rounded-lg text-sm min-h-[40px] outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all"
                                         style={{
-                                            color: selectedComponent.data.textStyle?.color || selectedComponent.data.color || '#111827',
                                             fontSize: selectedComponent.data.textStyle?.fontSize ? `${selectedComponent.data.textStyle.fontSize}px` : undefined,
                                             fontFamily: selectedComponent.data.textStyle?.fontFamily,
-                                            fontWeight: selectedComponent.data.textStyle?.bold ? 'bold' : undefined,
-                                            fontStyle: selectedComponent.data.textStyle?.italic ? 'italic' : undefined,
-                                            textDecoration: [
-                                                selectedComponent.data.textStyle?.underline ? 'underline' : '',
-                                                selectedComponent.data.textStyle?.strikethrough ? 'line-through' : ''
-                                            ].filter(Boolean).join(' ') || undefined,
-                                            textAlign: selectedComponent.data.textStyle?.align as any,
-                                            textTransform: selectedComponent.data.textStyle?.textTransform as any,
-                                            letterSpacing: selectedComponent.data.textStyle?.letterSpacing ? `${selectedComponent.data.textStyle.letterSpacing}px` : undefined,
                                             lineHeight: selectedComponent.data.textStyle?.lineHeight,
+                                            letterSpacing: selectedComponent.data.textStyle?.letterSpacing ? `${selectedComponent.data.textStyle.letterSpacing}px` : undefined,
+                                            textTransform: selectedComponent.data.textStyle?.textTransform as any,
                                         }}
                                         dangerouslySetInnerHTML={{ __html: selectedComponent.data.textHtml || selectedComponent.data.text || '' }}
                                     />
@@ -202,19 +194,11 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                         }}
                                         className="p-3 bg-white border border-gray-200 rounded-lg text-sm min-h-[80px] outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all whitespace-pre-wrap"
                                         style={{
-                                            color: selectedComponent.data.textStyle?.color || selectedComponent.data.color || '#374151',
                                             fontSize: selectedComponent.data.textStyle?.fontSize ? `${selectedComponent.data.textStyle.fontSize}px` : undefined,
                                             fontFamily: selectedComponent.data.textStyle?.fontFamily,
-                                            fontWeight: selectedComponent.data.textStyle?.bold ? 'bold' : undefined,
-                                            fontStyle: selectedComponent.data.textStyle?.italic ? 'italic' : undefined,
-                                            textDecoration: [
-                                                selectedComponent.data.textStyle?.underline ? 'underline' : '',
-                                                selectedComponent.data.textStyle?.strikethrough ? 'line-through' : ''
-                                            ].filter(Boolean).join(' ') || undefined,
-                                            textAlign: selectedComponent.data.textStyle?.align as any,
-                                            textTransform: selectedComponent.data.textStyle?.textTransform as any,
-                                            letterSpacing: selectedComponent.data.textStyle?.letterSpacing ? `${selectedComponent.data.textStyle.letterSpacing}px` : undefined,
                                             lineHeight: selectedComponent.data.textStyle?.lineHeight,
+                                            letterSpacing: selectedComponent.data.textStyle?.letterSpacing ? `${selectedComponent.data.textStyle.letterSpacing}px` : undefined,
+                                            textTransform: selectedComponent.data.textStyle?.textTransform as any,
                                         }}
                                         dangerouslySetInnerHTML={{ __html: selectedComponent.data.textHtml || selectedComponent.data.text || '' }}
                                     />

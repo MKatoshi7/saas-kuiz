@@ -90,7 +90,6 @@ export function MiniToolbar({
                         value={style?.color || '#111827'}
                         onChange={(e) => {
                             execOnContentEditable('foreColor', e.target.value);
-                            onStyleUpdate({ ...style, color: e.target.value });
                         }}
                         className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
                         title="Cor do Texto"
