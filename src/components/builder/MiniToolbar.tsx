@@ -31,6 +31,8 @@ interface MiniToolbarProps {
     showSize?: boolean;
     showFont?: boolean;
     showSpacing?: boolean;
+    recentColors?: string[];
+    onColorChange?: (color: string) => void;
 }
 
 export function MiniToolbar({
@@ -40,6 +42,8 @@ export function MiniToolbar({
     showSize = true,
     showFont = true,
     showSpacing = true,
+    recentColors,
+    onColorChange,
 }: MiniToolbarProps) {
     const execOnContentEditable = useCallback((command: string, value?: string) => {
         document.execCommand(command, false, value);
@@ -90,6 +94,7 @@ export function MiniToolbar({
                         value={style?.color || '#111827'}
                         onChange={(e) => {
                             execOnContentEditable('foreColor', e.target.value);
+                            onColorChange?.(e.target.value);
                         }}
                         className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
                         title="Cor do Texto"
@@ -99,6 +104,27 @@ export function MiniToolbar({
                         <div className="w-5 h-1 rounded-sm mt-0.5 border border-gray-300" style={{ backgroundColor: style?.color || '#111827' }} />
                     </div>
                 </div>
+
+                {recentColors && recentColors.length > 0 && (
+                    <>
+                        <div className="w-px h-5 bg-gray-300 mx-0.5" />
+                        <div className="flex items-center gap-0.5">
+                            {recentColors.slice(0, 6).map((color) => (
+                                <button
+                                    key={color}
+                                    onClick={() => {
+                                        execOnContentEditable('foreColor', color);
+                                        onColorChange?.(color);
+                                    }}
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    className="w-4 h-4 rounded-full border border-gray-300 hover:scale-125 transition-transform"
+                                    style={{ backgroundColor: color }}
+                                    title={color}
+                                />
+                            ))}
+                        </div>
+                    </>
+                )}
 
                 <div className="w-px h-5 bg-gray-300 mx-0.5" />
 

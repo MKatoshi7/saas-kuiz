@@ -15,6 +15,7 @@ const DEFAULT_COLORS = [
 export function BarChartRenderer({ component }: BarChartRendererProps) {
     const {
         title,
+        titleHtml,
         items = [],
         orientation = 'horizontal',
         showValues = true,
@@ -41,7 +42,11 @@ export function BarChartRenderer({ component }: BarChartRendererProps) {
             <div className="w-full flex flex-col items-center py-6">
                 {title && (
                     <h3 className="text-lg font-bold mb-4 text-center" style={{ color: titleColor }}>
-                        {title}
+                        {titleHtml ? (
+                            <span dangerouslySetInnerHTML={{ __html: titleHtml }} />
+                        ) : (
+                            title
+                        )}
                     </h3>
                 )}
 
@@ -96,7 +101,11 @@ export function BarChartRenderer({ component }: BarChartRendererProps) {
                                         />
                                     </div>
                                     <span className="text-[10px] text-gray-500 text-center max-w-[60px] truncate">
-                                        {item.label}
+                                        {item.labelHtml ? (
+                                            <span dangerouslySetInnerHTML={{ __html: item.labelHtml }} />
+                                        ) : (
+                                            item.label
+                                        )}
                                     </span>
                                 </div>
                             );
@@ -112,7 +121,11 @@ export function BarChartRenderer({ component }: BarChartRendererProps) {
         <div className="w-full py-6">
             {title && (
                 <h3 className="text-lg font-bold mb-4 text-center" style={{ color: titleColor }}>
-                    {title}
+                    {titleHtml ? (
+                        <span dangerouslySetInnerHTML={{ __html: titleHtml }} />
+                    ) : (
+                        title
+                    )}
                 </h3>
             )}
 
@@ -134,7 +147,11 @@ export function BarChartRenderer({ component }: BarChartRendererProps) {
                             }}
                         >
                             <span className="text-sm text-gray-700 w-24 text-right truncate flex-shrink-0">
-                                {item.label}
+                                {item.labelHtml ? (
+                                    <span dangerouslySetInnerHTML={{ __html: item.labelHtml }} />
+                                ) : (
+                                    item.label
+                                )}
                             </span>
                             <div
                                 className="flex-1 rounded-lg overflow-hidden"

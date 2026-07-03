@@ -1,5 +1,7 @@
 // Core types for the Funnel Builder system
 
+import type { MiniToolbarStyle } from '@/components/builder/MiniToolbar';
+
 // ===========================
 // Component Types
 // ===========================
@@ -144,6 +146,20 @@ export interface ButtonComponent extends BaseComponent {
   type: 'button';
   data: {
     text: string;
+    textHtml?: string;
+    textStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     action: ActionType;
     targetStepId?: string; // For jump_to_step action
     targetUrl?: string; // For open_url action
@@ -200,6 +216,20 @@ export interface VSLVideoComponent extends BaseComponent {
     showProgressBar?: boolean;
     progressBarColor?: string;
     playButtonText?: string;
+    playButtonTextHtml?: string;
+    playButtonTextStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     playButtonColor?: string;
     restartOnClick?: boolean;
     unmuteOnClick?: boolean;
@@ -244,6 +274,20 @@ export interface InputComponent extends BaseComponent {
   data: {
     inputType: 'text' | 'email' | 'tel' | 'number' | 'date' | 'textarea';
     label?: string;
+    labelHtml?: string;
+    labelStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     placeholder?: string;
     required?: boolean;
     variableName: string; // For data collection (e.g., "user_email")
@@ -256,8 +300,50 @@ export interface LoadingComponent extends BaseComponent {
   type: 'loading';
   data: {
     headline?: string;
+    headlineHtml?: string;
+    headlineStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     subheadline?: string;
+    subheadlineHtml?: string;
+    subheadlineStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     endText?: string;
+    endTextHtml?: string;
+    endTextStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     duration: number;
     barColor?: string;
     trackColor?: string;
@@ -336,7 +422,35 @@ export interface AudioComponent extends BaseComponent {
     loop?: boolean;
     avatarUrl?: string;
     senderName?: string;
+    senderNameHtml?: string;
+    senderNameStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     audioName?: string;
+    audioNameHtml?: string;
+    audioNameStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     playerStyle?: 'whatsapp' | 'mp3' | 'modern' | 'simple' | 'whatsapp2' | 'streaming' | 'simple2';
     variableName?: string;
   };
@@ -347,6 +461,20 @@ export interface SliderComponent extends BaseComponent {
   type: 'slider';
   data: {
     label: string;
+    labelHtml?: string;
+    labelStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     min: number;
     max: number;
     step?: number;
@@ -364,6 +492,20 @@ export interface AlertComponent extends BaseComponent {
     variant: 'warning' | 'danger' | 'info' | 'success';
     type?: 'warning' | 'danger' | 'info' | 'success'; // Alias for variant
     title?: string;
+    titleHtml?: string;
+    titleStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     backgroundColor?: string;
     borderColor?: string;
     textColor?: string;
@@ -382,8 +524,50 @@ export interface TestimonialComponent extends BaseComponent {
   type: 'testimonial';
   data: {
     text: string;
+    textHtml?: string;
+    textStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     author: string;
+    authorHtml?: string;
+    authorStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     role?: string;
+    roleHtml?: string;
+    roleStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     avatarUrl?: string;
     stars?: number;
     variableName?: string;
@@ -395,17 +579,101 @@ export interface PricingComponent extends BaseComponent {
   type: 'pricing';
   data: {
     title: string;
+    titleHtml?: string;
+    titleStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     price: string;
     originalPrice?: string;
     description?: string;
+    descriptionHtml?: string;
+    descriptionStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     features: string[];
+    featuresHtml?: string;
+    featuresStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     buttonText: string;
+    buttonTextHtml?: string;
+    buttonTextStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     buttonUrl?: string; // URL de redirecionamento ao clicar
     layout?: 'vertical' | 'compact';
     variant?: 'default' | 'minimal' | 'cards' | 'highlight' | 'flat';
     badge?: string;
+    badgeHtml?: string;
+    badgeStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     discount?: string;
     condition?: string;
+    conditionHtml?: string;
+    conditionStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     recommended?: boolean;
     highlightColor?: string;
     variableName?: string;
@@ -505,7 +773,11 @@ export interface ArgumentComponent extends BaseComponent {
 export interface FAQItem {
   id: string;
   question: string;
+  questionHtml?: string;
+  questionStyle?: MiniToolbarStyle;
   answer: string;
+  answerHtml?: string;
+  answerStyle?: MiniToolbarStyle;
 }
 
 export interface FAQComponent extends BaseComponent {
@@ -526,7 +798,9 @@ export interface FooterComponent extends BaseComponent {
   type: 'footer';
   data: {
     text: string; // Copyright text
-    links?: Array<{ id: string; label: string; url: string }>;
+    textHtml?: string;
+    textStyle?: MiniToolbarStyle;
+    links?: Array<{ id: string; label: string; labelHtml?: string; labelStyle?: MiniToolbarStyle; url: string }>;
     socialLinks?: Array<{ id: string; platform: 'instagram' | 'facebook' | 'twitter' | 'youtube' | 'linkedin'; url: string }>;
     backgroundColor?: string;
     textColor?: string;
@@ -774,6 +1048,8 @@ export interface BuilderState {
 export interface ChartDataItem {
   id: string;
   label: string;
+  labelHtml?: string;
+  labelStyle?: MiniToolbarStyle;
   value: number;
   color?: string;
 }
@@ -782,6 +1058,8 @@ export interface PieChartComponent extends BaseComponent {
   type: 'pie-chart';
   data: {
     title?: string;
+    titleHtml?: string;
+    titleStyle?: MiniToolbarStyle;
     items: ChartDataItem[];
     showLegend?: boolean;
     showPercentage?: boolean;
@@ -796,6 +1074,8 @@ export interface BarChartComponent extends BaseComponent {
   type: 'bar-chart';
   data: {
     title?: string;
+    titleHtml?: string;
+    titleStyle?: MiniToolbarStyle;
     items: ChartDataItem[];
     orientation?: 'horizontal' | 'vertical';
     showValues?: boolean;

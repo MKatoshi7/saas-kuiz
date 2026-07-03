@@ -11,6 +11,7 @@ interface VSLVideoProps {
     showProgressBar?: boolean;
     progressBarColor?: string;
     playButtonText?: string;
+    playButtonTextHtml?: string;
     playButtonColor?: string;
     restartOnClick?: boolean;
     unmuteOnClick?: boolean;
@@ -34,6 +35,7 @@ export function VSLVideo({
     showProgressBar = true,
     progressBarColor = '#2563EB',
     playButtonText = 'CLIQUE PARA OUVIR',
+    playButtonTextHtml,
     playButtonColor = '#2563EB',
     restartOnClick = true,
     unmuteOnClick = true,
@@ -113,7 +115,7 @@ export function VSLVideo({
                             className="px-6 py-3 rounded-full text-white font-bold shadow-lg text-lg tracking-wide"
                             style={{ backgroundColor: playButtonColor }}
                         >
-                            {playButtonText}
+                            {playButtonTextHtml ? <span dangerouslySetInnerHTML={{ __html: playButtonTextHtml }} /> : playButtonText}
                         </div>
                     </div>
 

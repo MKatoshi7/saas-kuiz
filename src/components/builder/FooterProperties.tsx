@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Plus, X } from 'lucide-react';
 import { FooterComponent } from '@/types/funnel';
+import { RichTextField } from './RichTextField';
 
 export function FooterProperties({ component }: { component: FooterComponent }) {
     const updateComponent = useBuilderStore((state) => state.updateComponent);
@@ -44,11 +45,19 @@ export function FooterProperties({ component }: { component: FooterComponent }) 
     return (
         <div className="space-y-6">
             <div className="space-y-2">
-                <Label>Texto de Copyright</Label>
-                <Input
-                    value={component.data.text || ''}
-                    onChange={(e) => handleUpdate('text', e.target.value)}
+                <RichTextField
+                    label="Texto de Copyright"
+                    value={component.data.text}
+                    htmlValue={component.data.textHtml}
+                    style={component.data.textStyle}
+                    onUpdate={(text, html, style) => {
+                        handleUpdate('text', text);
+                        handleUpdate('textHtml', html);
+                        handleUpdate('textStyle', style);
+                    }}
                     placeholder="© 2024 Sua Empresa"
+                    minHeight={36}
+                    compact
                 />
             </div>
 
@@ -64,11 +73,21 @@ export function FooterProperties({ component }: { component: FooterComponent }) 
                     {links.map((link) => (
                         <div key={link.id} className="flex items-start gap-2 p-2 bg-gray-50 rounded border border-gray-100">
                             <div className="flex-1 space-y-2">
-                                <Input
+                                <RichTextField
                                     value={link.label}
-                                    onChange={(e) => updateLink(link.id, 'label', e.target.value)}
+                                    htmlValue={(link as any).labelHtml}
+                                    style={(link as any).labelStyle}
+                                    onUpdate={(text, html, style) => {
+                                        const newLinks = links.map(l =>
+                                            l.id === link.id ? { ...l, label: text, labelHtml: html, labelStyle: style } : l
+                                        );
+                                        handleUpdate('links', newLinks);
+                                    }}
                                     placeholder="Nome do Link"
-                                    className="h-7 text-xs"
+                                    minHeight={28}
+                                    compact
+                                    showPresets={false}
+                                    showRecentColors={false}
                                 />
                                 <Input
                                     value={link.url}

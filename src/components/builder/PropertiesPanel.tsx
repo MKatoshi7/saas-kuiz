@@ -19,6 +19,7 @@ import { RichTextEditor } from './RichTextEditor';
 import { FullTextProperties } from './FullTextProperties';
 import { ColorPickerWithPalette } from './ColorPickerWithPalette';
 import { MiniToolbar } from './MiniToolbar';
+import { RichTextField } from './RichTextField';
 import { ImageUploadWithPreview } from './ImageUploadWithPreview';
 import { VideoUploadWithPreview } from './VideoUploadWithPreview';
 import EmojiPicker from 'emoji-picker-react';
@@ -139,31 +140,19 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                     <TabsContent value="content" className="space-y-4 mt-4">
                         {selectedComponent.type === 'headline' && (
                             <>
-                                <div className="space-y-3">
-                                    <MiniToolbar
-                                        style={selectedComponent.data.textStyle}
-                                        onStyleUpdate={(s) => handleUpdate('textStyle', s)}
-                                        label="Estilo do Título"
-                                    />
-                                    <div
-                                        contentEditable
-                                        suppressContentEditableWarning
-                                        onBlur={(e) => {
-                                            const target = e.currentTarget;
-                                            handleUpdate('text', target.innerText);
-                                            handleUpdate('textHtml', target.innerHTML);
-                                        }}
-                                        className="p-3 bg-white border border-gray-200 rounded-lg text-sm min-h-[40px] outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all"
-                                        style={{
-                                            fontSize: selectedComponent.data.textStyle?.fontSize ? `${selectedComponent.data.textStyle.fontSize}px` : undefined,
-                                            fontFamily: selectedComponent.data.textStyle?.fontFamily,
-                                            lineHeight: selectedComponent.data.textStyle?.lineHeight,
-                                            letterSpacing: selectedComponent.data.textStyle?.letterSpacing ? `${selectedComponent.data.textStyle.letterSpacing}px` : undefined,
-                                            textTransform: selectedComponent.data.textStyle?.textTransform as any,
-                                        }}
-                                        dangerouslySetInnerHTML={{ __html: selectedComponent.data.textHtml || selectedComponent.data.text || '' }}
-                                    />
-                                </div>
+                                <RichTextField
+                                    label="Texto"
+                                    value={selectedComponent.data.text}
+                                    htmlValue={selectedComponent.data.textHtml}
+                                    style={selectedComponent.data.textStyle}
+                                    onUpdate={(text, html, style) => {
+                                        handleUpdate('text', text);
+                                        if (html) handleUpdate('textHtml', html);
+                                        if (style) handleUpdate('textStyle', style);
+                                    }}
+                                    minHeight={40}
+                                    placeholder="Digite o título..."
+                                />
 
                                 <div className="pt-3 border-t border-gray-200 mt-3">
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Nome da Variável (Analytics)</label>
@@ -178,32 +167,19 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
 
                         {selectedComponent.type === 'paragraph' && (
                             <>
-                                <div className="space-y-3">
-                                    <MiniToolbar
-                                        style={selectedComponent.data.textStyle}
-                                        onStyleUpdate={(s) => handleUpdate('textStyle', s)}
-                                        label="Estilo do Parágrafo"
-                                    />
-                                    <div
-                                        contentEditable
-                                        suppressContentEditableWarning
-                                        onBlur={(e) => {
-                                            const target = e.currentTarget;
-                                            handleUpdate('text', target.innerText);
-                                            handleUpdate('textHtml', target.innerHTML);
-                                        }}
-                                        className="p-3 bg-white border border-gray-200 rounded-lg text-sm min-h-[80px] outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all whitespace-pre-wrap"
-                                        style={{
-                                            fontSize: selectedComponent.data.textStyle?.fontSize ? `${selectedComponent.data.textStyle.fontSize}px` : undefined,
-                                            fontFamily: selectedComponent.data.textStyle?.fontFamily,
-                                            lineHeight: selectedComponent.data.textStyle?.lineHeight,
-                                            letterSpacing: selectedComponent.data.textStyle?.letterSpacing ? `${selectedComponent.data.textStyle.letterSpacing}px` : undefined,
-                                            textTransform: selectedComponent.data.textStyle?.textTransform as any,
-                                        }}
-                                        dangerouslySetInnerHTML={{ __html: selectedComponent.data.textHtml || selectedComponent.data.text || '' }}
-                                    />
-                                    <p className="text-[10px] text-gray-400">Use Enter para quebras de linha. O texto formatado será preservado.</p>
-                                </div>
+                                <RichTextField
+                                    label="Texto"
+                                    value={selectedComponent.data.text}
+                                    htmlValue={selectedComponent.data.textHtml}
+                                    style={selectedComponent.data.textStyle}
+                                    onUpdate={(text, html, style) => {
+                                        handleUpdate('text', text);
+                                        if (html) handleUpdate('textHtml', html);
+                                        if (style) handleUpdate('textStyle', style);
+                                    }}
+                                    minHeight={80}
+                                    placeholder="Digite o parágrafo..."
+                                />
 
                                 <div className="pt-3 border-t border-gray-200 mt-3">
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Nome da Variável (Analytics)</label>
@@ -356,16 +332,21 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
 
                         {selectedComponent.type === 'button' && (
                             <>
-                                <div>
-                                    <label className="text-xs font-medium text-gray-700 mb-2 block">
-                                        Texto do Botão
-                                    </label>
-                                    <Input
-                                        value={selectedComponent.data.text}
-                                        onChange={(e) => handleUpdate('text', e.target.value)}
-                                        placeholder="Clique aqui"
-                                    />
-                                </div>
+                                <RichTextField
+                                    label="Texto do Botão"
+                                    value={selectedComponent.data.text}
+                                    htmlValue={selectedComponent.data.textHtml}
+                                    style={selectedComponent.data.textStyle}
+                                    onUpdate={(text, html, style) => {
+                                        handleUpdate('text', text);
+                                        if (html) handleUpdate('textHtml', html);
+                                        if (style) handleUpdate('textStyle', style);
+                                    }}
+                                    minHeight={36}
+                                    placeholder="Texto do botão"
+                                    compact
+                                    showPresets={false}
+                                />
 
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">
@@ -560,10 +541,19 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                 </div>
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Rótulo (Label)</label>
-                                    <Input
-                                        value={selectedComponent.data.label || ''}
-                                        onChange={(e) => handleUpdate('label', e.target.value)}
-                                        placeholder="Ex: Nome Completo"
+                                    <RichTextField
+                                        label="Label do Campo"
+                                        value={selectedComponent.data.label}
+                                        htmlValue={selectedComponent.data.labelHtml}
+                                        style={selectedComponent.data.labelStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('label', text);
+                                            if (html) handleUpdate('labelHtml', html);
+                                            if (style) handleUpdate('labelStyle', style);
+                                        }}
+                                        minHeight={36}
+                                        placeholder="Nome do campo"
+                                        compact
                                     />
                                 </div>
                                 <div>
@@ -589,9 +579,19 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                             <>
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Rótulo</label>
-                                    <Input
-                                        value={selectedComponent.data.label || ''}
-                                        onChange={(e) => handleUpdate('label', e.target.value)}
+                                    <RichTextField
+                                        label="Label do Slider"
+                                        value={selectedComponent.data.label}
+                                        htmlValue={selectedComponent.data.labelHtml}
+                                        style={selectedComponent.data.labelStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('label', text);
+                                            if (html) handleUpdate('labelHtml', html);
+                                            if (style) handleUpdate('labelStyle', style);
+                                        }}
+                                        minHeight={36}
+                                        placeholder="Label do slider"
+                                        compact
                                     />
                                 </div>
                                 <div className="grid grid-cols-2 gap-2">
@@ -740,10 +740,20 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
 
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Nome do Áudio</label>
-                                    <Input
-                                        value={selectedComponent.data.audioName || ''}
-                                        onChange={(e) => handleUpdate('audioName', e.target.value)}
-                                        placeholder="Ex: Áudio de apresentação"
+                                    <RichTextField
+                                        label="Nome do Áudio"
+                                        value={selectedComponent.data.audioName}
+                                        htmlValue={selectedComponent.data.audioNameHtml}
+                                        style={selectedComponent.data.audioNameStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('audioName', text);
+                                            if (html) handleUpdate('audioNameHtml', html);
+                                            if (style) handleUpdate('audioNameStyle', style);
+                                        }}
+                                        minHeight={36}
+                                        placeholder="Nome da faixa"
+                                        compact
+                                        showPresets={false}
                                     />
                                 </div>
 
@@ -751,10 +761,20 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                     <>
                                         <div>
                                             <label className="text-xs font-medium text-gray-700 mb-2 block">Nome do Remetente</label>
-                                            <Input
-                                                value={selectedComponent.data.senderName || ''}
-                                                onChange={(e) => handleUpdate('senderName', e.target.value)}
-                                                placeholder="Ex: João Silva"
+                                            <RichTextField
+                                                label="Nome do Remetente"
+                                                value={selectedComponent.data.senderName}
+                                                htmlValue={selectedComponent.data.senderNameHtml}
+                                                style={selectedComponent.data.senderNameStyle}
+                                                onUpdate={(text, html, style) => {
+                                                    handleUpdate('senderName', text);
+                                                    if (html) handleUpdate('senderNameHtml', html);
+                                                    if (style) handleUpdate('senderNameStyle', style);
+                                                }}
+                                                minHeight={36}
+                                                placeholder="Remetente"
+                                                compact
+                                                showPresets={false}
                                             />
                                         </div>
 
@@ -798,10 +818,19 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
 
                                     <div>
                                         <label className="text-xs font-medium text-gray-700 mb-2 block">Título do Destaque</label>
-                                        <Input
-                                            value={selectedComponent.data.title || ''}
-                                            onChange={(e) => handleUpdate('title', e.target.value)}
-                                            placeholder="Garantia de..."
+                                        <RichTextField
+                                            label="Título"
+                                            value={selectedComponent.data.title}
+                                            htmlValue={selectedComponent.data.titleHtml}
+                                            style={selectedComponent.data.titleStyle}
+                                            onUpdate={(text, html, style) => {
+                                                handleUpdate('title', text);
+                                                if (html) handleUpdate('titleHtml', html);
+                                                if (style) handleUpdate('titleStyle', style);
+                                            }}
+                                            minHeight={36}
+                                            placeholder="Título do destaque"
+                                            compact
                                         />
                                     </div>
 
@@ -966,29 +995,47 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
 
                         {selectedComponent.type === 'testimonial' && (
                             <>
-                                <div>
-                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Depoimento</label>
-                                    <textarea
-                                        className="w-full border border-gray-300 rounded-md p-2 text-sm"
-                                        value={selectedComponent.data.text || ''}
-                                        onChange={(e) => handleUpdate('text', e.target.value)}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Autor</label>
-                                    <Input
-                                        value={selectedComponent.data.author || ''}
-                                        onChange={(e) => handleUpdate('author', e.target.value)}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Função/Cargo</label>
-                                    <Input
-                                        value={selectedComponent.data.role || ''}
-                                        onChange={(e) => handleUpdate('role', e.target.value)}
-                                        placeholder="Ex: CEO, Cliente VIP"
-                                    />
-                                </div>
+                                <RichTextField
+                                    label="Depoimento"
+                                    value={selectedComponent.data.text}
+                                    htmlValue={selectedComponent.data.textHtml}
+                                    style={selectedComponent.data.textStyle}
+                                    onUpdate={(text, html, style) => {
+                                        handleUpdate('text', text);
+                                        if (html) handleUpdate('textHtml', html);
+                                        if (style) handleUpdate('textStyle', style);
+                                    }}
+                                    minHeight={80}
+                                    placeholder="Texto do depoimento..."
+                                />
+                                <RichTextField
+                                    label="Autor"
+                                    value={selectedComponent.data.author}
+                                    htmlValue={selectedComponent.data.authorHtml}
+                                    style={selectedComponent.data.authorStyle}
+                                    onUpdate={(text, html, style) => {
+                                        handleUpdate('author', text);
+                                        if (html) handleUpdate('authorHtml', html);
+                                        if (style) handleUpdate('authorStyle', style);
+                                    }}
+                                    minHeight={36}
+                                    placeholder="Nome do autor"
+                                    compact
+                                />
+                                <RichTextField
+                                    label="Cargo/Função"
+                                    value={selectedComponent.data.role}
+                                    htmlValue={selectedComponent.data.roleHtml}
+                                    style={selectedComponent.data.roleStyle}
+                                    onUpdate={(text, html, style) => {
+                                        handleUpdate('role', text);
+                                        if (html) handleUpdate('roleHtml', html);
+                                        if (style) handleUpdate('roleStyle', style);
+                                    }}
+                                    minHeight={36}
+                                    placeholder="Cargo ou função"
+                                    compact
+                                />
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Avatar</label>
                                     <div className="flex items-center gap-3">
@@ -1079,20 +1126,36 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
 
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Título</label>
-                                    <Input
-                                        value={selectedComponent.data.title || ''}
-                                        onChange={(e) => handleUpdate('title', e.target.value)}
-                                        placeholder="Plano PRO"
+                                    <RichTextField
+                                        label="Nome do Plano"
+                                        value={selectedComponent.data.title}
+                                        htmlValue={selectedComponent.data.titleHtml}
+                                        style={selectedComponent.data.titleStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('title', text);
+                                            if (html) handleUpdate('titleHtml', html);
+                                            if (style) handleUpdate('titleStyle', style);
+                                        }}
+                                        minHeight={36}
+                                        placeholder="Nome do plano"
+                                        compact
                                     />
                                 </div>
 
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Descrição Curta</label>
-                                    <textarea
-                                        className="w-full border border-gray-300 rounded-md p-2 text-sm h-20"
-                                        value={selectedComponent.data.description || ''}
-                                        onChange={(e) => handleUpdate('description', e.target.value)}
-                                        placeholder="O melhor plano para começar..."
+                                    <RichTextField
+                                        label="Descrição"
+                                        value={selectedComponent.data.description}
+                                        htmlValue={selectedComponent.data.descriptionHtml}
+                                        style={selectedComponent.data.descriptionStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('description', text);
+                                            if (html) handleUpdate('descriptionHtml', html);
+                                            if (style) handleUpdate('descriptionStyle', style);
+                                        }}
+                                        minHeight={60}
+                                        placeholder="Descrição do plano..."
                                     />
                                 </div>
 
@@ -1123,28 +1186,58 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
 
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Badge/Tag</label>
-                                    <Input
-                                        value={selectedComponent.data.badge || ''}
-                                        onChange={(e) => handleUpdate('badge', e.target.value)}
-                                        placeholder="Mais Popular"
+                                    <RichTextField
+                                        label="Badge"
+                                        value={selectedComponent.data.badge}
+                                        htmlValue={selectedComponent.data.badgeHtml}
+                                        style={selectedComponent.data.badgeStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('badge', text);
+                                            if (html) handleUpdate('badgeHtml', html);
+                                            if (style) handleUpdate('badgeStyle', style);
+                                        }}
+                                        minHeight={36}
+                                        placeholder="Ex: MAIS POPULAR"
+                                        compact
+                                        showPresets={false}
                                     />
                                 </div>
 
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Condição / Rodapé</label>
-                                    <Input
-                                        value={selectedComponent.data.condition || ''}
-                                        onChange={(e) => handleUpdate('condition', e.target.value)}
-                                        placeholder="Pagamento único, acesso vitalício"
+                                    <RichTextField
+                                        label="Condição"
+                                        value={selectedComponent.data.condition}
+                                        htmlValue={selectedComponent.data.conditionHtml}
+                                        style={selectedComponent.data.conditionStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('condition', text);
+                                            if (html) handleUpdate('conditionHtml', html);
+                                            if (style) handleUpdate('conditionStyle', style);
+                                        }}
+                                        minHeight={36}
+                                        placeholder="Ex: Preço promocional"
+                                        compact
+                                        showPresets={false}
                                     />
                                 </div>
 
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Texto do Botão</label>
-                                    <Input
-                                        value={selectedComponent.data.buttonText || ''}
-                                        onChange={(e) => handleUpdate('buttonText', e.target.value)}
-                                        placeholder="Quero este plano"
+                                    <RichTextField
+                                        label="Texto do Botão"
+                                        value={selectedComponent.data.buttonText}
+                                        htmlValue={selectedComponent.data.buttonTextHtml}
+                                        style={selectedComponent.data.buttonTextStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('buttonText', text);
+                                            if (html) handleUpdate('buttonTextHtml', html);
+                                            if (style) handleUpdate('buttonTextStyle', style);
+                                        }}
+                                        minHeight={36}
+                                        placeholder="Texto do botão"
+                                        compact
+                                        showPresets={false}
                                     />
                                 </div>
 
@@ -1159,12 +1252,19 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                 </div>
 
                                 <div>
-                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Features (separadas por vírgula)</label>
-                                    <textarea
-                                        className="w-full border border-gray-300 rounded-md p-2 text-sm h-24"
-                                        value={selectedComponent.data.features?.join(', ') || ''}
-                                        onChange={(e) => handleUpdate('features', e.target.value.split(',').map(s => s.trim()))}
-                                        placeholder="Acesso Imediato, Suporte 24h, Garantia de 7 dias"
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Features (uma por linha)</label>
+                                    <RichTextField
+                                        label="Features (uma por linha)"
+                                        value={Array.isArray(selectedComponent.data.features) ? selectedComponent.data.features.join('\n') : (selectedComponent.data.features as any || '')}
+                                        htmlValue={selectedComponent.data.featuresHtml}
+                                        style={selectedComponent.data.featuresStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('features', text.split('\n').filter(s => s.trim()));
+                                            if (html) handleUpdate('featuresHtml', html);
+                                            if (style) handleUpdate('featuresStyle', style);
+                                        }}
+                                        minHeight={80}
+                                        placeholder={"Feature 1\nFeature 2\nFeature 3"}
                                     />
                                 </div>
 
@@ -1230,28 +1330,55 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
 
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Título Principal</label>
-                                    <Input
-                                        value={selectedComponent.data.headline || ''}
-                                        onChange={(e) => handleUpdate('headline', e.target.value)}
-                                        placeholder="Analisando seu perfil..."
+                                    <RichTextField
+                                        label="Headline"
+                                        value={selectedComponent.data.headline}
+                                        htmlValue={selectedComponent.data.headlineHtml}
+                                        style={selectedComponent.data.headlineStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('headline', text);
+                                            if (html) handleUpdate('headlineHtml', html);
+                                            if (style) handleUpdate('headlineStyle', style);
+                                        }}
+                                        minHeight={36}
+                                        placeholder="Carregando..."
+                                        compact
                                     />
                                 </div>
 
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Subtítulo</label>
-                                    <Input
-                                        value={selectedComponent.data.subheadline || ''}
-                                        onChange={(e) => handleUpdate('subheadline', e.target.value)}
-                                        placeholder="Isso pode levar alguns segundos"
+                                    <RichTextField
+                                        label="Sub-headline"
+                                        value={selectedComponent.data.subheadline}
+                                        htmlValue={selectedComponent.data.subheadlineHtml}
+                                        style={selectedComponent.data.subheadlineStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('subheadline', text);
+                                            if (html) handleUpdate('subheadlineHtml', html);
+                                            if (style) handleUpdate('subheadlineStyle', style);
+                                        }}
+                                        minHeight={36}
+                                        placeholder="Aguarde um momento..."
+                                        compact
                                     />
                                 </div>
 
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Texto ao Completar</label>
-                                    <Input
-                                        value={selectedComponent.data.endText || ''}
-                                        onChange={(e) => handleUpdate('endText', e.target.value)}
-                                        placeholder="Concluído!"
+                                    <RichTextField
+                                        label="Texto Final"
+                                        value={selectedComponent.data.endText}
+                                        htmlValue={selectedComponent.data.endTextHtml}
+                                        style={selectedComponent.data.endTextStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('endText', text);
+                                            if (html) handleUpdate('endTextHtml', html);
+                                            if (style) handleUpdate('endTextStyle', style);
+                                        }}
+                                        minHeight={36}
+                                        placeholder="Pronto!"
+                                        compact
                                     />
                                 </div>
 
@@ -1544,9 +1671,20 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
 
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Texto do Botão de Play</label>
-                                    <Input
-                                        value={selectedComponent.data.playButtonText || 'CLIQUE PARA OUVIR'}
-                                        onChange={(e) => handleUpdate('playButtonText', e.target.value)}
+                                    <RichTextField
+                                        label="Texto do Botão"
+                                        value={selectedComponent.data.playButtonText}
+                                        htmlValue={selectedComponent.data.playButtonTextHtml}
+                                        style={selectedComponent.data.playButtonTextStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('playButtonText', text);
+                                            if (html) handleUpdate('playButtonTextHtml', html);
+                                            if (style) handleUpdate('playButtonTextStyle', style);
+                                        }}
+                                        minHeight={36}
+                                        placeholder="▶ Assistir Agora"
+                                        compact
+                                        showPresets={false}
                                     />
                                 </div>
 

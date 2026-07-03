@@ -225,7 +225,7 @@ function FaqAccordion({ items, headline, width, backgroundColor, borderColor }: 
                                     }}
                                 >
                                     <span className="font-semibold text-[15px] pr-4" style={{ color: '#1a1a2e' }}>
-                                        {item.question}
+                                        <span dangerouslySetInnerHTML={{ __html: item.questionHtml || item.question }} />
                                     </span>
                                     <span
                                         className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full transition-all duration-300"
@@ -266,7 +266,7 @@ function FaqAccordion({ items, headline, width, backgroundColor, borderColor }: 
                                             paddingTop: '14px',
                                         }}
                                     >
-                                        {item.answer}
+                                        <span dangerouslySetInnerHTML={{ __html: item.answerHtml || item.answer }} />
                                     </div>
                                 </div>
                             </div>
@@ -484,7 +484,11 @@ function PublicComponentRenderer({
                         marginBottom: is3D ? '4px' : '0',
                     }}
                 >
-                    {interpolateText ? interpolateText(data.text || 'Continuar') : (data.text || 'Continuar')}
+                    {data.textHtml ? (
+                        <span dangerouslySetInnerHTML={{ __html: interpolateText ? interpolateText(data.textHtml) : data.textHtml }} />
+                    ) : (
+                        interpolateText ? interpolateText(data.text || 'Continuar') : (data.text || 'Continuar')
+                    )}
                 </DelayedButton>
             );
 
@@ -544,6 +548,7 @@ function PublicComponentRenderer({
                         showProgressBar={data.showProgressBar}
                         progressBarColor={data.progressBarColor}
                         playButtonText={data.playButtonText}
+                        playButtonTextHtml={data.playButtonTextHtml}
                         playButtonColor={data.playButtonColor}
                         restartOnClick={data.restartOnClick}
                         unmuteOnClick={data.unmuteOnClick}
@@ -753,11 +758,11 @@ function PublicComponentRenderer({
                                     {icon}
                                 </span>
                             )}
-                            <div className="flex-1 min-w-0">
+                             <div className="flex-1 min-w-0">
                                 {title && (
                                     <p className={`font-semibold leading-tight mb-0.5 ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`}
                                        style={{ color: textColor }}>
-                                        {interpolateText ? interpolateText(title) : title}
+                                        {data.titleHtml ? <span dangerouslySetInnerHTML={{ __html: interpolateText ? interpolateText(data.titleHtml) : data.titleHtml }} /> : (interpolateText ? interpolateText(title) : title)}
                                     </p>
                                 )}
                                 {text && (
@@ -788,11 +793,11 @@ function PublicComponentRenderer({
                                     {icon}
                                 </span>
                             )}
-                            <div className="flex-1 min-w-0">
+                             <div className="flex-1 min-w-0">
                                 {title && (
                                     <p className={`font-semibold leading-tight mb-0.5 ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`}
                                        style={{ color: textColor }}>
-                                        {interpolateText ? interpolateText(title) : title}
+                                        {data.titleHtml ? <span dangerouslySetInnerHTML={{ __html: interpolateText ? interpolateText(data.titleHtml) : data.titleHtml }} /> : (interpolateText ? interpolateText(title) : title)}
                                     </p>
                                 )}
                                 {text && (
@@ -823,7 +828,7 @@ function PublicComponentRenderer({
                             <div className="flex-1 min-w-0">
                                 {title && (
                                     <p className={`font-semibold leading-tight mb-0.5 text-white ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`}>
-                                        {interpolateText ? interpolateText(title) : title}
+                                        {data.titleHtml ? <span dangerouslySetInnerHTML={{ __html: interpolateText ? interpolateText(data.titleHtml) : data.titleHtml }} /> : (interpolateText ? interpolateText(title) : title)}
                                     </p>
                                 )}
                                 {text && (
@@ -850,12 +855,12 @@ function PublicComponentRenderer({
                             </span>
                         )}
                         <div className="flex-1 min-w-0">
-                            {title && (
-                                <p className={`font-semibold leading-tight mb-0.5 ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`}
-                                   style={{ color: textColor }}>
-                                    {interpolateText ? interpolateText(title) : title}
-                                </p>
-                            )}
+                                {title && (
+                                    <p className={`font-semibold leading-tight mb-0.5 ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`}
+                                       style={{ color: textColor }}>
+                                        {data.titleHtml ? <span dangerouslySetInnerHTML={{ __html: interpolateText ? interpolateText(data.titleHtml) : data.titleHtml }} /> : (interpolateText ? interpolateText(title) : title)}
+                                    </p>
+                                )}
                             {text && (
                                 <div className={`${fontSizeMap[alertFontSize] || fontSizeMap.sm} leading-relaxed opacity-80`}
                                      style={{ color: textColor }}
@@ -883,14 +888,20 @@ function PublicComponentRenderer({
                             <Star key={i} className="w-4 h-4 fill-current" />
                         ))}
                     </div>
-                    <p className="text-gray-600 italic mb-4">"{data.text}"</p>
+                    <p className="text-gray-600 italic mb-4">
+                        &ldquo;{data.textHtml ? <span dangerouslySetInnerHTML={{ __html: data.textHtml }} /> : data.text}&rdquo;
+                    </p>
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">
                             {data.author?.charAt(0) || 'A'}
                         </div>
                         <div>
-                            <div className="text-sm font-bold text-gray-900">{data.author}</div>
-                            {data.role && <div className="text-xs text-gray-500">{data.role}</div>}
+                            <div className="text-sm font-bold text-gray-900">
+                                {data.authorHtml ? <span dangerouslySetInnerHTML={{ __html: data.authorHtml }} /> : data.author}
+                            </div>
+                            {data.role && <div className="text-xs text-gray-500">
+                                {data.roleHtml ? <span dangerouslySetInnerHTML={{ __html: data.roleHtml }} /> : data.role}
+                            </div>}
                         </div>
                     </div>
                 </div>
@@ -976,7 +987,11 @@ function PublicComponentRenderer({
                                             e.currentTarget.style.textDecoration = 'none';
                                         }}
                                     >
-                                        {link.label}
+                                        {link.labelHtml ? (
+                                            <span dangerouslySetInnerHTML={{ __html: link.labelHtml }} />
+                                        ) : (
+                                            link.label
+                                        )}
                                     </a>
                                 ))}
                             </div>
@@ -1012,7 +1027,7 @@ function PublicComponentRenderer({
                             className="text-sm leading-relaxed"
                             style={{ color: footerText }}
                         >
-                            {data.text || '© 2024 Todos os direitos reservados'}
+                            <span dangerouslySetInnerHTML={{ __html: data.textHtml || data.text || '© 2024 Todos os direitos reservados' }} />
                         </p>
 
                         <div className="mt-6">

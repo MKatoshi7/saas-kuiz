@@ -11,6 +11,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { FAQComponent, FAQItem } from '@/types/funnel';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextField } from './RichTextField';
 
 // Sortable Item Component
 function SortableFAQItem({
@@ -69,21 +70,26 @@ function SortableFAQItem({
             {isExpanded && (
                 <div className="p-3 space-y-3 bg-white">
                     <div>
-                        <Label className="text-xs text-gray-500 mb-1 block">Pergunta</Label>
-                        <Input
-                            className="h-8 text-sm"
+                        <RichTextField
+                            label="Pergunta"
                             value={item.question}
-                            onChange={(e) => onUpdate({ ...item, question: e.target.value })}
+                            htmlValue={item.questionHtml}
+                            style={item.questionStyle}
+                            onUpdate={(text, html, style) => onUpdate({ ...item, question: text, questionHtml: html, questionStyle: style })}
                             placeholder="Qual é a pergunta?"
+                            minHeight={36}
+                            compact
                         />
                     </div>
                     <div>
-                        <Label className="text-xs text-gray-500 mb-1 block">Resposta</Label>
-                        <Textarea
-                            className="text-sm min-h-[80px]"
+                        <RichTextField
+                            label="Resposta"
                             value={item.answer}
-                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onUpdate({ ...item, answer: e.target.value })}
+                            htmlValue={item.answerHtml}
+                            style={item.answerStyle}
+                            onUpdate={(text, html, style) => onUpdate({ ...item, answer: text, answerHtml: html, answerStyle: style })}
                             placeholder="Digite a resposta aqui..."
+                            minHeight={80}
                         />
                     </div>
                 </div>

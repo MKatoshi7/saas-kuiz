@@ -195,7 +195,11 @@ function VisualRenderer({ component, theme }: { component: FunnelComponentData; 
                         marginBottom: is3D ? '4px' : '0',
                     }}
                 >
-                    {data.text || 'Continuar'}
+                {data.textHtml ? (
+                    <span dangerouslySetInnerHTML={{ __html: data.textHtml }} />
+                ) : (
+                    data.text || 'Continuar'
+                )}
                 </DelayedButton>
             );
         }
@@ -385,7 +389,7 @@ function VisualRenderer({ component, theme }: { component: FunnelComponentData; 
                         <div className="flex items-start gap-3">
                             {icon && <span className="text-base leading-none mt-0.5 shrink-0" style={{ color: textColor }}>{icon}</span>}
                             <div className="flex-1 min-w-0">
-                                {title && <p className={`font-semibold leading-tight mb-0.5 ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`} style={{ color: textColor }}>{title}</p>}
+                                {title && <p className={`font-semibold leading-tight mb-0.5 ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`} style={{ color: textColor }}>{data.titleHtml ? <span dangerouslySetInnerHTML={{ __html: data.titleHtml }} /> : title}</p>}
                                 {text && <div className={`${fontSizeMap[alertFontSize] || fontSizeMap.sm} leading-relaxed opacity-80`} style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: sanitizeAlertText(text) }} />}
                             </div>
                         </div>
@@ -401,7 +405,7 @@ function VisualRenderer({ component, theme }: { component: FunnelComponentData; 
                         <div className="flex items-start gap-3">
                             {icon && <span className="text-base leading-none mt-0.5 shrink-0" style={{ color: textColor }}>{icon}</span>}
                             <div className="flex-1 min-w-0">
-                                {title && <p className={`font-semibold leading-tight mb-0.5 ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`} style={{ color: textColor }}>{title}</p>}
+                                {title && <p className={`font-semibold leading-tight mb-0.5 ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`} style={{ color: textColor }}>{data.titleHtml ? <span dangerouslySetInnerHTML={{ __html: data.titleHtml }} /> : title}</p>}
                                 {text && <div className={`${fontSizeMap[alertFontSize] || fontSizeMap.sm} leading-relaxed opacity-80`} style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: sanitizeAlertText(text) }} />}
                             </div>
                         </div>
@@ -417,7 +421,7 @@ function VisualRenderer({ component, theme }: { component: FunnelComponentData; 
                         <div className="flex items-start gap-3">
                             {icon && <span className="text-base leading-none mt-0.5 shrink-0 text-white">{icon}</span>}
                             <div className="flex-1 min-w-0">
-                                {title && <p className={`font-semibold leading-tight mb-0.5 text-white ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`}>{title}</p>}
+                                {title && <p className={`font-semibold leading-tight mb-0.5 text-white ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`}>{data.titleHtml ? <span dangerouslySetInnerHTML={{ __html: data.titleHtml }} /> : title}</p>}
                                 {text && <div className={`${fontSizeMap[alertFontSize] || fontSizeMap.sm} leading-relaxed text-white/90`} dangerouslySetInnerHTML={{ __html: sanitizeAlertText(text) }} />}
                             </div>
                         </div>
@@ -433,7 +437,7 @@ function VisualRenderer({ component, theme }: { component: FunnelComponentData; 
                     <div className="flex items-start gap-3">
                         {icon && <span className="text-base leading-none mt-0.5 shrink-0" style={{ color: borderColor }}>{icon}</span>}
                         <div className="flex-1 min-w-0">
-                            {title && <p className={`font-semibold leading-tight mb-0.5 ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`} style={{ color: textColor }}>{title}</p>}
+                            {title && <p className={`font-semibold leading-tight mb-0.5 ${fontSizeMap[alertFontSize] || fontSizeMap.sm}`} style={{ color: textColor }}>{data.titleHtml ? <span dangerouslySetInnerHTML={{ __html: data.titleHtml }} /> : title}</p>}
                             {text && <div className={`${fontSizeMap[alertFontSize] || fontSizeMap.sm} leading-relaxed opacity-80`} style={{ color: textColor }} dangerouslySetInnerHTML={{ __html: sanitizeAlertText(text) }} />}
                         </div>
                     </div>
@@ -468,14 +472,20 @@ function VisualRenderer({ component, theme }: { component: FunnelComponentData; 
                             <Star key={i} className="w-4 h-4 fill-current" />
                         ))}
                     </div>
-                    <p className="text-gray-600 italic mb-4">"{data.text}"</p>
+                    <p className="text-gray-600 italic mb-4">
+                        &ldquo;{data.textHtml ? <span dangerouslySetInnerHTML={{ __html: data.textHtml }} /> : data.text}&rdquo;
+                    </p>
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">
                             {data.author?.charAt(0) || 'A'}
                         </div>
                         <div>
-                            <div className="text-sm font-bold text-gray-900">{data.author}</div>
-                            {data.role && <div className="text-xs text-gray-500">{data.role}</div>}
+                            <div className="text-sm font-bold text-gray-900">
+                                {data.authorHtml ? <span dangerouslySetInnerHTML={{ __html: data.authorHtml }} /> : data.author}
+                            </div>
+                            {data.role && <div className="text-xs text-gray-500">
+                                {data.roleHtml ? <span dangerouslySetInnerHTML={{ __html: data.roleHtml }} /> : data.role}
+                            </div>}
                         </div>
                     </div>
                 </div>
@@ -525,6 +535,7 @@ function VisualRenderer({ component, theme }: { component: FunnelComponentData; 
                     showProgressBar={data.showProgressBar}
                     progressBarColor={data.progressBarColor}
                     playButtonText={data.playButtonText}
+                    playButtonTextHtml={data.playButtonTextHtml}
                     playButtonColor={data.playButtonColor}
                     restartOnClick={data.restartOnClick}
                     unmuteOnClick={data.unmuteOnClick}

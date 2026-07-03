@@ -10,6 +10,7 @@ import { PieChartComponent, BarChartComponent, ChartDataItem } from '@/types/fun
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { RichTextField } from './RichTextField';
 
 const DEFAULT_COLORS = [
     '#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6',
@@ -45,11 +46,17 @@ function SortableChartItem({
                 className="w-7 h-7 rounded border border-gray-200 cursor-pointer flex-shrink-0"
             />
 
-            <Input
+            <RichTextField
                 value={item.label}
-                onChange={(e) => onUpdate({ ...item, label: e.target.value })}
+                htmlValue={(item as any).labelHtml}
+                style={(item as any).labelStyle}
+                onUpdate={(text, html, style) => onUpdate({ ...item, label: text, labelHtml: html, labelStyle: style })}
                 placeholder="Rótulo"
-                className="h-8 text-xs flex-1 min-w-0"
+                minHeight={28}
+                compact
+                showPresets={false}
+                showRecentColors={false}
+                className="flex-1 min-w-0"
             />
 
             <Input
@@ -79,12 +86,19 @@ export function PieChartProperties({ component }: { component: PieChartComponent
     return (
         <div className="space-y-4">
             <div>
-                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Título</Label>
-                <Input
-                    value={component.data.title || ''}
-                    onChange={(e) => handleUpdate('title', e.target.value)}
+                <RichTextField
+                    label="Título"
+                    value={component.data.title}
+                    htmlValue={component.data.titleHtml}
+                    style={component.data.titleStyle}
+                    onUpdate={(text, html, style) => {
+                        handleUpdate('title', text);
+                        handleUpdate('titleHtml', html);
+                        handleUpdate('titleStyle', style);
+                    }}
                     placeholder="Ex: Distribuição de Vendas"
-                    className="bg-white"
+                    minHeight={36}
+                    compact
                 />
             </div>
 
@@ -174,12 +188,19 @@ export function BarChartProperties({ component }: { component: BarChartComponent
     return (
         <div className="space-y-4">
             <div>
-                <Label className="text-xs font-semibold text-gray-700 mb-1.5 block">Título</Label>
-                <Input
-                    value={component.data.title || ''}
-                    onChange={(e) => handleUpdate('title', e.target.value)}
+                <RichTextField
+                    label="Título"
+                    value={component.data.title}
+                    htmlValue={component.data.titleHtml}
+                    style={component.data.titleStyle}
+                    onUpdate={(text, html, style) => {
+                        handleUpdate('title', text);
+                        handleUpdate('titleHtml', html);
+                        handleUpdate('titleStyle', style);
+                    }}
                     placeholder="Ex: Comparativo de Resultados"
-                    className="bg-white"
+                    minHeight={36}
+                    compact
                 />
             </div>
 

@@ -15,6 +15,7 @@ const DEFAULT_COLORS = [
 export function PieChartRenderer({ component }: PieChartRendererProps) {
     const {
         title,
+        titleHtml,
         items = [],
         showLegend = true,
         showPercentage = true,
@@ -71,6 +72,7 @@ export function PieChartRenderer({ component }: PieChartRendererProps) {
             path,
             color: item.color || DEFAULT_COLORS[i % DEFAULT_COLORS.length],
             label: item.label,
+            labelHtml: (item as any).labelHtml,
             value,
             percentage: total > 0 ? ((value / total) * 100).toFixed(1) : '0',
             delay: i * 100,
@@ -81,7 +83,11 @@ export function PieChartRenderer({ component }: PieChartRendererProps) {
         <div className="w-full flex flex-col items-center py-6">
             {title && (
                 <h3 className="text-lg font-bold mb-4 text-center" style={{ color: titleColor }}>
-                    {title}
+                    {titleHtml ? (
+                        <span dangerouslySetInnerHTML={{ __html: titleHtml }} />
+                    ) : (
+                        title
+                    )}
                 </h3>
             )}
 
@@ -134,7 +140,11 @@ export function PieChartRenderer({ component }: PieChartRendererProps) {
                                 }}
                             >
                                 <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: seg.color }} />
-                                <span className="text-gray-700">{seg.label}</span>
+                                <span className="text-gray-700">{seg.labelHtml ? (
+                                    <span dangerouslySetInnerHTML={{ __html: seg.labelHtml }} />
+                                ) : (
+                                    seg.label
+                                )}</span>
                                 {showPercentage && (
                                     <span className="text-gray-400 font-mono text-xs">{seg.percentage}%</span>
                                 )}

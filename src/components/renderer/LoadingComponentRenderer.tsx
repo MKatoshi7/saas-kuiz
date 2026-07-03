@@ -66,7 +66,7 @@ export const LoadingComponentRenderer: React.FC<LoadingComponentRendererProps> =
                     className="text-2xl font-bold mb-6"
                     style={{ color: textColor }}
                 >
-                    {progress === 100 && data.endText ? data.endText : (data.headline || 'Processando...')}
+                    {progress === 100 ? (data.endTextHtml ? <span dangerouslySetInnerHTML={{ __html: data.endTextHtml }} /> : (data.endText || '')) : (data.headlineHtml ? <span dangerouslySetInnerHTML={{ __html: data.headlineHtml }} /> : (data.headline || 'Processando...'))}
                 </h2>
 
                 <div className="relative w-32 h-32">
@@ -87,7 +87,7 @@ export const LoadingComponentRenderer: React.FC<LoadingComponentRendererProps> =
                 </div>
 
                 {data.subheadline && (
-                    <p className="text-gray-500 mt-4 text-sm font-medium opacity-80">{data.subheadline}</p>
+                    <p className="text-gray-500 mt-4 text-sm font-medium opacity-80">{data.subheadlineHtml ? <span dangerouslySetInnerHTML={{ __html: data.subheadlineHtml }} /> : data.subheadline}</p>
                 )}
 
                 <div className="mt-3 text-xs text-gray-400 h-4">{getMessage()}</div>
@@ -103,11 +103,11 @@ export const LoadingComponentRenderer: React.FC<LoadingComponentRendererProps> =
                     className="text-2xl font-bold mb-4"
                     style={{ color: textColor }}
                 >
-                    {progress === 100 && data.endText ? data.endText : (data.headline || 'Processando...')}
+                    {progress === 100 ? (data.endTextHtml ? <span dangerouslySetInnerHTML={{ __html: data.endTextHtml }} /> : (data.endText || '')) : (data.headlineHtml ? <span dangerouslySetInnerHTML={{ __html: data.headlineHtml }} /> : (data.headline || 'Processando...'))}
                 </h2>
 
                 {data.subheadline && (
-                    <p className="text-gray-500 mb-6 text-sm font-medium opacity-80">{data.subheadline}</p>
+                    <p className="text-gray-500 mb-6 text-sm font-medium opacity-80">{data.subheadlineHtml ? <span dangerouslySetInnerHTML={{ __html: data.subheadlineHtml }} /> : data.subheadline}</p>
                 )}
 
                 <div className="flex gap-3 mb-4">
@@ -143,11 +143,11 @@ export const LoadingComponentRenderer: React.FC<LoadingComponentRendererProps> =
                     className="text-2xl font-bold mb-4"
                     style={{ color: textColor }}
                 >
-                    {progress === 100 && data.endText ? data.endText : (data.headline || 'Processando...')}
+                    {progress === 100 ? (data.endTextHtml ? <span dangerouslySetInnerHTML={{ __html: data.endTextHtml }} /> : (data.endText || '')) : (data.headlineHtml ? <span dangerouslySetInnerHTML={{ __html: data.headlineHtml }} /> : (data.headline || 'Processando...'))}
                 </h2>
 
                 {data.subheadline && (
-                    <p className="text-gray-500 mb-6 text-sm font-medium opacity-80">{data.subheadline}</p>
+                    <p className="text-gray-500 mb-6 text-sm font-medium opacity-80">{data.subheadlineHtml ? <span dangerouslySetInnerHTML={{ __html: data.subheadlineHtml }} /> : data.subheadline}</p>
                 )}
 
                 <div className="relative w-full max-w-sm">
@@ -200,11 +200,11 @@ export const LoadingComponentRenderer: React.FC<LoadingComponentRendererProps> =
                 className="text-2xl font-bold mb-2"
                 style={{ color: textColor }}
             >
-                {progress === 100 && data.endText ? data.endText : (data.headline || 'Processando...')}
+                {progress === 100 ? (data.endTextHtml ? <span dangerouslySetInnerHTML={{ __html: data.endTextHtml }} /> : (data.endText || '')) : (data.headlineHtml ? <span dangerouslySetInnerHTML={{ __html: data.headlineHtml }} /> : (data.headline || 'Processando...'))}
             </h2>
 
             {data.subheadline && (
-                <p className="text-gray-500 mb-8 text-sm font-medium opacity-80">{data.subheadline}</p>
+                <p className="text-gray-500 mb-8 text-sm font-medium opacity-80">{data.subheadlineHtml ? <span dangerouslySetInnerHTML={{ __html: data.subheadlineHtml }} /> : data.subheadline}</p>
             )}
 
             <div className="w-full max-w-sm">
