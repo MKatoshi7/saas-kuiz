@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Montserrat, Poppins, Oswald, Raleway, Lato, Playfair_Display, Roboto, Open_Sans, Bebas_Neue } from "next/font/google";
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import Script from 'next/script';
@@ -13,6 +13,17 @@ const geistMono = Geist_Mono({
     variable: "--font-geist-mono",
     subsets: ["latin"],
 });
+
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "swap" });
+const bebasNeue = Bebas_Neue({ variable: "--font-bebas-neue", subsets: ["latin"], weight: "400", display: "swap" });
+const montserrat = Montserrat({ variable: "--font-montserrat", subsets: ["latin"], display: "swap" });
+const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: ["400", "500", "600", "700"], display: "swap" });
+const oswald = Oswald({ variable: "--font-oswald", subsets: ["latin"], display: "swap" });
+const raleway = Raleway({ variable: "--font-raleway", subsets: ["latin"], display: "swap" });
+const lato = Lato({ variable: "--font-lato", subsets: ["latin"], weight: ["400", "700"], display: "swap" });
+const playfairDisplay = Playfair_Display({ variable: "--font-playfair", subsets: ["latin"], display: "swap" });
+const roboto = Roboto({ variable: "--font-roboto", subsets: ["latin"], weight: ["400", "500", "700"], display: "swap" });
+const openSans = Open_Sans({ variable: "--font-open-sans", subsets: ["latin"], display: "swap" });
 
 export const metadata = {
     title: 'Kuiz - Quiz Funnel Builder',
@@ -54,7 +65,7 @@ export default function RootLayout({
                     `}
                 </Script>
             </head>
-            <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+            <body className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${bebasNeue.variable} ${montserrat.variable} ${poppins.variable} ${oswald.variable} ${raleway.variable} ${lato.variable} ${playfairDisplay.variable} ${roboto.variable} ${openSans.variable} antialiased`}>
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="light"

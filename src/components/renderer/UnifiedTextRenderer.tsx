@@ -1,4 +1,5 @@
 import React from 'react';
+import { resolveFontFamily } from '@/lib/fonts';
 
 interface TextStyle {
     color?: string;
@@ -153,7 +154,7 @@ export function UnifiedTextRenderer({
         if (textStyle) {
             if (textStyle.color) styles.color = textStyle.color;
             if (textStyle.fontSize) styles.fontSize = `${textStyle.fontSize}px`;
-            if (textStyle.fontFamily) styles.fontFamily = textStyle.fontFamily;
+            if (textStyle.fontFamily) styles.fontFamily = resolveFontFamily(textStyle.fontFamily) || textStyle.fontFamily;
             if (textStyle.bold) styles.fontWeight = 'bold';
             if (textStyle.italic) styles.fontStyle = 'italic';
             const decorations: string[] = [];

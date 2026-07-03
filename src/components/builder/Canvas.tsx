@@ -146,9 +146,6 @@ export function Canvas({ previewDevice }: { previewDevice: 'mobile' | 'desktop' 
 import '@/styles/button-animations.css';
 
 import { ComponentControls } from './ComponentControls';
-import { InlineEditableText } from './InlineEditableText';
-
-const EDITABLE_TYPES = new Set(['headline', 'paragraph', 'button', 'alert', 'testimonial', 'pricing', 'loading', 'faq', 'footer']);
 
 const ComponentRenderer = React.memo(function ComponentRenderer({
     component,
@@ -164,20 +161,6 @@ const ComponentRenderer = React.memo(function ComponentRenderer({
     onDelete: () => void;
 }) {
     const contentRef = React.useRef<HTMLDivElement>(null);
-    const updateComponent = useBuilderStore((state) => state.updateComponent);
-    const isTextComponent = EDITABLE_TYPES.has(component.type);
-
-    const handleInlineUpdate = (field: string, htmlField: string, styleField: string) => (text: string, html: string, style?: any) => {
-        updateComponent(component.id, {
-            ...component,
-            data: {
-                ...component.data,
-                [field]: text,
-                [htmlField]: html,
-                ...(style ? { [styleField]: style } : {}),
-            },
-        } as any);
-    };
 
     return (
         <div className="relative group">
@@ -200,107 +183,6 @@ const ComponentRenderer = React.memo(function ComponentRenderer({
                     selectedId={isSelected ? component.id : null}
                     onSelect={onClick}
                 />
-
-                {/* Inline editing overlay for text components */}
-                {isSelected && isTextComponent && (
-                    <div className="absolute inset-0 pointer-events-none">
-                        {(() => {
-                            const data = component.data as any;
-                            switch (component.type) {
-                                case 'headline':
-                                    return (
-                                        <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 pointer-events-auto">
-                                            <InlineEditableText
-                                                value={data.text}
-                                                htmlValue={data.textHtml}
-                                                style={data.textStyle}
-                                                onUpdate={handleInlineUpdate('text', 'textHtml', 'textStyle')}
-                                                placeholder="Digite o título..."
-                                            />
-                                        </div>
-                                    );
-                                case 'paragraph':
-                                    return (
-                                        <div className="absolute inset-x-4 top-4 bottom-4 pointer-events-auto">
-                                            <InlineEditableText
-                                                value={data.text}
-                                                htmlValue={data.textHtml}
-                                                style={data.textStyle}
-                                                onUpdate={handleInlineUpdate('text', 'textHtml', 'textStyle')}
-                                                placeholder="Digite o parágrafo..."
-                                            />
-                                        </div>
-                                    );
-                                case 'button':
-                                    return (
-                                        <div className="absolute inset-x-8 top-1/2 -translate-y-1/2 pointer-events-auto">
-                                            <InlineEditableText
-                                                value={data.text}
-                                                htmlValue={data.textHtml}
-                                                style={data.textStyle}
-                                                onUpdate={handleInlineUpdate('text', 'textHtml', 'textStyle')}
-                                                placeholder="Texto do botão"
-                                                className="text-center"
-                                                minHeight={32}
-                                            />
-                                        </div>
-                                    );
-                                case 'alert':
-                                    return (
-                                        <div className="absolute inset-x-12 top-3 pointer-events-auto">
-                                            <InlineEditableText
-                                                value={data.title}
-                                                htmlValue={data.titleHtml}
-                                                style={data.titleStyle}
-                                                onUpdate={handleInlineUpdate('title', 'titleHtml', 'titleStyle')}
-                                                placeholder="Título do destaque"
-                                                minHeight={28}
-                                            />
-                                        </div>
-                                    );
-                                case 'testimonial':
-                                    return (
-                                        <div className="absolute inset-x-4 top-4 pointer-events-auto">
-                                            <InlineEditableText
-                                                value={data.text}
-                                                htmlValue={data.textHtml}
-                                                style={data.textStyle}
-                                                onUpdate={handleInlineUpdate('text', 'textHtml', 'textStyle')}
-                                                placeholder="Depoimento..."
-                                            />
-                                        </div>
-                                    );
-                                case 'pricing':
-                                    return (
-                                        <div className="absolute inset-x-4 top-4 pointer-events-auto">
-                                            <InlineEditableText
-                                                value={data.title}
-                                                htmlValue={data.titleHtml}
-                                                style={data.titleStyle}
-                                                onUpdate={handleInlineUpdate('title', 'titleHtml', 'titleStyle')}
-                                                placeholder="Nome do plano"
-                                                minHeight={28}
-                                            />
-                                        </div>
-                                    );
-                                case 'loading':
-                                    return (
-                                        <div className="absolute inset-x-4 top-1/3 pointer-events-auto">
-                                            <InlineEditableText
-                                                value={data.headline}
-                                                htmlValue={data.headlineHtml}
-                                                style={data.headlineStyle}
-                                                onUpdate={handleInlineUpdate('headline', 'headlineHtml', 'headlineStyle')}
-                                                placeholder="Carregando..."
-                                            />
-                                        </div>
-                                    );
-                                default:
-                                    return null;
-                            }
-                        })()}
-                    </div>
-                )}
             </div>
         </div>
     );

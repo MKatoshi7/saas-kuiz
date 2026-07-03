@@ -2,6 +2,7 @@
 
 import React, { useRef, useCallback, useState } from 'react';
 import { MiniToolbar, MiniToolbarStyle } from './MiniToolbar';
+import { resolveFontFamily } from '@/lib/fonts';
 
 interface InlineEditableTextProps {
   value?: string;
@@ -69,7 +70,7 @@ export function InlineEditableText({
         style={{
           minHeight: `${minHeight}px`,
           fontSize: style?.fontSize ? `${style.fontSize}px` : undefined,
-          fontFamily: style?.fontFamily,
+          fontFamily: resolveFontFamily(style?.fontFamily),
           lineHeight: style?.lineHeight,
           letterSpacing: style?.letterSpacing ? `${style.letterSpacing}px` : undefined,
           textTransform: style?.textTransform as any,

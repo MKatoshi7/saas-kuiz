@@ -4,6 +4,7 @@ import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { ChevronDown, Bookmark, BookmarkCheck, X } from 'lucide-react';
 import { MiniToolbar, MiniToolbarStyle } from './MiniToolbar';
 import { Label } from '@/components/ui/label';
+import { resolveFontFamily } from '@/lib/fonts';
 
 // ─── Presets ────────────────────────────────────────────────────────
 
@@ -45,14 +46,14 @@ function saveCustomPresets(presets: TextStylePreset[]) {
 const COLORS_KEY = 'kuiz-recent-colors';
 const MAX_RECENT_COLORS = 10;
 
-function loadRecentColors(): string[] {
+export function loadRecentColors(): string[] {
     if (typeof window === 'undefined') return [];
     try {
         return JSON.parse(localStorage.getItem(COLORS_KEY) || '[]');
     } catch { return []; }
 }
 
-function saveRecentColor(color: string) {
+export function saveRecentColor(color: string) {
     const colors = loadRecentColors().filter(c => c !== color);
     colors.unshift(color);
     if (colors.length > MAX_RECENT_COLORS) colors.pop();
@@ -261,7 +262,7 @@ export function RichTextField({
                 style={{
                     minHeight: `${minHeight}px`,
                     fontSize: style?.fontSize ? `${style.fontSize}px` : undefined,
-                    fontFamily: style?.fontFamily,
+                    fontFamily: resolveFontFamily(style?.fontFamily),
                     lineHeight: style?.lineHeight,
                     letterSpacing: style?.letterSpacing ? `${style.letterSpacing}px` : undefined,
                     textTransform: style?.textTransform as any,

@@ -1,13 +1,31 @@
 'use client';
 
-import React, { useCallback } from 'react';
-import { Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight, Type } from 'lucide-react';
+import React, { useCallback, useState, useEffect } from 'react';
+import { Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight, Type, ChevronDown } from 'lucide-react';
+import { loadRecentColors, saveRecentColor } from './RichTextField';
 
 const FONT_OPTIONS = [
-    'Inter', 'Arial', 'Helvetica', 'Times New Roman', 'Georgia',
-    'Courier New', 'Verdana', 'Roboto', 'Open Sans', 'Lato',
-    'Montserrat', 'Poppins', 'Oswald', 'Raleway', 'Nunito',
-    'Source Sans Pro', 'Ubuntu', 'Playfair Display', 'Merriweather', 'PT Sans'
+    'Inter', 'Bebas Neue', 'Montserrat', 'Poppins', 'Oswald',
+    'Raleway', 'Lato', 'Playfair Display', 'Roboto', 'Open Sans',
+];
+
+const PREDEFINED_COLORS = [
+    // Neutrals
+    '#111827', '#374151', '#6B7280', '#9CA3AF', '#D1D5DB', '#F3F4F6',
+    // Brand
+    '#2563EB', '#3B82F6', '#60A5FA', '#93C5FD',
+    // Success
+    '#059669', '#10B981', '#34D399',
+    // Warning
+    '#D97706', '#F59E0B', '#FCD34D',
+    // Danger
+    '#DC2626', '#EF4444', '#F87171',
+    // Purple
+    '#7C3AED', '#8B5CF6', '#A78BFA',
+    // Pink
+    '#DB2777', '#EC4899', '#F472B6',
+    // Teal
+    '#0D9488', '#14B8A6', '#5EEAD4',
 ];
 
 export interface MiniToolbarStyle {
@@ -42,12 +60,30 @@ export function MiniToolbar({
     showSize = true,
     showFont = true,
     showSpacing = true,
-    recentColors,
+    recentColors: recentColorsProp,
     onColorChange,
 }: MiniToolbarProps) {
+    const [recentColors, setRecentColors] = useState<string[]>([]);
+    const [showColorPicker, setShowColorPicker] = useState(false);
+    const [customColor, setCustomColor] = useState(style?.color || '#111827');
+
+    useEffect(() => {
+        setRecentColors(loadRecentColors());
+    }, []);
+
     const execOnContentEditable = useCallback((command: string, value?: string) => {
         document.execCommand(command, false, value);
     }, []);
+
+    const applyColor = useCallback((color: string) => {
+        execOnContentEditable('foreColor', color);
+        onStyleUpdate({ ...style, color });
+        saveRecentColor(color);
+        setRecentColors(loadRecentColors());
+        onColorChange?.(color);
+    }, [style, onStyleUpdate, onColorChange, execOnContentEditable]);
+
+    const allRecentColors = recentColorsProp || recentColors;
 
     return (
         <div className="border border-gray-200 rounded-lg p-1.5 bg-gray-50 space-y-1.5">
@@ -88,43 +124,92 @@ export function MiniToolbar({
 
                 <div className="w-px h-5 bg-gray-300 mx-0.5" />
 
+                {/* Color picker with palette */}
                 <div className="relative">
-                    <input
-                        type="color"
-                        value={style?.color || '#111827'}
-                        onChange={(e) => {
-                            execOnContentEditable('foreColor', e.target.value);
-                            onColorChange?.(e.target.value);
-                        }}
-                        className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                    <button
+                        onClick={() => setShowColorPicker(!showColorPicker)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        className="flex flex-col items-center p-1 hover:bg-gray-200 rounded cursor-pointer"
                         title="Cor do Texto"
-                    />
-                    <div className="flex flex-col items-center p-1 hover:bg-gray-200 rounded cursor-pointer">
+                    >
                         <Type className="w-3.5 h-3.5 text-gray-600" />
-                        <div className="w-5 h-1 rounded-sm mt-0.5 border border-gray-300" style={{ backgroundColor: style?.color || '#111827' }} />
-                    </div>
-                </div>
+                        <div className="w-5 h-1.5 rounded-sm mt-0.5 border border-gray-300" style={{ backgroundColor: style?.color || '#111827' }} />
+                    </button>
 
-                {recentColors && recentColors.length > 0 && (
-                    <>
-                        <div className="w-px h-5 bg-gray-300 mx-0.5" />
-                        <div className="flex items-center gap-0.5">
-                            {recentColors.slice(0, 6).map((color) => (
-                                <button
-                                    key={color}
-                                    onClick={() => {
-                                        execOnContentEditable('foreColor', color);
-                                        onColorChange?.(color);
-                                    }}
-                                    onMouseDown={(e) => e.preventDefault()}
-                                    className="w-4 h-4 rounded-full border border-gray-300 hover:scale-125 transition-transform"
-                                    style={{ backgroundColor: color }}
-                                    title={color}
-                                />
-                            ))}
+                    {showColorPicker && (
+                        <div className="absolute top-10 left-0 z-50 w-64 bg-white border border-gray-200 rounded-xl shadow-xl p-3 space-y-3">
+                            {/* Predefined colors */}
+                            <div>
+                                <div className="text-[10px] text-gray-400 font-medium mb-1.5">Cores Predefinidas</div>
+                                <div className="grid grid-cols-9 gap-1.5">
+                                    {PREDEFINED_COLORS.map((color) => (
+                                        <button
+                                            key={color}
+                                            onClick={() => applyColor(color)}
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${style?.color === color ? 'border-blue-500 ring-2 ring-blue-200' : 'border-white shadow-sm'}`}
+                                            style={{ backgroundColor: color }}
+                                            title={color}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Recent colors */}
+                            {allRecentColors.length > 0 && (
+                                <div>
+                                    <div className="text-[10px] text-gray-400 font-medium mb-1.5">Últimas Cores</div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {allRecentColors.slice(0, 12).map((color) => (
+                                            <button
+                                                key={color}
+                                                onClick={() => applyColor(color)}
+                                                onMouseDown={(e) => e.preventDefault()}
+                                                className={`w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform ${style?.color === color ? 'border-blue-500 ring-2 ring-blue-200' : 'border-white shadow-sm'}`}
+                                                style={{ backgroundColor: color }}
+                                                title={color}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Custom color */}
+                            <div className="border-t border-gray-100 pt-2">
+                                <div className="text-[10px] text-gray-400 font-medium mb-1.5">Cor Personalizada</div>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="color"
+                                        value={customColor}
+                                        onChange={(e) => setCustomColor(e.target.value)}
+                                        className="w-8 h-8 rounded-lg border border-gray-200 cursor-pointer"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={customColor}
+                                        onChange={(e) => setCustomColor(e.target.value)}
+                                        className="flex-1 h-8 text-xs border border-gray-200 rounded-lg px-2 font-mono"
+                                        placeholder="#000000"
+                                    />
+                                    <button
+                                        onClick={() => applyColor(customColor)}
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        className="h-8 px-3 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                                    >
+                                        Aplicar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setShowColorPicker(false)}
+                                className="w-full text-[10px] text-gray-400 hover:text-gray-600 text-center"
+                            >
+                                Fechar
+                            </button>
                         </div>
-                    </>
-                )}
+                    )}
+                </div>
 
                 <div className="w-px h-5 bg-gray-300 mx-0.5" />
 
@@ -165,7 +250,7 @@ export function MiniToolbar({
                     <select
                         value={style?.fontFamily || 'Inter'}
                         onChange={(e) => onStyleUpdate({ ...style, fontFamily: e.target.value })}
-                        className="h-7 text-xs border border-gray-200 rounded px-1.5 bg-white max-w-[100px]"
+                        className="h-7 text-xs border border-gray-200 rounded px-1.5 bg-white max-w-[120px]"
                     >
                         {FONT_OPTIONS.map(f => <option key={f} value={f}>{f}</option>)}
                     </select>

@@ -176,3 +176,17 @@
 [contenteditable]:focus {
     outline: none;
 }
+
+/* Google Fonts mapping — font-family names → CSS variables */
+:root {
+    --ff-inter: var(--font-inter), 'Inter', system-ui, sans-serif;
+    --ff-bebas-neue: var(--font-bebas-neue), 'Bebas Neue', system-ui, sans-serif;
+    --ff-montserrat: var(--font-montserrat), 'Montserrat', system-ui, sans-serif;
+    --ff-poppins: var(--font-poppins), 'Poppins', system-ui, sans-serif;
+    --ff-oswald: var(--font-oswald), 'Oswald', system-ui, sans-serif;
+    --ff-raleway: var(--font-raleway), 'Raleway', system-ui, sans-serif;
+    --ff-lato: var(--font-lato), 'Lato', system-ui, sans-serif;
+    --ff-playfair: var(--font-playfair), 'Playfair Display', system-ui, serif;
+    --ff-roboto: var(--font-roboto), 'Roboto', system-ui, sans-serif;
+    --ff-open-sans: var(--font-open-sans), 'Open Sans', system-ui, sans-serif;
+}
