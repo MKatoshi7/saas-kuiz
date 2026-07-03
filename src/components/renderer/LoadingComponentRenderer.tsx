@@ -39,18 +39,31 @@ export const LoadingComponentRenderer: React.FC<LoadingComponentRendererProps> =
     const height = data.height || 'md';
     const rounded = data.rounded || 'full';
     const loadingStyle = data.loadingStyle || 'bar';
+    const showPercentage = data.showPercentage !== false;
+    const percentageInside = data.percentageInside === true;
+    const percentagePosition = data.percentagePosition || 'center';
 
     const HEIGHT_MAP: Record<string, string> = { sm: 'h-2', md: 'h-4', lg: 'h-6' };
 
+    const pctLabel = `${Math.round(progress)}%`;
+
+    const positionClass =
+        percentagePosition === 'left'
+            ? 'justify-start pl-3'
+            : percentagePosition === 'right'
+            ? 'justify-end pr-3'
+            : 'justify-center';
+
+    // ── CIRCLE ──
     if (loadingStyle === 'circle') {
         const radius = 45;
         const circumference = 2 * Math.PI * radius;
         const offset = circumference - (progress / 100) * circumference;
 
         return (
-            <div className="w-full flex flex-col items-center justify-center py-12 px-6 text-center animate-in fade-in duration-500">
+            <div className="w-full flex flex-col items-center justify-center py-12 px-6 text-center">
                 <h2
-                    className="text-2xl font-bold mb-6 transition-all duration-300"
+                    className="text-2xl font-bold mb-6"
                     style={{ color: textColor }}
                 >
                     {progress === 100 && data.endText ? data.endText : (data.headline || 'Processando...')}
@@ -63,28 +76,31 @@ export const LoadingComponentRenderer: React.FC<LoadingComponentRendererProps> =
                             cx="50" cy="50" r={radius} fill="none" stroke={barColor} strokeWidth="8"
                             strokeDasharray={circumference} strokeDashoffset={offset}
                             strokeLinecap="round"
-                            style={{ transition: 'stroke-dashoffset 0.1s linear', filter: `drop-shadow(0 0 6px ${barColor}60)` }}
+                            style={{ filter: `drop-shadow(0 0 6px ${barColor}60)` }}
                         />
                     </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xl font-bold" style={{ color: textColor }}>{Math.round(progress)}%</span>
-                    </div>
+                    {showPercentage && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-xl font-bold" style={{ color: textColor }}>{pctLabel}</span>
+                        </div>
+                    )}
                 </div>
 
                 {data.subheadline && (
                     <p className="text-gray-500 mt-4 text-sm font-medium opacity-80">{data.subheadline}</p>
                 )}
 
-                <div className="mt-3 text-xs text-gray-400 h-4 transition-all duration-300">{getMessage()}</div>
+                <div className="mt-3 text-xs text-gray-400 h-4">{getMessage()}</div>
             </div>
         );
     }
 
+    // ── DOTS ──
     if (loadingStyle === 'dots') {
         return (
-            <div className="w-full flex flex-col items-center justify-center py-12 px-6 text-center animate-in fade-in duration-500">
+            <div className="w-full flex flex-col items-center justify-center py-12 px-6 text-center">
                 <h2
-                    className="text-2xl font-bold mb-4 transition-all duration-300"
+                    className="text-2xl font-bold mb-4"
                     style={{ color: textColor }}
                 >
                     {progress === 100 && data.endText ? data.endText : (data.headline || 'Processando...')}
@@ -98,7 +114,7 @@ export const LoadingComponentRenderer: React.FC<LoadingComponentRendererProps> =
                     {[0, 1, 2].map((i) => (
                         <div
                             key={i}
-                            className="w-4 h-4 rounded-full transition-all duration-300"
+                            className="w-4 h-4 rounded-full"
                             style={{
                                 backgroundColor: progress > (i + 1) * 33 ? barColor : trackColor,
                                 transform: progress > (i + 1) * 33 ? 'scale(1.2)' : 'scale(1)',
@@ -108,22 +124,23 @@ export const LoadingComponentRenderer: React.FC<LoadingComponentRendererProps> =
                     ))}
                 </div>
 
-                {data.showPercentage !== false && (
+                {showPercentage && (
                     <div className="font-mono text-sm font-bold mb-2" style={{ color: textColor }}>
-                        {Math.round(progress)}%
+                        {pctLabel}
                     </div>
                 )}
 
-                <div className="text-xs text-gray-400 h-4 transition-all duration-300">{getMessage()}</div>
+                <div className="text-xs text-gray-400 h-4">{getMessage()}</div>
             </div>
         );
     }
 
+    // ── PULSE ──
     if (loadingStyle === 'pulse') {
         return (
-            <div className="w-full flex flex-col items-center justify-center py-12 px-6 text-center animate-in fade-in duration-500">
+            <div className="w-full flex flex-col items-center justify-center py-12 px-6 text-center">
                 <h2
-                    className="text-2xl font-bold mb-4 transition-all duration-300"
+                    className="text-2xl font-bold mb-4"
                     style={{ color: textColor }}
                 >
                     {progress === 100 && data.endText ? data.endText : (data.headline || 'Processando...')}
@@ -133,41 +150,54 @@ export const LoadingComponentRenderer: React.FC<LoadingComponentRendererProps> =
                     <p className="text-gray-500 mb-6 text-sm font-medium opacity-80">{data.subheadline}</p>
                 )}
 
-                <div className="relative w-48 h-2 rounded-full overflow-hidden" style={{ backgroundColor: trackColor }}>
+                <div className="relative w-full max-w-sm">
                     <div
-                        className="absolute inset-0 rounded-full"
-                        style={{
-                            width: `${progress}%`,
-                            backgroundColor: barColor,
-                            boxShadow: `0 0 20px ${barColor}80`,
-                            transition: 'width 0.1s linear',
-                        }}
-                    />
-                    <div
-                        className="absolute inset-0 rounded-full animate-pulse"
-                        style={{
-                            width: `${progress}%`,
-                            backgroundColor: `${barColor}40`,
-                        }}
-                    />
+                        className={`w-full overflow-hidden ${HEIGHT_MAP[height]} ${rounded === 'full' ? 'rounded-full' : rounded === 'md' ? 'rounded-md' : ''}`}
+                        style={{ backgroundColor: trackColor }}
+                    >
+                        <div
+                            className="h-full relative"
+                            style={{
+                                width: `${progress}%`,
+                                backgroundColor: barColor,
+                                boxShadow: `0 0 20px ${barColor}80`,
+                            }}
+                        />
+                        <div
+                            className="absolute inset-0 rounded-full animate-pulse"
+                            style={{
+                                width: `${progress}%`,
+                                backgroundColor: `${barColor}40`,
+                            }}
+                        />
+                    </div>
+
+                    {showPercentage && percentageInside && (
+                        <div
+                            className={`absolute inset-0 flex items-center text-xs font-bold ${positionClass}`}
+                            style={{ color: textColor }}
+                        >
+                            {pctLabel}
+                        </div>
+                    )}
                 </div>
 
-                {data.showPercentage !== false && (
+                {showPercentage && !percentageInside && (
                     <div className="mt-3 font-mono text-sm font-bold" style={{ color: textColor }}>
-                        {Math.round(progress)}%
+                        {pctLabel}
                     </div>
                 )}
 
-                <div className="mt-2 text-xs text-gray-400 h-4 transition-all duration-300">{getMessage()}</div>
+                <div className="mt-2 text-xs text-gray-400 h-4">{getMessage()}</div>
             </div>
         );
     }
 
-    // Default 'bar' style (improved)
+    // ── BAR (default) ──
     return (
-        <div className="w-full flex flex-col items-center justify-center py-12 px-6 text-center animate-in fade-in duration-500">
+        <div className="w-full flex flex-col items-center justify-center py-12 px-6 text-center">
             <h2
-                className="text-2xl font-bold mb-2 transition-all duration-300"
+                className="text-2xl font-bold mb-2"
                 style={{ color: textColor }}
             >
                 {progress === 100 && data.endText ? data.endText : (data.headline || 'Processando...')}
@@ -179,8 +209,8 @@ export const LoadingComponentRenderer: React.FC<LoadingComponentRendererProps> =
 
             <div className="w-full max-w-sm">
                 <div
-                    className={`w-full overflow-hidden ${HEIGHT_MAP[height]} ${rounded === 'full' ? 'rounded-full' : rounded === 'md' ? 'rounded-md' : ''}`}
-                    style={{ backgroundColor: trackColor, boxShadow: `inset 0 1px 3px ${trackColor}` }}
+                    className={`relative w-full overflow-hidden ${HEIGHT_MAP[height]} ${rounded === 'full' ? 'rounded-full' : rounded === 'md' ? 'rounded-md' : ''}`}
+                    style={{ backgroundColor: trackColor }}
                 >
                     <div
                         className="h-full relative overflow-hidden"
@@ -188,33 +218,41 @@ export const LoadingComponentRenderer: React.FC<LoadingComponentRendererProps> =
                             width: `${progress}%`,
                             backgroundColor: barColor,
                             boxShadow: `0 0 12px ${barColor}50`,
-                            transition: 'width 0.1s linear',
                         }}
                     >
                         <div
                             className="absolute inset-0"
                             style={{
                                 background: `linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)`,
-                                animation: 'shimmer 1.5s infinite',
+                                animation: 'loading-shimmer 1.5s infinite',
                             }}
                         />
                     </div>
+
+                    {showPercentage && percentageInside && (
+                        <div
+                            className={`absolute inset-0 flex items-center text-xs font-bold z-10 ${positionClass}`}
+                            style={{ color: textColor }}
+                        >
+                            {pctLabel}
+                        </div>
+                    )}
                 </div>
 
-                {data.showPercentage !== false && (
+                {showPercentage && !percentageInside && (
                     <div className="mt-3 flex items-center justify-between">
                         <span className="font-mono text-sm font-bold" style={{ color: textColor }}>
-                            {Math.round(progress)}%
+                            {pctLabel}
                         </span>
                         <span className="text-[10px] text-gray-400">completo</span>
                     </div>
                 )}
             </div>
 
-            <div className="mt-4 text-xs text-gray-400 h-4 transition-all duration-300">{getMessage()}</div>
+            <div className="mt-4 text-xs text-gray-400 h-4">{getMessage()}</div>
 
-            <style jsx>{`
-                @keyframes shimmer {
+            <style>{`
+                @keyframes loading-shimmer {
                     0% { transform: translateX(-100%); }
                     100% { transform: translateX(100%); }
                 }

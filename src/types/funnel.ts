@@ -227,20 +227,23 @@ export interface InputComponent extends BaseComponent {
 export interface LoadingComponent extends BaseComponent {
   type: 'loading';
   data: {
-    headline?: string; // Texto principal (ex: "Analisando seu perfil...")
-    subheadline?: string; // Texto de apoio (ex: "Isso pode levar alguns segundos")
-    endText?: string; // Texto quando chega em 100% (ex: "Concluído!")
-    duration: number; // Tempo em milissegundos (ex: 3000ms = 3s)
-    barColor?: string; // Cor da barra preenchida
-    trackColor?: string; // Cor do fundo da barra
-    textColor?: string; // Cor dos textos
-    height?: 'sm' | 'md' | 'lg'; // Altura da barra
-    rounded?: 'none' | 'md' | 'full'; // Arredondamento
-    showPercentage?: boolean; // Mostrar porcentagem
-    messages?: string[]; // Mensagens dinâmicas (opcional, 3-4 mensagens que aparecem em sequência)
-    actionType?: 'next_step' | 'open_url' | 'jump_to_step'; // Ação ao finalizar
-    targetUrl?: string; // URL para redirecionar
-    nextStepId?: string; // Auto-redirect após finalizar (usado para jump_to_step)
+    headline?: string;
+    subheadline?: string;
+    endText?: string;
+    duration: number;
+    barColor?: string;
+    trackColor?: string;
+    textColor?: string;
+    height?: 'sm' | 'md' | 'lg';
+    rounded?: 'none' | 'md' | 'full';
+    showPercentage?: boolean;
+    percentageInside?: boolean;
+    percentagePosition?: 'left' | 'center' | 'right';
+    loadingStyle?: 'bar' | 'circle' | 'dots' | 'pulse';
+    messages?: string[];
+    actionType?: 'next_step' | 'open_url' | 'jump_to_step' | 'none';
+    targetUrl?: string;
+    nextStepId?: string;
     variableName?: string;
   };
 }

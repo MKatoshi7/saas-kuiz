@@ -732,12 +732,21 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
             const loadingBarColor = component.data.barColor || '#22c55e';
             const loadingTrackColor = component.data.trackColor || '#e2e8f0';
             const loadingTextColor = component.data.textColor || '#1e293b';
+            const loadingPercentageInside = component.data.percentageInside === true;
+            const loadingPercentagePosition = component.data.percentagePosition || 'center';
 
             const heightMap: Record<string, string> = {
                 sm: 'h-2',
                 md: 'h-4',
                 lg: 'h-6',
             };
+
+            const previewPositionClass =
+                loadingPercentagePosition === 'left'
+                    ? 'justify-start pl-3'
+                    : loadingPercentagePosition === 'right'
+                    ? 'justify-end pr-3'
+                    : 'justify-center';
 
             return (
                 <div className="p-4 flex flex-col items-center justify-center text-center">
@@ -754,25 +763,35 @@ function renderContent(component: FunnelComponentData, onUpdate: (id: string, da
                         </p>
                     )}
 
-                    <div
-                        className={`w-full overflow-hidden shadow-inner ${heightMap[loadingHeight]} ${loadingRounded === 'full' ? 'rounded-full' : loadingRounded === 'md' ? 'rounded-md' : ''}`}
-                        style={{ backgroundColor: loadingTrackColor }}
-                    >
+                    <div className="w-full max-w-sm">
                         <div
-                            className="h-full"
-                            style={{
-                                width: '50%',
-                                backgroundColor: loadingBarColor,
-                                boxShadow: `0 0 10px ${loadingBarColor}40`
-                            }}
-                        />
-                    </div>
-
-                    {component.data.showPercentage !== false && (
-                        <div className="mt-3 font-mono text-sm font-bold text-gray-400">
-                            50%
+                            className={`relative w-full overflow-hidden shadow-inner ${heightMap[loadingHeight]} ${loadingRounded === 'full' ? 'rounded-full' : loadingRounded === 'md' ? 'rounded-md' : ''}`}
+                            style={{ backgroundColor: loadingTrackColor }}
+                        >
+                            <div
+                                className="h-full"
+                                style={{
+                                    width: '50%',
+                                    backgroundColor: loadingBarColor,
+                                    boxShadow: `0 0 10px ${loadingBarColor}40`
+                                }}
+                            />
+                            {loadingPercentageInside && (
+                                <div
+                                    className={`absolute inset-0 flex items-center text-xs font-bold ${previewPositionClass}`}
+                                    style={{ color: loadingTextColor }}
+                                >
+                                    50%
+                                </div>
+                            )}
                         </div>
-                    )}
+
+                        {!loadingPercentageInside && component.data.showPercentage !== false && (
+                            <div className="mt-3 font-mono text-sm font-bold text-gray-400">
+                                50%
+                            </div>
+                        )}
+                    </div>
 
                     <div className="mt-2 text-xs text-gray-400">
                         {(component.data.messages && component.data.messages[0]) || "Conectando ao servidor..."}

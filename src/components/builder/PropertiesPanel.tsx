@@ -1195,6 +1195,20 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                         {selectedComponent.type === 'loading' && (
                             <>
                                 <div>
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Estilo do Loading</label>
+                                    <select
+                                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                        value={selectedComponent.data.loadingStyle || 'bar'}
+                                        onChange={(e) => handleUpdate('loadingStyle', e.target.value)}
+                                    >
+                                        <option value="bar">Barra</option>
+                                        <option value="circle">Círculo</option>
+                                        <option value="dots">Pontos</option>
+                                        <option value="pulse">Pulso</option>
+                                    </select>
+                                </div>
+
+                                <div>
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Título Principal</label>
                                     <Input
                                         value={selectedComponent.data.headline || ''}
@@ -1223,7 +1237,7 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
 
                                 <div>
                                     <label className="text-xs font-medium text-gray-700 mb-2 flex justify-between">
-                                        <span>Duração (segundos)</span>
+                                        <span>Duração</span>
                                         <span className="text-blue-600">{((selectedComponent.data.duration || 3000) / 1000).toFixed(1)}s</span>
                                     </label>
                                     <input
@@ -1241,17 +1255,56 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                     </div>
                                 </div>
 
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="showPercentage"
+                                        checked={selectedComponent.data.showPercentage !== false}
+                                        onChange={(e) => handleUpdate('showPercentage', e.target.checked)}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <label htmlFor="showPercentage" className="text-xs font-medium text-gray-700">Mostrar Porcentagem</label>
+                                </div>
+
+                                {selectedComponent.data.showPercentage !== false && (
+                                    <>
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                id="percentageInside"
+                                                checked={selectedComponent.data.percentageInside === true}
+                                                onChange={(e) => handleUpdate('percentageInside', e.target.checked)}
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                            />
+                                            <label htmlFor="percentageInside" className="text-xs font-medium text-gray-700">Porcentagem dentro da barra</label>
+                                        </div>
+
+                                        {selectedComponent.data.percentageInside === true && (
+                                            <div>
+                                                <label className="text-xs font-medium text-gray-700 mb-2 block">Posição do valor</label>
+                                                <select
+                                                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                                                    value={selectedComponent.data.percentagePosition || 'center'}
+                                                    onChange={(e) => handleUpdate('percentagePosition', e.target.value)}
+                                                >
+                                                    <option value="left">Esquerda</option>
+                                                    <option value="center">Centro</option>
+                                                    <option value="right">Direita</option>
+                                                </select>
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
                                         <label className="text-xs font-medium text-gray-700 mb-2 block">Cor da Barra</label>
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="color"
-                                                value={selectedComponent.data.barColor || '#22c55e'}
-                                                onChange={(e) => handleUpdate('barColor', e.target.value)}
-                                                className="w-full h-10 rounded border border-gray-300 cursor-pointer"
-                                            />
-                                        </div>
+                                        <input
+                                            type="color"
+                                            value={selectedComponent.data.barColor || '#22c55e'}
+                                            onChange={(e) => handleUpdate('barColor', e.target.value)}
+                                            className="w-full h-10 rounded border border-gray-300 cursor-pointer"
+                                        />
                                     </div>
                                     <div>
                                         <label className="text-xs font-medium text-gray-700 mb-2 block">Cor do Fundo</label>
@@ -1276,7 +1329,7 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
 
                                 <div className="grid grid-cols-2 gap-2">
                                     <div>
-                                        <label className="text-xs font-medium text-gray-700 mb-2 block">Altura da Barra</label>
+                                        <label className="text-xs font-medium text-gray-700 mb-2 block">Altura</label>
                                         <select
                                             className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                                             value={selectedComponent.data.height || 'md'}
@@ -1299,17 +1352,6 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                                             <option value="full">Completo</option>
                                         </select>
                                     </div>
-                                </div>
-
-                                <div className="flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        id="showPercentage"
-                                        checked={selectedComponent.data.showPercentage !== false}
-                                        onChange={(e) => handleUpdate('showPercentage', e.target.checked)}
-                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    />
-                                    <label htmlFor="showPercentage" className="text-xs font-medium text-gray-700">Mostrar Porcentagem</label>
                                 </div>
 
                                 <div>

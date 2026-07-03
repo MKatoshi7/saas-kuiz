@@ -1,52 +1,35 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 export const useLoadingTimer = (duration: number, onComplete: () => void) => {
     const [progress, setProgress] = useState(0);
     const onCompleteRef = useRef(onComplete);
+    const startTimeRef = useRef<number>(0);
+    const animFrameRef = useRef<number>(0);
 
     useEffect(() => {
         onCompleteRef.current = onComplete;
     }, [onComplete]);
 
     useEffect(() => {
-        console.log('🚀 useLoadingTimer started with duration:', duration);
-        const startTime = Date.now();
-        let animationId: number;
-        let timeoutId: NodeJS.Timeout;
-        let frameCount = 0;
+        startTimeRef.current = Date.now();
 
-        const animate = () => {
-            const elapsed = Date.now() - startTime;
-            const nextProgress = Math.min((elapsed / duration) * 100, 100);
+        const tick = () => {
+            const elapsed = Date.now() - startTimeRef.current;
+            const next = Math.min((elapsed / duration) * 100, 100);
+            setProgress(next);
 
-            frameCount++;
-            if (frameCount % 60 === 0) {
-                console.log('🎬 Animation frame:', { frameCount, elapsed, nextProgress });
-            }
-
-            setProgress(nextProgress);
-
-            if (nextProgress < 100) {
-                animationId = requestAnimationFrame(animate);
+            if (next < 100) {
+                animFrameRef.current = requestAnimationFrame(tick);
             } else {
-                console.log('✅ Progress reached 100%, waiting 500ms before callback');
-                // Aguarda um pequeno delay (500ms) no 100% antes de mudar de tela
-                // para o usuário ver que terminou.
-                timeoutId = setTimeout(() => {
-                    if (onCompleteRef.current) {
-                        onCompleteRef.current();
-                    }
-                }, 500);
+                setTimeout(() => {
+                    onCompleteRef.current?.();
+                }, 600);
             }
         };
 
-        animationId = requestAnimationFrame(animate);
+        animFrameRef.current = requestAnimationFrame(tick);
 
-        return () => {
-            console.log('🛑 useLoadingTimer cleanup');
-            cancelAnimationFrame(animationId);
-            clearTimeout(timeoutId);
-        };
+        return () => cancelAnimationFrame(animFrameRef.current);
     }, [duration]);
 
     return progress;
