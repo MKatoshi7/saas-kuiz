@@ -1,7 +1,23 @@
 import React from 'react';
 
+interface TextStyle {
+    color?: string;
+    fontSize?: number;
+    fontFamily?: string;
+    bold?: boolean;
+    italic?: boolean;
+    underline?: boolean;
+    strikethrough?: boolean;
+    align?: 'left' | 'center' | 'right';
+    textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+    letterSpacing?: number;
+    lineHeight?: number;
+}
+
 interface UnifiedTextRendererProps {
     text: string;
+    textHtml?: string;
+    textStyle?: TextStyle;
     tag?: 'h1' | 'h2' | 'h3' | 'p' | 'div';
     fontSize?: string;
     align?: string;
@@ -21,6 +37,8 @@ interface UnifiedTextRendererProps {
 
 export function UnifiedTextRenderer({
     text,
+    textHtml,
+    textStyle,
     tag = 'p',
     fontSize,
     align,
@@ -131,6 +149,25 @@ export function UnifiedTextRenderer({
     const buildStyles = (): React.CSSProperties => {
         const styles: React.CSSProperties = {};
 
+        // If textStyle is provided (from MiniToolbar), use it directly
+        if (textStyle) {
+            if (textStyle.color) styles.color = textStyle.color;
+            if (textStyle.fontSize) styles.fontSize = `${textStyle.fontSize}px`;
+            if (textStyle.fontFamily) styles.fontFamily = textStyle.fontFamily;
+            if (textStyle.bold) styles.fontWeight = 'bold';
+            if (textStyle.italic) styles.fontStyle = 'italic';
+            const decorations: string[] = [];
+            if (textStyle.underline) decorations.push('underline');
+            if (textStyle.strikethrough) decorations.push('line-through');
+            if (decorations.length) styles.textDecoration = decorations.join(' ');
+            if (textStyle.align) styles.textAlign = textStyle.align;
+            if (textStyle.textTransform) styles.textTransform = textStyle.textTransform;
+            if (textStyle.letterSpacing !== undefined) styles.letterSpacing = `${textStyle.letterSpacing}px`;
+            if (textStyle.lineHeight) styles.lineHeight = textStyle.lineHeight;
+            return styles;
+        }
+
+        // Fallback to individual props
         if (color) {
             styles.color = color;
         }
@@ -164,7 +201,7 @@ export function UnifiedTextRenderer({
     };
 
     // Sanitização simples: remove tags perigosas, mantém formatação básica
-    const sanitizedText = (text || '')
+    const sanitizedText = (textHtml || text || '')
         .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
         .replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi, '')
         .replace(/<object\b[^>]*>[\s\S]*?<\/object>/gi, '')

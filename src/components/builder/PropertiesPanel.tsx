@@ -18,6 +18,7 @@ import { TextStyleToolbar } from './TextStyleToolbar';
 import { RichTextEditor } from './RichTextEditor';
 import { FullTextProperties } from './FullTextProperties';
 import { ColorPickerWithPalette } from './ColorPickerWithPalette';
+import { MiniToolbar } from './MiniToolbar';
 import { ImageUploadWithPreview } from './ImageUploadWithPreview';
 import { VideoUploadWithPreview } from './VideoUploadWithPreview';
 import EmojiPicker from 'emoji-picker-react';
@@ -139,23 +140,40 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                         {selectedComponent.type === 'headline' && (
                             <>
                                 <div className="space-y-3">
-                                    <label className="text-xs font-medium text-gray-700 mb-2 block">
-                                        Texto do Título
-                                    </label>
-                                    <RichTextEditor
-                                        value={selectedComponent.data.text || ''}
-                                        onChange={(html) => handleUpdate('text', html)}
-                                        placeholder="Digite seu título aqui..."
-                                        className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] bg-white"
+                                    <MiniToolbar
+                                        style={selectedComponent.data.textStyle}
+                                        onStyleUpdate={(s) => handleUpdate('textStyle', s)}
+                                        label="Estilo do Título"
+                                    />
+                                    <div
+                                        contentEditable
+                                        suppressContentEditableWarning
+                                        onBlur={(e) => {
+                                            const target = e.currentTarget;
+                                            handleUpdate('text', target.innerText);
+                                            handleUpdate('textHtml', target.innerHTML);
+                                        }}
+                                        className="p-3 bg-white border border-gray-200 rounded-lg text-sm min-h-[40px] outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all"
+                                        style={{
+                                            color: selectedComponent.data.textStyle?.color || selectedComponent.data.color || '#111827',
+                                            fontSize: selectedComponent.data.textStyle?.fontSize ? `${selectedComponent.data.textStyle.fontSize}px` : undefined,
+                                            fontFamily: selectedComponent.data.textStyle?.fontFamily,
+                                            fontWeight: selectedComponent.data.textStyle?.bold ? 'bold' : undefined,
+                                            fontStyle: selectedComponent.data.textStyle?.italic ? 'italic' : undefined,
+                                            textDecoration: [
+                                                selectedComponent.data.textStyle?.underline ? 'underline' : '',
+                                                selectedComponent.data.textStyle?.strikethrough ? 'line-through' : ''
+                                            ].filter(Boolean).join(' ') || undefined,
+                                            textAlign: selectedComponent.data.textStyle?.align as any,
+                                            textTransform: selectedComponent.data.textStyle?.textTransform as any,
+                                            letterSpacing: selectedComponent.data.textStyle?.letterSpacing ? `${selectedComponent.data.textStyle.letterSpacing}px` : undefined,
+                                            lineHeight: selectedComponent.data.textStyle?.lineHeight,
+                                        }}
+                                        dangerouslySetInnerHTML={{ __html: selectedComponent.data.textHtml || selectedComponent.data.text || '' }}
                                     />
                                 </div>
 
-                                <FullTextProperties
-                                    data={selectedComponent.data}
-                                    onUpdate={handleUpdate}
-                                />
-
-                                <div className="pt-4 border-t border-gray-200 mt-4">
+                                <div className="pt-3 border-t border-gray-200 mt-3">
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Nome da Variável (Analytics)</label>
                                     <Input
                                         value={selectedComponent.data.variableName || ''}
@@ -169,23 +187,41 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                         {selectedComponent.type === 'paragraph' && (
                             <>
                                 <div className="space-y-3">
-                                    <label className="text-xs font-medium text-gray-700 mb-2 block">
-                                        Texto do Parágrafo
-                                    </label>
-                                    <RichTextEditor
-                                        value={selectedComponent.data.text || ''}
-                                        onChange={(html) => handleUpdate('text', html)}
-                                        placeholder="Digite seu parágrafo aqui..."
-                                        className="w-full border border-gray-300 rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[120px] bg-white"
+                                    <MiniToolbar
+                                        style={selectedComponent.data.textStyle}
+                                        onStyleUpdate={(s) => handleUpdate('textStyle', s)}
+                                        label="Estilo do Parágrafo"
                                     />
+                                    <div
+                                        contentEditable
+                                        suppressContentEditableWarning
+                                        onBlur={(e) => {
+                                            const target = e.currentTarget;
+                                            handleUpdate('text', target.innerText);
+                                            handleUpdate('textHtml', target.innerHTML);
+                                        }}
+                                        className="p-3 bg-white border border-gray-200 rounded-lg text-sm min-h-[80px] outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all whitespace-pre-wrap"
+                                        style={{
+                                            color: selectedComponent.data.textStyle?.color || selectedComponent.data.color || '#374151',
+                                            fontSize: selectedComponent.data.textStyle?.fontSize ? `${selectedComponent.data.textStyle.fontSize}px` : undefined,
+                                            fontFamily: selectedComponent.data.textStyle?.fontFamily,
+                                            fontWeight: selectedComponent.data.textStyle?.bold ? 'bold' : undefined,
+                                            fontStyle: selectedComponent.data.textStyle?.italic ? 'italic' : undefined,
+                                            textDecoration: [
+                                                selectedComponent.data.textStyle?.underline ? 'underline' : '',
+                                                selectedComponent.data.textStyle?.strikethrough ? 'line-through' : ''
+                                            ].filter(Boolean).join(' ') || undefined,
+                                            textAlign: selectedComponent.data.textStyle?.align as any,
+                                            textTransform: selectedComponent.data.textStyle?.textTransform as any,
+                                            letterSpacing: selectedComponent.data.textStyle?.letterSpacing ? `${selectedComponent.data.textStyle.letterSpacing}px` : undefined,
+                                            lineHeight: selectedComponent.data.textStyle?.lineHeight,
+                                        }}
+                                        dangerouslySetInnerHTML={{ __html: selectedComponent.data.textHtml || selectedComponent.data.text || '' }}
+                                    />
+                                    <p className="text-[10px] text-gray-400">Use Enter para quebras de linha. O texto formatado será preservado.</p>
                                 </div>
 
-                                <FullTextProperties
-                                    data={selectedComponent.data}
-                                    onUpdate={handleUpdate}
-                                />
-
-                                <div className="pt-4 border-t border-gray-200 mt-4">
+                                <div className="pt-3 border-t border-gray-200 mt-3">
                                     <label className="text-xs font-medium text-gray-700 mb-2 block">Nome da Variável (Analytics)</label>
                                     <Input
                                         value={selectedComponent.data.variableName || ''}

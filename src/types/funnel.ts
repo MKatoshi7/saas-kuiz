@@ -63,6 +63,20 @@ export interface HeadlineComponent extends BaseComponent {
   type: 'headline';
   data: {
     text: string;
+    textHtml?: string;
+    textStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     tag?: 'h1' | 'h2' | 'h3' | 'p';
     fontSize?: 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | 'small' | 'normal' | 'medium' | 'big' | 'bigger' | 'huge';
     bold?: boolean;
@@ -90,6 +104,20 @@ export interface ParagraphComponent extends BaseComponent {
   type: 'paragraph';
   data: {
     text: string;
+    textHtml?: string;
+    textStyle?: {
+      color?: string;
+      fontSize?: number;
+      fontFamily?: string;
+      bold?: boolean;
+      italic?: boolean;
+      underline?: boolean;
+      strikethrough?: boolean;
+      align?: 'left' | 'center' | 'right';
+      textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+      letterSpacing?: number;
+      lineHeight?: number;
+    };
     tag?: 'h1' | 'h2' | 'h3' | 'p';
     fontSize?: 'sm' | 'base' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | 'small' | 'normal' | 'medium' | 'big' | 'bigger' | 'huge';
     bold?: boolean;

@@ -307,6 +307,8 @@ function PublicComponentRenderer({
             return (
                 <UnifiedTextRenderer
                     text={interpolateText ? interpolateText(data.text || '') : (data.text || '')}
+                    textHtml={data.textHtml}
+                    textStyle={data.textStyle}
                     tag="h1"
                     fontSize={data.fontSize}
                     align={data.align}
@@ -325,6 +327,8 @@ function PublicComponentRenderer({
             return (
                 <UnifiedTextRenderer
                     text={interpolateText ? interpolateText(data.text || '') : (data.text || '')}
+                    textHtml={data.textHtml}
+                    textStyle={data.textStyle}
                     tag="div"
                     fontSize={data.fontSize}
                     align={data.align}

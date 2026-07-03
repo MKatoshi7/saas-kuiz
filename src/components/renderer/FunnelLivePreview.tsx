@@ -76,6 +76,8 @@ function VisualRenderer({ component, theme }: { component: FunnelComponentData; 
             return (
                 <UnifiedTextRenderer
                     text={data.text || ''}
+                    textHtml={data.textHtml}
+                    textStyle={data.textStyle}
                     tag="h1"
                     fontSize={data.fontSize}
                     align={data.align}
@@ -94,6 +96,8 @@ function VisualRenderer({ component, theme }: { component: FunnelComponentData; 
             return (
                 <UnifiedTextRenderer
                     text={data.text || ''}
+                    textHtml={data.textHtml}
+                    textStyle={data.textStyle}
                     tag="div"
                     fontSize={data.fontSize}
                     align={data.align}
