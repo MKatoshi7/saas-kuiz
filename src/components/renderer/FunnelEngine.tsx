@@ -14,7 +14,7 @@ import { PricingComponent } from '@/types/funnel';
 import { DelayedButton } from './DelayedButton';
 import { VSLVideo } from './VSLVideo';
 import Image from 'next/image';
-import DOMPurify from 'isomorphic-dompurify';
+import { sanitizeAlertText, sanitizeUrl } from '@/lib/sanitize';
 import { TimerRenderer } from './TimerRenderer';
 
 // Lazy load heavy components
@@ -352,7 +352,7 @@ function PublicComponentRenderer({
 
 
         case 'code':
-            const sanitizedCode = DOMPurify.sanitize(data.code || '', { ADD_TAGS: ['iframe', 'script'], ADD_ATTR: ['src', 'frameborder', 'allow', 'allowfullscreen'] });
+            const sanitizedCode = data.code || '';
             return (
                 <div dangerouslySetInnerHTML={{ __html: sanitizedCode }} />
             );
@@ -759,7 +759,7 @@ function PublicComponentRenderer({
                                 {text && (
                                     <div className={`${fontSizeMap[alertFontSize] || fontSizeMap.sm} leading-relaxed opacity-80`}
                                          style={{ color: textColor }}
-                                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(interpolateText ? interpolateText(text) : text, { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'br', 'span'], ALLOWED_ATTR: ['href', 'target', 'style', 'class'] }) }}
+                                         dangerouslySetInnerHTML={{ __html: sanitizeAlertText(interpolateText ? interpolateText(text) : text) }}
                                     />
                                 )}
                             </div>
@@ -794,7 +794,7 @@ function PublicComponentRenderer({
                                 {text && (
                                     <div className={`${fontSizeMap[alertFontSize] || fontSizeMap.sm} leading-relaxed opacity-80`}
                                          style={{ color: textColor }}
-                                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(interpolateText ? interpolateText(text) : text, { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'br', 'span'], ALLOWED_ATTR: ['href', 'target', 'style', 'class'] }) }}
+                                         dangerouslySetInnerHTML={{ __html: sanitizeAlertText(interpolateText ? interpolateText(text) : text) }}
                                     />
                                 )}
                             </div>
@@ -824,7 +824,7 @@ function PublicComponentRenderer({
                                 )}
                                 {text && (
                                     <div className={`${fontSizeMap[alertFontSize] || fontSizeMap.sm} leading-relaxed text-white/90`}
-                                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(interpolateText ? interpolateText(text) : text, { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'br', 'span'], ALLOWED_ATTR: ['href', 'target', 'style', 'class'] }) }}
+                                         dangerouslySetInnerHTML={{ __html: sanitizeAlertText(interpolateText ? interpolateText(text) : text) }}
                                     />
                                 )}
                             </div>
@@ -855,7 +855,7 @@ function PublicComponentRenderer({
                             {text && (
                                 <div className={`${fontSizeMap[alertFontSize] || fontSizeMap.sm} leading-relaxed opacity-80`}
                                      style={{ color: textColor }}
-                                     dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(interpolateText ? interpolateText(text) : text, { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'br', 'span'], ALLOWED_ATTR: ['href', 'target', 'style', 'class'] }) }}
+                                     dangerouslySetInnerHTML={{ __html: sanitizeAlertText(interpolateText ? interpolateText(text) : text) }}
                                 />
                             )}
                         </div>

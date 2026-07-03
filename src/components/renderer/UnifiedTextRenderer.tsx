@@ -1,5 +1,4 @@
 import React from 'react';
-import DOMPurify from 'isomorphic-dompurify';
 
 interface UnifiedTextRendererProps {
     text: string;
@@ -164,7 +163,14 @@ export function UnifiedTextRenderer({
         return styles;
     };
 
-    const sanitizedText = DOMPurify.sanitize(text || '');
+    // Sanitização simples: remove tags perigosas, mantém formatação básica
+    const sanitizedText = (text || '')
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi, '')
+        .replace(/<object\b[^>]*>[\s\S]*?<\/object>/gi, '')
+        .replace(/<embed\b[^>]*\/?>/gi, '')
+        .replace(/\son\w+\s*=\s*["'][^"']*["']/gi, '')
+        .replace(/\son\w+\s*=\s*\S+/gi, '');
 
     return (
         <Tag
