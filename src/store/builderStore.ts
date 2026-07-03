@@ -5,6 +5,13 @@ interface Step {
     id: string;
     title: string;
     order: number;
+    branchRules?: Array<{
+        id: string;
+        condition: { field: string; op: string; value?: string };
+        targetStepId: string;
+        label?: string;
+    }>;
+    defaultNextStepId?: string;
 }
 
 interface BuilderStore {
@@ -58,6 +65,8 @@ interface BuilderStore {
     duplicateStep: (stepId: string) => void;
     deleteStep: (stepId: string) => void;
     reorderSteps: (steps: Step[]) => void;
+    setStepBranchRules: (stepId: string, rules: Step['branchRules']) => void;
+    setStepDefaultNext: (stepId: string, targetStepId: string | undefined) => void;
 
     // Component Actions
     setSelectedComponent: (componentId: string | null) => void;
@@ -166,7 +175,9 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
         const newStep: Step = {
             id: `step_${Date.now()}`,
             title: `Etapa ${steps.length + 1}`,
-            order: steps.length
+            order: steps.length,
+            branchRules: [],
+            defaultNextStepId: undefined,
         };
 
         const newSteps = [...steps, newStep];
@@ -204,7 +215,14 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
         const newStep: Step = {
             id: `step_${Date.now()}`,
             title: `${stepToDuplicate.title} (Cópia)`,
-            order: steps.length
+            order: steps.length,
+            branchRules: stepToDuplicate.branchRules
+                ? stepToDuplicate.branchRules.map(r => ({
+                    ...r,
+                    id: `rule_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+                }))
+                : [],
+            defaultNextStepId: stepToDuplicate.defaultNextStepId,
         };
 
         // Deep copy components to ensure no reference sharing
@@ -265,6 +283,28 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
     reorderSteps: (newSteps) => {
         set({ steps: newSteps });
     },
+
+    setStepBranchRules: (stepId, rules) => set((state) => ({
+        steps: state.steps.map(s => s.id === stepId ? { ...s, branchRules: rules } : s),
+        history: [...state.history.slice(-49), {
+            steps: [...state.steps.map(s => s.id === stepId ? { ...s, branchRules: rules } : s)],
+            componentsByStep: { ...state.componentsByStep },
+            action: 'setStepBranchRules',
+            timestamp: Date.now(),
+        }],
+        historyIndex: Math.min(state.historyIndex + 1, 49),
+    })),
+
+    setStepDefaultNext: (stepId, targetStepId) => set((state) => ({
+        steps: state.steps.map(s => s.id === stepId ? { ...s, defaultNextStepId: targetStepId } : s),
+        history: [...state.history.slice(-49), {
+            steps: [...state.steps.map(s => s.id === stepId ? { ...s, defaultNextStepId: targetStepId } : s)],
+            componentsByStep: { ...state.componentsByStep },
+            action: 'setStepDefaultNext',
+            timestamp: Date.now(),
+        }],
+        historyIndex: Math.min(state.historyIndex + 1, 49),
+    })),
 
     // Component Actions
     setSelectedComponent: (componentId) => {
@@ -604,11 +644,16 @@ export const useBuilderStore = create<BuilderStore>((set, get) => ({
             }
 
             // Map DB steps to store steps
-            const storeSteps: Step[] = funnel.steps.map((s: any) => ({
-                id: s.id,
-                title: s.title,
-                order: s.order
-            }));
+            const storeSteps: Step[] = funnel.steps.map((s: any) => {
+                const settings = (s.settings as any) || {};
+                return {
+                    id: s.id,
+                    title: s.title,
+                    order: s.order,
+                    branchRules: settings.branchRules || [],
+                    defaultNextStepId: settings.defaultNextStepId,
+                };
+            });
 
             // Map DB components to store componentsByStep
             const storeComponentsByStep: Record<string, FunnelComponentData[]> = {};

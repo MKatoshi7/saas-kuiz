@@ -15,6 +15,8 @@ import { VSLVideo } from './VSLVideo'
 import { WhatsAppAudioPlayer } from './WhatsAppAudio'
 import { PieChartRenderer } from './PieChartRenderer'
 import { BarChartRenderer } from './BarChartRenderer'
+import { SocialProofRenderer } from './SocialProofRenderer'
+import { WhatsAppButtonRenderer } from './WhatsAppButtonRenderer'
 import { Star } from 'lucide-react'
 import { sanitizeAlertText, sanitizeUrl } from '@/lib/sanitize'
 
@@ -653,6 +655,39 @@ function VisualRenderer({ component, theme }: { component: FunnelComponentData; 
                 <Suspense fallback={<ComponentSkeleton />}>
                     <BarChartRenderer component={component as any} />
                 </Suspense>
+            );
+
+        case 'social-proof':
+            return (
+                <SocialProofRenderer
+                    style={data.style || 'viewing'}
+                    text={data.text || ''}
+                    number={data.number || 47}
+                    min={data.min || 20}
+                    max={data.max || 80}
+                    interval={data.interval || 5}
+                    icon={data.icon}
+                    backgroundColor={data.backgroundColor}
+                    textColor={data.textColor}
+                    borderRadius={data.borderRadius}
+                    textHtml={data.textHtml}
+                />
+            );
+
+        case 'whatsapp-button':
+            return (
+                <WhatsAppButtonRenderer
+                    phoneNumber={data.phoneNumber || ''}
+                    message={data.message || 'Olá! Vim pelo quiz.'}
+                    buttonText={data.buttonText || 'Falar no WhatsApp'}
+                    buttonColor={data.buttonColor || '#25D366'}
+                    textColor={data.textColor || '#FFFFFF'}
+                    style={data.style || 'default'}
+                    position={data.position}
+                    borderRadius={data.borderRadius}
+                    icon={data.icon}
+                    textHtml={data.textHtml}
+                />
             );
 
         default:

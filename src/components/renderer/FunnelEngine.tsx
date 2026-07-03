@@ -16,6 +16,8 @@ import { VSLVideo } from './VSLVideo';
 import Image from 'next/image';
 import { sanitizeAlertText, sanitizeUrl } from '@/lib/sanitize';
 import { TimerRenderer } from './TimerRenderer';
+import { SocialProofRenderer } from './SocialProofRenderer';
+import { WhatsAppButtonRenderer } from './WhatsAppButtonRenderer';
 
 // Lazy load heavy components
 const QuizOptionsRenderer = lazy(() => import('./QuizOptionsRenderer').then(m => ({ default: m.QuizOptionsRenderer })));
@@ -39,6 +41,56 @@ interface Step {
     id: string;
     title: string;
     order: number;
+    branchRules?: Array<{
+        id: string;
+        condition: { field: string; op: string; value?: string };
+        targetStepId: string;
+        label?: string;
+    }>;
+    defaultNextStepId?: string;
+}
+
+function evaluateBranchRules(
+    branchRules: Array<{ condition: { field: string; op: string; value?: string }; targetStepId: string }>,
+    answers: Record<string, any>,
+    defaultNextStepId?: string
+): string | null {
+    if (!branchRules || branchRules.length === 0) return null;
+
+    for (const rule of branchRules) {
+        const answer = answers[rule.condition.field];
+        let matches = false;
+
+        switch (rule.condition.op) {
+            case 'equals':
+                matches = String(answer ?? '').toLowerCase() === String(rule.condition.value ?? '').toLowerCase();
+                break;
+            case 'not_equals':
+                matches = String(answer ?? '').toLowerCase() !== String(rule.condition.value ?? '').toLowerCase();
+                break;
+            case 'contains':
+                matches = String(answer ?? '').toLowerCase().includes(String(rule.condition.value ?? '').toLowerCase());
+                break;
+            case 'greater_than':
+                matches = Number(answer) > Number(rule.condition.value);
+                break;
+            case 'less_than':
+                matches = Number(answer) < Number(rule.condition.value);
+                break;
+            case 'is_empty':
+                matches = !answer || String(answer).trim() === '';
+                break;
+            case 'is_not_empty':
+                matches = !!answer && String(answer).trim() !== '';
+                break;
+        }
+
+        if (matches) {
+            return rule.targetStepId;
+        }
+    }
+
+    return defaultNextStepId || null;
 }
 
 interface FunnelEngineProps {
@@ -85,16 +137,40 @@ export function FunnelEngine({ funnelId, steps, componentsByStep, onStepChange, 
 
             // 2. Wait for fade-out to complete
             setTimeout(() => {
-                // 3. Scroll to top immediately while invisible
+                // 3. Check branching rules before advancing
+                const currentStepData = steps[currentStepIndex];
+                if (currentStepData?.branchRules && currentStepData.branchRules.length > 0) {
+                    const targetStepId = evaluateBranchRules(
+                        currentStepData.branchRules,
+                        answers || {},
+                        currentStepData.defaultNextStepId
+                    );
+                    if (targetStepId) {
+                        const targetIndex = steps.findIndex(s => s.id === targetStepId);
+                        if (targetIndex !== -1 && targetIndex !== currentStepIndex) {
+                            window.scrollTo({ top: 0, behavior: 'auto' });
+                            setCurrentStepIndex(targetIndex);
+                            if (onStepChange) onStepChange(targetIndex);
+                            requestAnimationFrame(() => {
+                                setTimeout(() => {
+                                    setIsTransitioning(false);
+                                }, 50);
+                            });
+                            return;
+                        }
+                    }
+                }
+
+                // 4. Scroll to top immediately while invisible
                 // We use 'auto' to jump instantly so the user doesn't see the scroll happening
                 window.scrollTo({ top: 0, behavior: 'auto' });
 
-                // 4. Change content
+                // 5. Change content
                 const nextIndex = currentStepIndex + 1;
                 setCurrentStepIndex(nextIndex);
                 if (onStepChange) onStepChange(nextIndex);
 
-                // 5. Start fade-in
+                // 6. Start fade-in
                 // Small delay to ensure React has rendered the new step
                 requestAnimationFrame(() => {
                     setTimeout(() => {
@@ -1059,6 +1135,39 @@ function PublicComponentRenderer({
                 <Suspense fallback={<ComponentSkeleton />}>
                     <BarChartRenderer component={component as any} />
                 </Suspense>
+            );
+
+        case 'social-proof':
+            return (
+                <SocialProofRenderer
+                    style={data.style || 'viewing'}
+                    text={data.text || ''}
+                    number={data.number || 47}
+                    min={data.min || 20}
+                    max={data.max || 80}
+                    interval={data.interval || 5}
+                    icon={data.icon}
+                    backgroundColor={data.backgroundColor}
+                    textColor={data.textColor}
+                    borderRadius={data.borderRadius}
+                    textHtml={data.textHtml}
+                />
+            );
+
+        case 'whatsapp-button':
+            return (
+                <WhatsAppButtonRenderer
+                    phoneNumber={data.phoneNumber || ''}
+                    message={data.message || 'Olá! Vim pelo quiz.'}
+                    buttonText={data.buttonText || 'Falar no WhatsApp'}
+                    buttonColor={data.buttonColor || '#25D366'}
+                    textColor={data.textColor || '#FFFFFF'}
+                    style={data.style || 'default'}
+                    position={data.position}
+                    borderRadius={data.borderRadius}
+                    icon={data.icon}
+                    textHtml={data.textHtml}
+                />
             );
 
         default:

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, GripVertical, Edit2, Trash2, Check, X, Copy, MoreVertical, Map as MapIcon, List } from 'lucide-react';
+import { Plus, GripVertical, Edit2, Trash2, Check, X, Copy, MoreVertical, Map as MapIcon, List, GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useBuilderStore } from '@/store/builderStore';
@@ -11,6 +11,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { BranchingRulesEditor } from './BranchingRulesEditor';
 
 function SortableStepItem({
     step,
@@ -20,6 +21,7 @@ function SortableStepItem({
     onEdit,
     onDuplicate,
     onDelete,
+    onBranch,
     isEditing,
     editingTitle,
     setEditingTitle,
@@ -33,6 +35,7 @@ function SortableStepItem({
     onEdit: () => void
     onDuplicate: () => void
     onDelete: () => void
+    onBranch: () => void
     isEditing: boolean
     editingTitle: string
     setEditingTitle: (val: string) => void
@@ -107,9 +110,17 @@ function SortableStepItem({
                         </button>
                     </div>
                 ) : (
-                    <span className="text-xs font-medium truncate block">
-                        {step.title || `Passo ${index + 1}`}
-                    </span>
+                    <div className="flex-1 min-w-0">
+                        <span className="text-xs font-medium truncate block">
+                            {step.title || `Passo ${index + 1}`}
+                        </span>
+                        {step.branchRules && step.branchRules.length > 0 && (
+                            <div className="flex items-center gap-1 text-[10px] text-blue-500 font-medium mt-0.5">
+                                <GitBranch className="w-3 h-3" />
+                                {step.branchRules.length} {step.branchRules.length === 1 ? 'regra' : 'regras'}
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
 
@@ -136,6 +147,16 @@ function SortableStepItem({
                             }}
                         >
                             <Edit2 className="w-3 h-3" /> Renomear
+                        </button>
+                        <button
+                            className="flex items-center gap-2 px-2 py-1.5 text-xs hover:bg-secondary rounded w-full text-left transition-colors"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsMenuOpen(false);
+                                onBranch();
+                            }}
+                        >
+                            <GitBranch className="w-3 h-3" /> Branching
                         </button>
                         <button
                             className="flex items-center gap-2 px-2 py-1.5 text-xs hover:bg-secondary rounded w-full text-left transition-colors"
@@ -176,11 +197,14 @@ export function StepsPanel() {
         deleteStep,
         updateStepTitle,
         reorderSteps,
+        setStepBranchRules,
+        setStepDefaultNext,
     } = useBuilderStore();
 
     const [editingStepId, setEditingStepId] = useState<string | null>(null);
     const [editingTitle, setEditingTitle] = useState('');
     const [view, setView] = useState<'list' | 'map'>('list');
+    const [editingBranchStepId, setEditingBranchStepId] = useState<string | null>(null);
 
     const sensors = useSensors(
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -266,6 +290,7 @@ export function StepsPanel() {
                                         onEdit={() => startEditing(step.id, step.title)}
                                         onDuplicate={() => duplicateStep(step.id)}
                                         onDelete={() => deleteStep(step.id)}
+                                        onBranch={() => setEditingBranchStepId(step.id)}
                                         isEditing={editingStepId === step.id}
                                         editingTitle={editingTitle}
                                         setEditingTitle={setEditingTitle}
@@ -290,6 +315,33 @@ export function StepsPanel() {
                     </div>
                 )}
             </div>
+
+            {editingBranchStepId && (() => {
+                const editingStep = steps.find(s => s.id === editingBranchStepId);
+                if (!editingStep) return null;
+                return (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[80vh] overflow-y-auto p-4 m-4">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-sm font-semibold">Branching — {editingStep.title}</h3>
+                                <button
+                                    onClick={() => setEditingBranchStepId(null)}
+                                    className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <BranchingRulesEditor
+                                stepId={editingBranchStepId}
+                                branchRules={editingStep.branchRules || []}
+                                defaultNextStepId={editingStep.defaultNextStepId}
+                                onUpdate={(rules) => setStepBranchRules(editingBranchStepId, rules)}
+                                onDefaultNextChange={(target) => setStepDefaultNext(editingBranchStepId, target)}
+                            />
+                        </div>
+                    </div>
+                );
+            })()}
         </div>
     );
 }
@@ -334,9 +386,14 @@ function FunnelMap() {
                                 )}>
                                     {step.title || `Etapa ${index + 1}`}
                                 </p>
-                                <span className="text-[9px] text-muted-foreground">
-                                    {components.length}
-                                </span>
+                                <div className="flex items-center gap-1.5">
+                                    {step.branchRules && step.branchRules.length > 0 && (
+                                        <GitBranch className="w-3 h-3 text-blue-500" />
+                                    )}
+                                    <span className="text-[9px] text-muted-foreground">
+                                        {components.length}
+                                    </span>
+                                </div>
                             </div>
                             {components.length > 0 && (
                                 <div className="mt-1.5 flex flex-wrap gap-0.5">

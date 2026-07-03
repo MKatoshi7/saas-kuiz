@@ -142,11 +142,16 @@ export default async function FunnelPage({ params }: { params: Promise<{ funnelI
         }));
     });
 
-    const steps = funnel.steps.map((s: any) => ({
-        id: s.id,
-        title: s.title,
-        order: s.order
-    }));
+    const steps = funnel.steps.map((s: any) => {
+        const settings = (s.settings as any) || {};
+        return {
+            id: s.id,
+            title: s.title,
+            order: s.order,
+            branchRules: settings.branchRules || [],
+            defaultNextStepId: settings.defaultNextStepId,
+        };
+    });
 
     const marketingConfig = funnel.marketingConfig as any;
     const fbPixelId = marketingConfig?.fbPixelId;

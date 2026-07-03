@@ -13,6 +13,13 @@ interface Step {
     id: string;
     title: string;
     order: number;
+    branchRules?: Array<{
+        id: string;
+        condition: { field: string; op: string; value?: string };
+        targetStepId: string;
+        label?: string;
+    }>;
+    defaultNextStepId?: string;
 }
 
 interface FunnelPageClientProps {

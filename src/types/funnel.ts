@@ -37,7 +37,9 @@ export type ComponentType =
   | 'vsl-video'
   // NEW: Chart Components
   | 'pie-chart'
-  | 'bar-chart';
+  | 'bar-chart'
+  | 'social-proof'
+  | 'whatsapp-button';
 
 export type ActionType = 'next_step' | 'jump_to_step' | 'submit_funnel' | 'open_url';
 
@@ -903,6 +905,66 @@ export interface ConfettiComponent extends BaseComponent {
   };
 }
 
+// Social Proof component
+export interface SocialProofComponent extends BaseComponent {
+  type: 'social-proof';
+  data: {
+    style: 'viewing' | 'buying' | 'recent' | 'counter';
+    text: string;
+    number: number;
+    min: number;
+    max: number;
+    interval: number;
+    icon?: string;
+    backgroundColor?: string;
+    textColor?: string;
+    borderRadius?: number;
+    textStyle?: MiniToolbarStyle;
+    textHtml?: string;
+  };
+}
+
+export interface WhatsAppButtonComponent extends BaseComponent {
+  type: 'whatsapp-button';
+  data: {
+    phoneNumber: string;
+    message: string;
+    buttonText?: string;
+    buttonColor?: string;
+    textColor?: string;
+    style?: 'default' | 'floating' | 'inline';
+    position?: 'bottom-right' | 'bottom-center' | 'bottom-left';
+    borderRadius?: number;
+    icon?: string;
+    textStyle?: MiniToolbarStyle;
+    textHtml?: string;
+  };
+}
+
+// ===========================
+// Branching Engine Types
+// ===========================
+
+export type BranchOperator = 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than' | 'is_empty' | 'is_not_empty';
+
+export interface BranchCondition {
+  field: string;
+  op: BranchOperator;
+  value?: string;
+}
+
+export interface BranchRule {
+  id: string;
+  condition: BranchCondition;
+  targetStepId: string;
+  label?: string;
+}
+
+export interface StepNavigation {
+  branchRules?: BranchRule[];
+  defaultNextStepId?: string;
+}
+
 // Union type for all components
 export type FunnelComponentData =
   | HeadlineComponent
@@ -935,7 +997,11 @@ export type FunnelComponentData =
   | VSLVideoComponent
   // NEW: Chart Components
   | PieChartComponent
-  | BarChartComponent;
+  | BarChartComponent
+  // NEW: Social Proof
+  | SocialProofComponent
+  // NEW: WhatsApp Button
+  | WhatsAppButtonComponent;
 
 // ===========================
 // Funnel & Step Types

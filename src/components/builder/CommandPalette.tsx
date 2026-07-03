@@ -25,6 +25,7 @@ import {
     CheckSquare,
     Sparkles,
     ArrowRight,
+    MessageCircle,
 } from 'lucide-react';
 import { ComponentType } from '@/types/funnel';
 
@@ -56,6 +57,8 @@ const COMPONENT_ICONS: Record<string, any> = {
     'vsl-video': Video,
     'pie-chart': BarChart3,
     'bar-chart': BarChart3,
+    'social-proof': Eye,
+    'whatsapp-button': MessageCircle,
 }
 
 export function CommandPalette() {
@@ -93,7 +96,7 @@ export function CommandPalette() {
     const componentTypes: ComponentType[] = [
         'headline', 'paragraph', 'image', 'video', 'audio', 'button',
         'quiz-option', 'pricing', 'timer', 'argument', 'social-share',
-        'carousel', 'notification', 'confetti', 'vsl-video',
+        'carousel', 'notification', 'confetti', 'vsl-video', 'social-proof', 'whatsapp-button',
     ]
 
     const items: CommandItem[] = [

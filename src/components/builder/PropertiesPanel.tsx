@@ -1766,7 +1766,271 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                             </>
                         )}
 
-                        {!['headline', 'paragraph', 'button', 'quiz-option', 'video', 'vsl-video', 'image', 'input', 'slider', 'audio', 'alert', 'testimonial', 'pricing', 'spacer', 'code', 'loading', 'argument', 'timer'].includes(selectedComponent.type) && (
+                        {selectedComponent.type === 'social-proof' && (
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Estilo</label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {[
+                                            { value: 'viewing', label: '👁️ Vendo Agora' },
+                                            { value: 'buying', label: '🛒 Compraram' },
+                                            { value: 'recent', label: '✅ Recentes' },
+                                            { value: 'counter', label: '👥 Contador' },
+                                        ].map(opt => (
+                                            <button
+                                                key={opt.value}
+                                                onClick={() => handleUpdate('style', opt.value)}
+                                                className={`p-2 text-xs rounded-lg border transition-all ${
+                                                    selectedComponent.data.style === opt.value
+                                                        ? 'border-blue-500 bg-blue-50 text-blue-700 font-medium'
+                                                        : 'border-gray-200 hover:border-gray-300'
+                                                }`}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Ícone (emoji)</label>
+                                    <Input
+                                        value={selectedComponent.data.icon || ''}
+                                        onChange={(e) => handleUpdate('icon', e.target.value)}
+                                        placeholder="Ex: 👁️"
+                                        className="h-8 text-sm"
+                                    />
+                                </div>
+
+                                {selectedComponent.data.style !== 'recent' && (
+                                    <div>
+                                        <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Texto</label>
+                                        <Input
+                                            value={selectedComponent.data.text || ''}
+                                            onChange={(e) => handleUpdate('text', e.target.value)}
+                                            placeholder="pessoas estão vendo agora"
+                                            className="h-8 text-sm"
+                                        />
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-3 gap-2">
+                                    <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Número Base</label>
+                                        <Input
+                                            type="number"
+                                            value={selectedComponent.data.number || 47}
+                                            onChange={(e) => handleUpdate('number', parseInt(e.target.value) || 47)}
+                                            className="h-8 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Mín</label>
+                                        <Input
+                                            type="number"
+                                            value={selectedComponent.data.min || 20}
+                                            onChange={(e) => handleUpdate('min', parseInt(e.target.value) || 20)}
+                                            className="h-8 text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Máx</label>
+                                        <Input
+                                            type="number"
+                                            value={selectedComponent.data.max || 80}
+                                            onChange={(e) => handleUpdate('max', parseInt(e.target.value) || 80)}
+                                            className="h-8 text-sm"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs text-gray-500 mb-1 block">Intervalo (segundos)</label>
+                                    <Input
+                                        type="number"
+                                        min="2"
+                                        max="60"
+                                        value={selectedComponent.data.interval || 5}
+                                        onChange={(e) => handleUpdate('interval', parseInt(e.target.value) || 5)}
+                                        className="h-8 text-sm"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Cor de Fundo</label>
+                                        <div className="flex items-center gap-1.5">
+                                            <input
+                                                type="color"
+                                                value={selectedComponent.data.backgroundColor || '#F0FDF4'}
+                                                onChange={(e) => handleUpdate('backgroundColor', e.target.value)}
+                                                className="w-7 h-7 rounded border border-gray-200 cursor-pointer"
+                                            />
+                                            <span className="text-[10px] text-gray-400">{selectedComponent.data.backgroundColor || '#F0FDF4'}</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Cor do Texto</label>
+                                        <div className="flex items-center gap-1.5">
+                                            <input
+                                                type="color"
+                                                value={selectedComponent.data.textColor || '#166534'}
+                                                onChange={(e) => handleUpdate('textColor', e.target.value)}
+                                                className="w-7 h-7 rounded border border-gray-200 cursor-pointer"
+                                            />
+                                            <span className="text-[10px] text-gray-400">{selectedComponent.data.textColor || '#166534'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs text-gray-500 mb-1 block">Raio da Borda</label>
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        max="32"
+                                        value={selectedComponent.data.borderRadius ?? 12}
+                                        onChange={(e) => handleUpdate('borderRadius', parseInt(e.target.value) || 12)}
+                                        className="h-8 text-sm"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {selectedComponent.type === 'whatsapp-button' && (
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Número WhatsApp</label>
+                                    <Input
+                                        value={selectedComponent.data.phoneNumber || ''}
+                                        onChange={(e) => handleUpdate('phoneNumber', e.target.value)}
+                                        placeholder="+5511999999999"
+                                        className="h-8 text-sm"
+                                    />
+                                    <p className="text-[10px] text-gray-400 mt-1">Formato: +55DDDNUMERO</p>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Mensagem Pré-preenchida</label>
+                                    <textarea
+                                        value={selectedComponent.data.message || ''}
+                                        onChange={(e) => handleUpdate('message', e.target.value)}
+                                        placeholder="Olá! Vim pelo quiz."
+                                        className="w-full p-2 text-sm border border-gray-200 rounded-lg min-h-[60px]"
+                                    />
+                                    <p className="text-[10px] text-gray-400 mt-1">Use {'{nome}'}, {'{email}'}, {'{resultado}'} para personalizar</p>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Texto do Botão</label>
+                                    <Input
+                                        value={selectedComponent.data.buttonText || ''}
+                                        onChange={(e) => handleUpdate('buttonText', e.target.value)}
+                                        placeholder="Falar no WhatsApp"
+                                        className="h-8 text-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Ícone (emoji)</label>
+                                    <Input
+                                        value={selectedComponent.data.icon || ''}
+                                        onChange={(e) => handleUpdate('icon', e.target.value)}
+                                        placeholder="💬"
+                                        className="h-8 text-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Estilo</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {[
+                                            { value: 'default', label: 'Padrão' },
+                                            { value: 'floating', label: 'Flutuante' },
+                                            { value: 'inline', label: 'Inline' },
+                                        ].map(opt => (
+                                            <button
+                                                key={opt.value}
+                                                onClick={() => handleUpdate('style', opt.value)}
+                                                className={`p-2 text-xs rounded-lg border transition-all ${
+                                                    selectedComponent.data.style === opt.value
+                                                        ? 'border-blue-500 bg-blue-50 text-blue-700 font-medium'
+                                                        : 'border-gray-200 hover:border-gray-300'
+                                                }`}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {selectedComponent.data.style === 'floating' && (
+                                    <div>
+                                        <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Posição</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {[
+                                                { value: 'bottom-left', label: 'Esquerda' },
+                                                { value: 'bottom-center', label: 'Centro' },
+                                                { value: 'bottom-right', label: 'Direita' },
+                                            ].map(opt => (
+                                                <button
+                                                    key={opt.value}
+                                                    onClick={() => handleUpdate('position', opt.value)}
+                                                    className={`p-2 text-xs rounded-lg border transition-all ${
+                                                        selectedComponent.data.position === opt.value
+                                                            ? 'border-blue-500 bg-blue-50 text-blue-700 font-medium'
+                                                            : 'border-gray-200 hover:border-gray-300'
+                                                    }`}
+                                                >
+                                                    {opt.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Cor do Botão</label>
+                                        <div className="flex items-center gap-1.5">
+                                            <input
+                                                type="color"
+                                                value={selectedComponent.data.buttonColor || '#25D366'}
+                                                onChange={(e) => handleUpdate('buttonColor', e.target.value)}
+                                                className="w-7 h-7 rounded border border-gray-200 cursor-pointer"
+                                            />
+                                            <span className="text-[10px] text-gray-400">{selectedComponent.data.buttonColor || '#25D366'}</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-gray-500 mb-1 block">Cor do Texto</label>
+                                        <div className="flex items-center gap-1.5">
+                                            <input
+                                                type="color"
+                                                value={selectedComponent.data.textColor || '#FFFFFF'}
+                                                onChange={(e) => handleUpdate('textColor', e.target.value)}
+                                                className="w-7 h-7 rounded border border-gray-200 cursor-pointer"
+                                            />
+                                            <span className="text-[10px] text-gray-400">{selectedComponent.data.textColor || '#FFFFFF'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs text-gray-500 mb-1 block">Raio da Borda</label>
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        max="32"
+                                        value={selectedComponent.data.borderRadius ?? 12}
+                                        onChange={(e) => handleUpdate('borderRadius', parseInt(e.target.value) || 12)}
+                                        className="h-8 text-sm"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {!['headline', 'paragraph', 'button', 'quiz-option', 'video', 'vsl-video', 'image', 'input', 'slider', 'audio', 'alert', 'testimonial', 'pricing', 'spacer', 'code', 'loading', 'argument', 'timer', 'social-proof', 'whatsapp-button'].includes(selectedComponent.type) && (
                             <p className="text-xs text-gray-500">
                                 Edição avançada para {selectedComponent.type} em breve...
                             </p>

@@ -147,10 +147,32 @@ export async function PUT(
                 const step = steps[index];
                 const isExisting = existingStepIds.has(step.id);
 
+                // Build settings JSON with branchRules and defaultNextStepId
+                const branchSettings: any = {};
+                if (step.branchRules && step.branchRules.length > 0) {
+                    // Remap step IDs in branchRules if they changed
+                    branchSettings.branchRules = step.branchRules.map((rule: any) => {
+                        const remappedTarget = map.has(rule.targetStepId) ? map.get(rule.targetStepId) : rule.targetStepId;
+                        return {
+                            ...rule,
+                            targetStepId: remappedTarget || rule.targetStepId,
+                        };
+                    });
+                }
+                if (step.defaultNextStepId) {
+                    branchSettings.defaultNextStepId = map.has(step.defaultNextStepId)
+                        ? map.get(step.defaultNextStepId)
+                        : step.defaultNextStepId;
+                }
+
+                const settingsData = Object.keys(branchSettings).length > 0
+                    ? branchSettings
+                    : undefined;
+
                 if (isExisting) {
                     const updated = await tx.funnelStep.update({
                         where: { id: step.id },
-                        data: { title: step.title, order: index }
+                        data: { title: step.title, order: index, ...(settingsData ? { settings: settingsData } : {}) }
                     });
                     map.set(step.id, updated.id);
                 } else {
@@ -161,6 +183,7 @@ export async function PUT(
                             slug: `step-${Date.now()}-${index}`,
                             order: index,
                             stepType: 'question',
+                            ...(settingsData ? { settings: settingsData } : {}),
                         },
                     });
                     map.set(step.id, created.id);
