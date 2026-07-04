@@ -2,7 +2,7 @@
 
 import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { ChevronDown, Bookmark, BookmarkCheck, X } from 'lucide-react';
-import { MiniToolbar, MiniToolbarStyle } from './MiniToolbar';
+import { MiniToolbar, MiniToolbarStyle, saveCurrentSelection, restoreSelection } from './MiniToolbar';
 import { Label } from '@/components/ui/label';
 import { resolveFontFamily } from '@/lib/fonts';
 
@@ -148,9 +148,8 @@ export function RichTextField({
     }, [presets]);
 
     const insertColorToContentEditable = useCallback((color: string) => {
-        requestAnimationFrame(() => {
-            document.execCommand('foreColor', false, color);
-        });
+        restoreSelection();
+        document.execCommand('foreColor', false, color);
         saveRecentColor(color);
         setRecentColors(loadRecentColors());
     }, []);
@@ -261,6 +260,9 @@ export function RichTextField({
                 contentEditable
                 suppressContentEditableWarning
                 onBlur={handleBlur}
+                onSelect={() => saveCurrentSelection()}
+                onMouseUp={() => saveCurrentSelection()}
+                onKeyUp={() => saveCurrentSelection()}
                 className="p-3 bg-white border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all whitespace-pre-wrap"
                 style={{
                     minHeight: `${minHeight}px`,

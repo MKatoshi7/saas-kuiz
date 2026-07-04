@@ -100,7 +100,7 @@ export function Canvas({ previewDevice }: { previewDevice: 'mobile' | 'desktop' 
                                 {components.length === 0 ? (
                                     <EmptyCanvasState />
                                 ) : (
-                                    <div className="min-h-[500px] pb-20">
+                                    <div className="min-h-[500px] pb-20 space-y-4">
                                         {components.map((component) => (
                                             <SortableComponent
                                                 key={component.id}

@@ -44,7 +44,7 @@ export function FunnelLivePreview({ components, theme, mode = 'live', onSelect, 
     }
 
     return (
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4">
             {components.map((component) => {
                 const isSelected = mode === 'editor' && selectedId === component.id
                 return (

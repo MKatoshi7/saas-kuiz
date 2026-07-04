@@ -1,8 +1,27 @@
 'use client';
 
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight, Type, ChevronDown } from 'lucide-react';
 import { loadRecentColors, saveRecentColor } from './RichTextField';
+
+// ─── Selection persistence ─────────────────────────────────────────
+let _savedRange: Range | null = null;
+
+export function saveCurrentSelection() {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+        _savedRange = sel.getRangeAt(0).cloneRange();
+    }
+}
+
+export function restoreSelection(): boolean {
+    if (!_savedRange) return false;
+    const sel = window.getSelection();
+    if (!sel) return false;
+    sel.removeAllRanges();
+    sel.addRange(_savedRange);
+    return true;
+}
 
 const FONT_OPTIONS = [
     'Inter', 'Bebas Neue', 'Montserrat', 'Poppins', 'Oswald',
@@ -77,14 +96,13 @@ export function MiniToolbar({
     }, []);
 
     const applyColor = useCallback((color: string) => {
-        // Use requestAnimationFrame to ensure selection is preserved after focus changes
-        requestAnimationFrame(() => {
-            execOnContentEditable('foreColor', color);
-        });
+        // Restore the saved selection first, then apply color
+        restoreSelection();
+        document.execCommand('foreColor', false, color);
         saveRecentColor(color);
         setRecentColors(loadRecentColors());
         onColorChange?.(color);
-    }, [onColorChange, execOnContentEditable]);
+    }, [onColorChange]);
 
     const allRecentColors = recentColorsProp || recentColors;
 
