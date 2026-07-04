@@ -148,9 +148,12 @@ export function RichTextField({
     }, [presets]);
 
     const insertColorToContentEditable = useCallback((color: string) => {
-        document.execCommand('foreColor', false, color);
-        handleStyleUpdate({ ...style, color });
-    }, [style, handleStyleUpdate]);
+        requestAnimationFrame(() => {
+            document.execCommand('foreColor', false, color);
+        });
+        saveRecentColor(color);
+        setRecentColors(loadRecentColors());
+    }, []);
 
     return (
         <div className={`space-y-1 ${className}`}>

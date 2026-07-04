@@ -77,12 +77,14 @@ export function MiniToolbar({
     }, []);
 
     const applyColor = useCallback((color: string) => {
-        execOnContentEditable('foreColor', color);
-        onStyleUpdate({ ...style, color });
+        // Use requestAnimationFrame to ensure selection is preserved after focus changes
+        requestAnimationFrame(() => {
+            execOnContentEditable('foreColor', color);
+        });
         saveRecentColor(color);
         setRecentColors(loadRecentColors());
         onColorChange?.(color);
-    }, [style, onStyleUpdate, onColorChange, execOnContentEditable]);
+    }, [onColorChange, execOnContentEditable]);
 
     const allRecentColors = recentColorsProp || recentColors;
 
@@ -142,7 +144,7 @@ export function MiniToolbar({
                     </button>
 
                     {showColorPicker && (
-                        <div className="absolute top-10 left-0 z-50 w-64 bg-white border border-gray-200 rounded-xl shadow-xl p-3 space-y-3">
+                        <div className="absolute top-10 right-0 z-50 w-64 bg-white border border-gray-200 rounded-xl shadow-xl p-3 space-y-3">
                             {/* Predefined colors */}
                             <div>
                                 <div className="text-[10px] text-gray-400 font-medium mb-1.5">Cores Predefinidas</div>
