@@ -17,6 +17,7 @@ import { PieChartRenderer } from './PieChartRenderer'
 import { BarChartRenderer } from './BarChartRenderer'
 import { SocialProofRenderer } from './SocialProofRenderer'
 import { WhatsAppButtonRenderer } from './WhatsAppButtonRenderer'
+import { OfferRenderer } from './OfferRenderer'
 import { Star } from 'lucide-react'
 import { sanitizeAlertText, sanitizeUrl } from '@/lib/sanitize'
 
@@ -687,6 +688,38 @@ function VisualRenderer({ component, theme }: { component: FunnelComponentData; 
                     borderRadius={data.borderRadius}
                     icon={data.icon}
                     textHtml={data.textHtml}
+                />
+            );
+
+        case 'offer':
+            return (
+                <OfferRenderer
+                    layout={data.layout}
+                    microTitle={data.microTitle}
+                    microTitleHtml={data.microTitleHtml}
+                    microTitleStyle={data.microTitleStyle}
+                    microTitleColor={data.microTitleColor}
+                    productName={data.productName}
+                    productNameHtml={data.productNameHtml}
+                    productNameStyle={data.productNameStyle}
+                    price={data.price}
+                    priceHtml={data.priceHtml}
+                    priceStyle={data.priceStyle}
+                    originalPrice={data.originalPrice}
+                    originalPriceStyle={data.originalPriceStyle}
+                    subtitle={data.subtitle}
+                    subtitleHtml={data.subtitleHtml}
+                    subtitleStyle={data.subtitleStyle}
+                    ctaText={data.ctaText}
+                    ctaTextHtml={data.ctaTextHtml}
+                    ctaTextStyle={data.ctaTextStyle}
+                    ctaUrl={data.ctaUrl}
+                    ctaColor={data.ctaColor}
+                    ctaTextColor={data.ctaTextColor}
+                    backgroundColor={data.backgroundColor}
+                    borderColor={data.borderColor}
+                    borderRadius={data.borderRadius}
+                    accentColor={data.accentColor}
                 />
             );
 

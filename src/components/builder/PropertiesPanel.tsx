@@ -2030,7 +2030,192 @@ export function PropertiesPanel({ funnelId }: { funnelId?: string }) {
                             </div>
                         )}
 
-                        {!['headline', 'paragraph', 'button', 'quiz-option', 'video', 'vsl-video', 'image', 'input', 'slider', 'audio', 'alert', 'testimonial', 'pricing', 'spacer', 'code', 'loading', 'argument', 'timer', 'social-proof', 'whatsapp-button'].includes(selectedComponent.type) && (
+                        {selectedComponent.type === 'offer' && (
+                            <>
+                                <div>
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Layout</label>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {[
+                                            { value: 'inlead', label: 'InLead' },
+                                            { value: 'card', label: 'Card' },
+                                            { value: 'minimal', label: 'Minimal' },
+                                            { value: 'highlighted', label: 'Highlighted' },
+                                        ].map(opt => (
+                                            <button
+                                                key={opt.value}
+                                                onClick={() => handleUpdate('layout', opt.value)}
+                                                className={`p-2 text-xs rounded-lg border transition-all ${
+                                                    (selectedComponent.data.layout || 'inlead') === opt.value
+                                                        ? 'border-blue-500 bg-blue-50 text-blue-700 font-medium'
+                                                        : 'border-gray-200 hover:border-gray-300'
+                                                }`}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Micro Título</label>
+                                    <RichTextField
+                                        label="Micro Título"
+                                        value={selectedComponent.data.microTitle}
+                                        htmlValue={selectedComponent.data.microTitleHtml}
+                                        style={selectedComponent.data.microTitleStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('microTitle', text);
+                                            if (html) handleUpdate('microTitleHtml', html);
+                                            if (style) handleUpdate('microTitleStyle', style);
+                                        }}
+                                        minHeight={36}
+                                        placeholder="Ex: OFERTA ESPECIAL"
+                                        compact
+                                        showPresets={false}
+                                    />
+                                </div>
+
+                                <ColorPickerWithPalette
+                                    label="Cor do Micro Título"
+                                    value={selectedComponent.data.microTitleColor || '#2563EB'}
+                                    onChange={(color) => handleUpdate('microTitleColor', color)}
+                                />
+
+                                <div>
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Nome do Produto</label>
+                                    <RichTextField
+                                        label="Nome do Produto"
+                                        value={selectedComponent.data.productName}
+                                        htmlValue={selectedComponent.data.productNameHtml}
+                                        style={selectedComponent.data.productNameStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('productName', text);
+                                            if (html) handleUpdate('productNameHtml', html);
+                                            if (style) handleUpdate('productNameStyle', style);
+                                        }}
+                                        minHeight={36}
+                                        placeholder="Nome do produto"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Preço</label>
+                                    <RichTextField
+                                        label="Preço"
+                                        value={selectedComponent.data.price}
+                                        htmlValue={selectedComponent.data.priceHtml}
+                                        style={selectedComponent.data.priceStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('price', text);
+                                            if (html) handleUpdate('priceHtml', html);
+                                            if (style) handleUpdate('priceStyle', style);
+                                        }}
+                                        minHeight={36}
+                                        placeholder="R$ 197,00"
+                                        compact
+                                        showPresets={false}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Preço Original</label>
+                                    <Input
+                                        value={selectedComponent.data.originalPrice || ''}
+                                        onChange={(e) => handleUpdate('originalPrice', e.target.value)}
+                                        placeholder="R$ 297,00"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Subtítulo</label>
+                                    <RichTextField
+                                        label="Subtítulo"
+                                        value={selectedComponent.data.subtitle}
+                                        htmlValue={selectedComponent.data.subtitleHtml}
+                                        style={selectedComponent.data.subtitleStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('subtitle', text);
+                                            if (html) handleUpdate('subtitleHtml', html);
+                                            if (style) handleUpdate('subtitleStyle', style);
+                                        }}
+                                        minHeight={36}
+                                        placeholder="Descrição curta da oferta"
+                                        compact
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Texto do CTA</label>
+                                    <RichTextField
+                                        label="Texto do CTA"
+                                        value={selectedComponent.data.ctaText}
+                                        htmlValue={selectedComponent.data.ctaTextHtml}
+                                        style={selectedComponent.data.ctaTextStyle}
+                                        onUpdate={(text, html, style) => {
+                                            handleUpdate('ctaText', text);
+                                            if (html) handleUpdate('ctaTextHtml', html);
+                                            if (style) handleUpdate('ctaTextStyle', style);
+                                        }}
+                                        minHeight={36}
+                                        placeholder="Comprar Agora"
+                                        compact
+                                        showPresets={false}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">URL do CTA</label>
+                                    <Input
+                                        value={selectedComponent.data.ctaUrl || ''}
+                                        onChange={(e) => handleUpdate('ctaUrl', e.target.value)}
+                                        placeholder="https://checkout.com/produto"
+                                    />
+                                </div>
+
+                                <ColorPickerWithPalette
+                                    label="Cor do CTA"
+                                    value={selectedComponent.data.ctaColor || '#2563EB'}
+                                    onChange={(color) => handleUpdate('ctaColor', color)}
+                                />
+
+                                <ColorPickerWithPalette
+                                    label="Cor do Texto do CTA"
+                                    value={selectedComponent.data.ctaTextColor || '#FFFFFF'}
+                                    onChange={(color) => handleUpdate('ctaTextColor', color)}
+                                />
+
+                                <ColorPickerWithPalette
+                                    label="Cor de Fundo"
+                                    value={selectedComponent.data.backgroundColor || '#FFFFFF'}
+                                    onChange={(color) => handleUpdate('backgroundColor', color)}
+                                />
+
+                                <ColorPickerWithPalette
+                                    label="Cor da Borda"
+                                    value={selectedComponent.data.borderColor || '#E5E7EB'}
+                                    onChange={(color) => handleUpdate('borderColor', color)}
+                                />
+
+                                <div>
+                                    <label className="text-xs font-medium text-gray-700 mb-2 block">Raio da Borda</label>
+                                    <Input
+                                        type="number"
+                                        min="0"
+                                        max="32"
+                                        value={selectedComponent.data.borderRadius ?? 12}
+                                        onChange={(e) => handleUpdate('borderRadius', parseInt(e.target.value) || 12)}
+                                    />
+                                </div>
+
+                                <ColorPickerWithPalette
+                                    label="Cor de Destaque"
+                                    value={selectedComponent.data.accentColor || '#2563EB'}
+                                    onChange={(color) => handleUpdate('accentColor', color)}
+                                />
+                            </>
+                        )}
+
+                        {!['headline', 'paragraph', 'button', 'quiz-option', 'video', 'vsl-video', 'image', 'input', 'slider', 'audio', 'alert', 'testimonial', 'pricing', 'spacer', 'code', 'loading', 'argument', 'timer', 'social-proof', 'whatsapp-button', 'offer'].includes(selectedComponent.type) && (
                             <p className="text-xs text-gray-500">
                                 Edição avançada para {selectedComponent.type} em breve...
                             </p>

@@ -39,7 +39,8 @@ export type ComponentType =
   | 'pie-chart'
   | 'bar-chart'
   | 'social-proof'
-  | 'whatsapp-button';
+  | 'whatsapp-button'
+  | 'offer';
 
 export type ActionType = 'next_step' | 'jump_to_step' | 'submit_funnel' | 'open_url';
 
@@ -1001,7 +1002,52 @@ export type FunnelComponentData =
   // NEW: Social Proof
   | SocialProofComponent
   // NEW: WhatsApp Button
-  | WhatsAppButtonComponent;
+  | WhatsAppButtonComponent
+  // NEW: Offer Component
+  | OfferComponent;
+
+// ===========================
+// Offer Component
+// ===========================
+
+export interface OfferComponent extends BaseComponent {
+  type: 'offer';
+  data: {
+    layout?: 'inlead' | 'card' | 'minimal' | 'highlighted';
+    // Micro title (top bar / badge)
+    microTitle?: string;
+    microTitleHtml?: string;
+    microTitleStyle?: MiniToolbarStyle;
+    microTitleColor?: string;
+    // Product name / description (left side)
+    productName?: string;
+    productNameHtml?: string;
+    productNameStyle?: MiniToolbarStyle;
+    // Price
+    price?: string;
+    priceHtml?: string;
+    priceStyle?: MiniToolbarStyle;
+    // Original price (strikethrough)
+    originalPrice?: string;
+    originalPriceStyle?: MiniToolbarStyle;
+    // Subtitle (below, e.g. "à vista" or "em 12x")
+    subtitle?: string;
+    subtitleHtml?: string;
+    subtitleStyle?: MiniToolbarStyle;
+    // CTA Button
+    ctaText?: string;
+    ctaTextHtml?: string;
+    ctaTextStyle?: MiniToolbarStyle;
+    ctaUrl?: string;
+    ctaColor?: string;
+    ctaTextColor?: string;
+    // Visual
+    backgroundColor?: string;
+    borderColor?: string;
+    borderRadius?: number;
+    accentColor?: string;
+  };
+}
 
 // ===========================
 // Funnel & Step Types
