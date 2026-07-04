@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 import { FUNNEL_TEMPLATES, getTemplate } from '@/lib/templates'
 import { getPlanLimits } from '@/lib/limits'
+import { revalidateTag } from 'next/cache'
 
 export async function GET() {
     try {
@@ -121,6 +122,7 @@ export async function POST(request: Request) {
             include: { steps: { include: { components: true } } },
         })
 
+        revalidateTag('funnels', 'max')
         return NextResponse.json({ funnel })
     } catch (error) {
         console.error('Create funnel from template error:', error)

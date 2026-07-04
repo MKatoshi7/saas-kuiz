@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { revalidateTag } from 'next/cache';
 
 export async function POST(
     req: NextRequest,
@@ -115,6 +116,7 @@ export async function POST(
             duplicate: duplicatedFunnel.id
         });
 
+        revalidateTag('funnels', 'max');
         return NextResponse.json({
             success: true,
             funnelId: duplicatedFunnel.id,

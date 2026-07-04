@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/admin-auth';
 import prisma from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { logAdminAction } from '@/lib/audit';
+import { revalidateTag } from 'next/cache';
 
 export async function POST(
     req: Request,
@@ -33,6 +34,7 @@ export async function POST(
             })
         }
 
+        revalidateTag('funnels', 'max');
         return NextResponse.json({ funnel });
     } catch (error) {
         console.error('Error banning funnel:', error);

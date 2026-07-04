@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { revalidateTag } from "next/cache";
 
 export async function PATCH(
     request: NextRequest,
@@ -60,6 +61,7 @@ export async function PATCH(
             }
         });
 
+        revalidateTag('funnels', 'max');
         return NextResponse.json({ success: true, funnel: updatedFunnel });
     } catch (error) {
         console.error("Error updating funnel settings:", error);

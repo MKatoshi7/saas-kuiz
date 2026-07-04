@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { revalidateTag } from "next/cache";
 
 export const dynamic = 'force-dynamic';
 
@@ -267,6 +268,9 @@ export async function PUT(
         const duration = performance.now() - startTime;
         console.log(`✅ Funnel saved in ${duration.toFixed(0)}ms`);
 
+        // Bust ISR cache so the public page picks up changes immediately
+        revalidateTag('funnels', 'max');
+
         return NextResponse.json({ success: true, stepIdMap: idMap, duration });
     } catch (error) {
         const duration = performance.now() - startTime;
@@ -392,6 +396,9 @@ export async function DELETE(
         ]);
 
         console.log('✅ Funnel deleted successfully:', funnelId);
+
+        // Bust ISR cache
+        revalidateTag('funnels', 'max');
 
         return NextResponse.json({
             success: true,

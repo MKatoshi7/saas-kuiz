@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/admin-auth'
 import prisma from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { logAdminAction } from '@/lib/audit'
+import { revalidateTag } from 'next/cache'
 
 type BulkAction = 'ban' | 'unban' | 'delete'
 
@@ -67,6 +68,7 @@ export async function POST(req: Request) {
             } catch {}
         }
 
+        revalidateTag('funnels', 'max');
         return NextResponse.json({ success: true, affected, action })
     } catch (error) {
         console.error('Error in bulk action:', error)

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { promises as dns } from 'dns';
+import { revalidateTag } from 'next/cache';
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ funnelId: string }> }) {
     try {
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ fun
             data: { customDomain: domain }
         });
 
+        revalidateTag('funnels', 'max');
         return NextResponse.json({ success: true, funnel: updatedFunnel });
     } catch (error) {
         console.error('Error updating custom domain:', error);

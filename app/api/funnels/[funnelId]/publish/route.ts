@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { revalidateTag } from 'next/cache';
 
 export async function POST(
     request: NextRequest,
@@ -36,6 +37,7 @@ export async function POST(
             }
         });
 
+        revalidateTag('funnels', 'max');
         return NextResponse.json({
             success: true,
             funnel: {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { revalidateTag } from 'next/cache';
 
 export async function POST(request: Request) {
     try {
@@ -96,6 +97,7 @@ export async function POST(request: Request) {
             },
         });
 
+        revalidateTag('funnels', 'max');
         return NextResponse.json(newFunnel);
     } catch (error) {
         console.error('Create funnel error:', error);
