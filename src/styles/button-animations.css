@@ -1,13 +1,10 @@
 /* Custom button animations */
 
 @keyframes button-pulse {
-
-    0%,
-    100% {
+    0%, 100% {
         opacity: 1;
         transform: scale(1);
     }
-
     50% {
         opacity: 0.9;
         transform: scale(1.05);
@@ -15,71 +12,57 @@
 }
 
 @keyframes button-pop {
-
-    0%,
-    100% {
+    0%, 100% {
         transform: scale(1);
     }
-
     50% {
         transform: scale(1.03);
     }
 }
 
 @keyframes button-bounce {
-
-    0%,
-    100% {
+    0%, 100% {
         transform: translateY(0);
     }
-
     50% {
         transform: translateY(-10px);
     }
 }
 
 @keyframes button-gradient {
-    0% {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
-
-    100% {
-        background-position: 0% 50%;
-    }
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
-/* Animation classes */
-.animate-button-pulse {
-    animation: button-pulse var(--animation-duration, 2s) ease-in-out infinite;
-}
+/* Pulse */
+.animate-button-pulse-slow    { animation: button-pulse 3s ease-in-out infinite; }
+.animate-button-pulse-normal  { animation: button-pulse 2s ease-in-out infinite; }
+.animate-button-pulse-fast    { animation: button-pulse 1s ease-in-out infinite; }
 
-.animate-button-pop {
-    animation: button-pop var(--animation-duration, 2s) ease-in-out infinite;
-}
+/* Pop */
+.animate-button-pop-slow      { animation: button-pop 3s ease-in-out infinite; }
+.animate-button-pop-normal    { animation: button-pop 2s ease-in-out infinite; }
+.animate-button-pop-fast      { animation: button-pop 1s ease-in-out infinite; }
 
-.animate-button-bounce {
-    animation: button-bounce var(--animation-duration, 2s) ease-in-out infinite;
-}
+/* Bounce */
+.animate-button-bounce-slow   { animation: button-bounce 3s ease-in-out infinite; }
+.animate-button-bounce-normal { animation: button-bounce 2s ease-in-out infinite; }
+.animate-button-bounce-fast   { animation: button-bounce 1s ease-in-out infinite; }
 
-.animate-button-gradient {
-    background: linear-gradient(270deg, var(--bg-color), var(--bg-color-light));
+/* Gradient */
+.animate-button-gradient-slow   {
+    background: linear-gradient(270deg, var(--bg-color, #2563eb), var(--bg-color-light, #7c3aed));
     background-size: 200% 200%;
-    animation: button-gradient var(--animation-duration, 2s) ease infinite;
+    animation: button-gradient 3s ease infinite;
 }
-
-/* Speed modifiers */
-.animation-slow {
-    --animation-duration: 3s;
+.animate-button-gradient-normal {
+    background: linear-gradient(270deg, var(--bg-color, #2563eb), var(--bg-color-light, #7c3aed));
+    background-size: 200% 200%;
+    animation: button-gradient 2s ease infinite;
 }
-
-.animation-normal {
-    --animation-duration: 2s;
-}
-
-.animation-fast {
-    --animation-duration: 1s;
+.animate-button-gradient-fast   {
+    background: linear-gradient(270deg, var(--bg-color, #2563eb), var(--bg-color-light, #7c3aed));
+    background-size: 200% 200%;
+    animation: button-gradient 1s ease infinite;
 }

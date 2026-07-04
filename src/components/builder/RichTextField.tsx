@@ -15,14 +15,14 @@ export interface TextStylePreset {
 }
 
 const DEFAULT_PRESETS: TextStylePreset[] = [
-    { id: 'headline-lg', name: 'Headline Grande', style: { fontSize: 32, fontFamily: 'Inter', bold: true, lineHeight: 1.2, letterSpacing: -0.5, textTransform: 'none' } },
-    { id: 'headline-md', name: 'Headline Médio', style: { fontSize: 24, fontFamily: 'Inter', bold: true, lineHeight: 1.3, letterSpacing: -0.3, textTransform: 'none' } },
-    { id: 'subtitle', name: 'Subtítulo', style: { fontSize: 18, fontFamily: 'Inter', bold: false, lineHeight: 1.4, letterSpacing: 0, textTransform: 'none' } },
-    { id: 'body', name: 'Corpo', style: { fontSize: 16, fontFamily: 'Inter', bold: false, lineHeight: 1.5, letterSpacing: 0, textTransform: 'none' } },
-    { id: 'caption', name: 'Legenda', style: { fontSize: 13, fontFamily: 'Inter', bold: false, lineHeight: 1.4, letterSpacing: 0.2, textTransform: 'none' } },
-    { id: 'button', name: 'Botão', style: { fontSize: 16, fontFamily: 'Inter', bold: true, lineHeight: 1, letterSpacing: 0.5, textTransform: 'uppercase' } },
-    { id: 'quote', name: 'Citação', style: { fontSize: 18, fontFamily: 'Playfair Display', italic: true, lineHeight: 1.5, letterSpacing: 0, textTransform: 'none' } },
-    { id: 'hero-title', name: 'Título Hero', style: { fontSize: 40, fontFamily: 'Montserrat', bold: true, lineHeight: 1.1, letterSpacing: -1, textTransform: 'none' } },
+    { id: 'headline-lg', name: 'Headline Grande', style: { fontSize: 32, fontFamily: 'Inter', fontWeight: 700, bold: true, lineHeight: 1.2, letterSpacing: -0.5, textTransform: 'none' } },
+    { id: 'headline-md', name: 'Headline Médio', style: { fontSize: 24, fontFamily: 'Inter', fontWeight: 700, bold: true, lineHeight: 1.3, letterSpacing: -0.3, textTransform: 'none' } },
+    { id: 'subtitle', name: 'Subtítulo', style: { fontSize: 18, fontFamily: 'Inter', fontWeight: 400, lineHeight: 1.4, letterSpacing: 0, textTransform: 'none' } },
+    { id: 'body', name: 'Corpo', style: { fontSize: 16, fontFamily: 'Inter', fontWeight: 400, lineHeight: 1.5, letterSpacing: 0, textTransform: 'none' } },
+    { id: 'caption', name: 'Legenda', style: { fontSize: 13, fontFamily: 'Inter', fontWeight: 400, lineHeight: 1.4, letterSpacing: 0.2, textTransform: 'none' } },
+    { id: 'button', name: 'Botão', style: { fontSize: 16, fontFamily: 'Inter', fontWeight: 600, lineHeight: 1, letterSpacing: 0.5, textTransform: 'uppercase' } },
+    { id: 'quote', name: 'Citação', style: { fontSize: 18, fontFamily: 'Playfair Display', fontWeight: 400, italic: true, lineHeight: 1.5, letterSpacing: 0, textTransform: 'none' } },
+    { id: 'hero-title', name: 'Título Hero', style: { fontSize: 40, fontFamily: 'Montserrat', fontWeight: 700, bold: true, lineHeight: 1.1, letterSpacing: -1, textTransform: 'none' } },
 ];
 
 const PRESETS_KEY = 'kuiz-text-style-presets';
@@ -263,6 +263,7 @@ export function RichTextField({
                     minHeight: `${minHeight}px`,
                     fontSize: style?.fontSize ? `${style.fontSize}px` : undefined,
                     fontFamily: resolveFontFamily(style?.fontFamily),
+                    fontWeight: style?.fontWeight || (style?.bold ? 700 : undefined),
                     lineHeight: style?.lineHeight,
                     letterSpacing: style?.letterSpacing ? `${style.letterSpacing}px` : undefined,
                     textTransform: style?.textTransform as any,

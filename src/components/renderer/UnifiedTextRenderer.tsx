@@ -5,6 +5,7 @@ interface TextStyle {
     color?: string;
     fontSize?: number;
     fontFamily?: string;
+    fontWeight?: number;
     bold?: boolean;
     italic?: boolean;
     underline?: boolean;
@@ -155,7 +156,8 @@ export function UnifiedTextRenderer({
             if (textStyle.color) styles.color = textStyle.color;
             if (textStyle.fontSize) styles.fontSize = `${textStyle.fontSize}px`;
             if (textStyle.fontFamily) styles.fontFamily = resolveFontFamily(textStyle.fontFamily) || textStyle.fontFamily;
-            if (textStyle.bold) styles.fontWeight = 'bold';
+            if (textStyle.fontWeight) styles.fontWeight = textStyle.fontWeight;
+            else if (textStyle.bold) styles.fontWeight = 'bold';
             if (textStyle.italic) styles.fontStyle = 'italic';
             const decorations: string[] = [];
             if (textStyle.underline) decorations.push('underline');

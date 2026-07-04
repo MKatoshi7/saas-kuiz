@@ -71,6 +71,7 @@ export function InlineEditableText({
           minHeight: `${minHeight}px`,
           fontSize: style?.fontSize ? `${style.fontSize}px` : undefined,
           fontFamily: resolveFontFamily(style?.fontFamily),
+          fontWeight: style?.fontWeight || (style?.bold ? 700 : undefined),
           lineHeight: style?.lineHeight,
           letterSpacing: style?.letterSpacing ? `${style.letterSpacing}px` : undefined,
           textTransform: style?.textTransform as any,

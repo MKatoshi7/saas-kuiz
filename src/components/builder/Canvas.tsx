@@ -143,8 +143,6 @@ export function Canvas({ previewDevice }: { previewDevice: 'mobile' | 'desktop' 
     );
 }
 
-import '@/styles/button-animations.css';
-
 import { ComponentControls } from './ComponentControls';
 
 const ComponentRenderer = React.memo(function ComponentRenderer({

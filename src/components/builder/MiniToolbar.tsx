@@ -32,6 +32,7 @@ export interface MiniToolbarStyle {
     color?: string;
     fontSize?: number;
     fontFamily?: string;
+    fontWeight?: number;
     bold?: boolean;
     italic?: boolean;
     underline?: boolean;
@@ -90,7 +91,11 @@ export function MiniToolbar({
             {label && <div className="text-[10px] text-gray-400 font-medium px-1">{label}</div>}
             <div className="flex flex-wrap items-center gap-0.5">
                 <button
-                    onClick={() => execOnContentEditable('bold')}
+                    onClick={() => {
+                        const newBold = !style?.bold;
+                        execOnContentEditable('bold');
+                        onStyleUpdate({ ...style, bold: newBold, fontWeight: newBold ? 700 : 400 });
+                    }}
                     onMouseDown={(e) => e.preventDefault()}
                     className={`p-1.5 rounded hover:bg-gray-200 transition-colors ${style?.bold ? 'bg-blue-100 text-blue-700' : 'text-gray-600'}`}
                     title="Negrito"
@@ -255,6 +260,26 @@ export function MiniToolbar({
                         {FONT_OPTIONS.map(f => <option key={f} value={f}>{f}</option>)}
                     </select>
                 )}
+
+                <select
+                    value={style?.fontWeight || 400}
+                    onChange={(e) => {
+                        const weight = parseInt(e.target.value);
+                        onStyleUpdate({ ...style, fontWeight: weight, bold: weight >= 700 });
+                    }}
+                    className="h-7 text-xs border border-gray-200 rounded px-1.5 bg-white"
+                    title="Peso da Fonte"
+                >
+                    <option value={100}>Thin</option>
+                    <option value={200}>ExtraLight</option>
+                    <option value={300}>Light</option>
+                    <option value={400}>Regular</option>
+                    <option value={500}>Medium</option>
+                    <option value={600}>Semibold</option>
+                    <option value={700}>Bold</option>
+                    <option value={800}>ExtraBold</option>
+                    <option value={900}>Black</option>
+                </select>
 
                 <select
                     value={style?.textTransform || 'none'}
